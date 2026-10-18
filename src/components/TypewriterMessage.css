@@ -1,0 +1,101 @@
+/* ==========================================================================
+   TYPEWRITER MESSAGE - MR BEN
+   ÉCRITURE PROGRESSIVE MOLO MOLO AVEC MAIN ✍️
+   COULEUR BLANCHE UNIFORME ÉLÉGANTE (AUCUN JAUNE)
+   MAINTIEN NET PENDANT 7 SECONDES PUIS FONDU DOUX & NOUVEAU MESSAGE
+   TYPOGRAPHIE PENCHÉE / SLANTED DYNAMIQUE
+   ========================================================================== */
+
+.typewriter-container {
+  position: absolute;
+  top: 5.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 92%;
+  max-width: 860px;
+  text-align: center;
+  pointer-events: none;
+  min-height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Phase de lecture stable (pendant 7 secondes) */
+.typewriter-container.phase-reading {
+  opacity: 1;
+}
+
+/* Phase de disparition douce */
+.typewriter-container.phase-fading {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.typewriter-container.phase-pause {
+  opacity: 0;
+}
+
+.typewriter-content-box {
+  width: 100%;
+}
+
+/* Lignes de texte penchées et stylées, 100% blanches et homogènes */
+.typewriter-line {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.45rem;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 24px rgba(0, 0, 0, 0.85);
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  white-space: pre-wrap;
+}
+
+.typewriter-line.line-2 {
+  color: #ffffff;
+}
+
+/* Emoji main ✍️ qui oscille naturellement pendant la saisie */
+.writing-hand-emoji {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 1.25rem;
+  vertical-align: middle;
+  animation: writingHandWiggle 0.24s infinite alternate ease-in-out;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+}
+
+@keyframes writingHandWiggle {
+  0% {
+    transform: rotate(0deg) translateY(0);
+  }
+  100% {
+    transform: rotate(-16deg) translateY(-3px) translateX(2px);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .typewriter-container {
+    top: 4.6rem;
+    width: 95%;
+  }
+
+  .typewriter-line {
+    font-size: 1.02rem;
+    line-height: 1.35;
+  }
+
+  .writing-hand-emoji {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,775 @@
+/* ==========================================================================
+   PAGE FORMATIONS - GRAND LIVRE DE LUXE COULEUR IVOIRE / PAPIER D'ART
+   AFFICHE SOUS LE HEADER - TRANCHES MULTI-PAGES GAUCHE & DROITE
+   CADRAGE HARMONIEUX (BIEN ÉCARTÉ DU BAS ET DES BORDS)
+   BOUTONS RIGOUREUSEMENT ALIGNÉS SUR LA MÊME LIGNE
+   ========================================================================== */
+
+.formations-book-viewport {
+  position: fixed;
+  top: 4.2rem; /* S'affiche strictement sous le Header qui reste 100% visible */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  height: calc(100vh - 4.2rem);
+  z-index: 40;
+  background: radial-gradient(circle at center, rgba(18, 20, 28, 0.94) 0%, rgba(5, 6, 8, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Marges aérées pour ne pas coller aux côtés ni au bas */
+  padding: 0.5rem 2.2rem 1.6rem 2.2rem;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: bookViewportFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes bookViewportFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.988);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   CONTENEUR DU LIVRE ÉPAIS (TRANCHES MULTI-PAGES GAUCHE & DROITE)
+   ========================================================================== */
+
+.book-multipage-wrapper {
+  position: relative;
+  width: 90vw;
+  max-width: 1260px;
+  height: calc(100vh - 6.6rem);
+  max-height: 710px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* Épaisseur des feuillets sur les tranches gauche & droite (papier d'édition) */
+.book-pages-stack-edge {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 15px;
+  background: repeating-linear-gradient(
+    90deg,
+    #e8e3d5,
+    #e8e3d5 1px,
+    #f2eee2 2px,
+    #ded7c5 3px
+  );
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+  z-index: 2;
+  border-radius: 4px 0 0 4px;
+}
+
+.book-pages-stack-edge.left-edge {
+  left: -13px;
+  border-left: 2px solid #8c8273;
+  transform: skewY(-0.8deg);
+}
+
+.book-pages-stack-edge.right-edge {
+  right: -13px;
+  border-right: 2px solid #8c8273;
+  border-radius: 0 4px 4px 0;
+  transform: skewY(0.8deg);
+}
+
+/* ==========================================================================
+   LE GRAND LIVRE OUVERT (PAPIER IVOIRE / BLANC CASSÉ NOBLE D'ART)
+   ========================================================================== */
+
+.open-book-spread.ivory-book-theme {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fbf9f4;
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    0 8px 24px rgba(0, 0, 0, 0.55),
+    inset 0 0 70px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 5;
+}
+
+/* Tranche de couverture rigide en dessous */
+.open-book-spread::before {
+  content: "";
+  position: absolute;
+  inset: -6px -14px;
+  background: linear-gradient(135deg, #221c15 0%, #12141a 50%, #241d15 100%);
+  border-radius: 8px;
+  z-index: -2;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+}
+
+/* ==========================================================================
+   PETITE CROIX ROUGE DE FERMETURE (SANS CARTE NI CADRE)
+   ========================================================================== */
+
+.book-close-red-cross {
+  position: absolute;
+  top: 0.8rem;
+  right: 1.1rem;
+  color: #ef4444;
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 50;
+  line-height: 1;
+  padding: 0.2rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.book-close-red-cross:hover {
+  transform: scale(1.25);
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   LE RUBAN ROUGE MARQUE-PAGE AU MILIEU DU LIVRE
+   ========================================================================== */
+
+.red-ribbon-bookmark {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 19px;
+  height: calc(100% + 22px);
+  background: linear-gradient(
+    90deg,
+    #991b1b 0%,
+    #dc2626 35%,
+    #ef4444 55%,
+    #b91c1c 100%
+  );
+  box-shadow: 
+    2px 4px 10px rgba(0, 0, 0, 0.35),
+    -1px 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.red-ribbon-bookmark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.08) 3px,
+    rgba(255, 255, 255, 0.08) 4px
+  );
+}
+
+.ribbon-tail {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: #08090d;
+  clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+}
+
+/* Pliure centrale réaliste du livre */
+.book-center-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 65px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 0%,
+    rgba(0, 0, 0, 0.15) 42%,
+    rgba(0, 0, 0, 0.24) 50%,
+    rgba(0, 0, 0, 0.15) 58%,
+    rgba(0, 0, 0, 0.06) 100%
+  );
+  pointer-events: none;
+  z-index: 15;
+}
+
+/* ==========================================================================
+   LES DEUX PAGES (BLANC CASSÉ CHAUD / IVOIRE VÉLIN NOBLE)
+   ========================================================================== */
+
+.book-page {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 2.5rem 1rem 2.5rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.left-page {
+  background: linear-gradient(90deg, #f5f1e7 0%, #faf8f2 85%, #eee7d8 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  padding-right: 3rem;
+}
+
+.right-page {
+  background: linear-gradient(270deg, #f5f1e7 0%, #faf8f2 85%, #eee7d8 100%);
+  padding-left: 3rem;
+}
+
+.page-inner-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.page-fade-in {
+  animation: pageFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* En-tête de page */
+.page-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.left-page .page-header-row {
+  justify-content: flex-end;
+}
+
+.right-page .page-header-row {
+  justify-content: flex-start;
+}
+
+.page-corner-number {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  font-style: italic;
+  font-weight: 700;
+  color: #78716c;
+}
+
+/* Badges : Bandes dessinées & Vidéo avec IA */
+.page-category-tag {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #713f12;
+  background: #fef08a;
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
+}
+
+.page-category-tag.video-tag {
+  color: #0369a1;
+  background: #e0f2fe;
+}
+
+/* Bouton retour quand on est sur la page tournée */
+.btn-back-to-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f5f5f4;
+  border: 1px solid #d6d3d1;
+  color: #1c1917;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back-to-summary:hover {
+  background: #e7e5e4;
+  border-color: #a8a29e;
+  transform: translateX(-2px);
+}
+
+/* ==========================================================================
+   STICKER DU LIVRE (100% DÉTOURÉ SANS AUCUN ARTEFACT)
+   ========================================================================== */
+
+.book-sticker-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.1rem 0 0.45rem 0;
+  height: 140px; /* Hauteur strictement identique sur les 2 pages */
+}
+
+.book-sticker-img {
+  max-height: 135px;
+  width: auto;
+  object-fit: contain;
+  /* Ombre portée découpée propre */
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25))
+          drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15));
+  transition: transform 0.25s ease;
+}
+
+.book-sticker-img:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+/* Badge de prix & best-seller (taille discrète et affinée) */
+.book-price-badge {
+  position: absolute;
+  bottom: 0px;
+  right: 18%;
+  background: #11131a;
+  color: #fff;
+  padding: 0.16rem 0.42rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  border: 1px solid rgba(229, 179, 88, 0.45);
+}
+
+.price-tag {
+  font-family: var(--font-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f7d786;
+}
+
+.badge-highlight {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #cbd5e1;
+}
+
+.video-price {
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.video-price .price-tag {
+  color: #7dd3fc;
+}
+
+/* Version débloquée : petite pilule discrète et élégante */
+.book-price-badge.is-unlocked {
+  padding: 0.15rem 0.45rem;
+  border-radius: 12px;
+  flex-direction: row;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.book-price-badge.is-unlocked .price-tag {
+  font-size: 0.68rem;
+  color: #10b981;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.book-price-badge.video-price.is-unlocked {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.book-price-badge.video-price.is-unlocked .price-tag {
+  color: #10b981;
+}
+
+/* ==========================================================================
+   CORPS DE PAGE : TITRE, ACCROCHE, 4 PILIERS & BONUS CALIBRÉS
+   ========================================================================== */
+
+.book-page-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.formation-book-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1c1917;
+  margin-bottom: 0.15rem;
+}
+
+.formation-author-line {
+  font-size: 0.74rem;
+  font-style: italic;
+  color: #78716c;
+  margin-bottom: 0.35rem;
+}
+
+.formation-lead-desc {
+  font-size: 0.8rem;
+  line-height: 1.42;
+  color: #44403c;
+  margin-bottom: 0.45rem;
+  min-height: 38px; /* Calibrage strict de l'accroche */
+}
+
+/* Boîte des 4 piliers de la méthode */
+.formation-highlights-box {
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 5px;
+  padding: 0.45rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.45rem;
+}
+
+.highlight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.73rem;
+  line-height: 1.32;
+  color: #292524;
+}
+
+.highlight-icon {
+  color: #b45309;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.right-page .highlight-icon {
+  color: #0284c7;
+}
+
+.highlight-item strong {
+  color: #0c0a09;
+}
+
+/* Mention Super Bonus demandée */
+.bonus-mini-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fefce8;
+  border: 1px dashed #facc15;
+  border-radius: 4px;
+  padding: 0.26rem 0.55rem;
+  font-size: 0.71rem;
+  color: #854d0e;
+  margin-bottom: 0.35rem;
+}
+
+.bonus-icon {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+/* Note discrète insérée en bas du Super Bonus */
+.formation-discrete-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  background: rgba(254, 243, 199, 0.45);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  border-radius: 4px;
+  padding: 0.26rem 0.55rem;
+  font-size: 0.69rem;
+  line-height: 1.35;
+  color: #44403c;
+  margin-bottom: 0.45rem;
+}
+
+.discrete-note-icon {
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.formation-discrete-note em {
+  font-weight: 700;
+  color: #92400e;
+  font-style: normal;
+}
+
+.services-link-inline-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 800;
+  color: #b45309;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  display: inline;
+  transition: color 0.15s ease;
+}
+
+.services-link-inline-btn:hover {
+  color: #78350f;
+}
+
+/* ==========================================================================
+   VUE 2 : PAGE TOURNÉE (SOMMAIRE DES MODULES DÉTAILLÉS)
+   ========================================================================== */
+
+.turned-page-header {
+  margin-bottom: 0.55rem;
+}
+
+.turned-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1c1917;
+  margin-bottom: 0.15rem;
+}
+
+.turned-subtitle {
+  font-size: 0.75rem;
+  color: #78716c;
+}
+
+.turned-modules-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+.turned-module-card {
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  border-radius: 5px;
+  padding: 0.45rem 0.7rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.module-tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #b45309;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.1rem;
+}
+
+.turned-module-card h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1c1917;
+  margin-bottom: 0.12rem;
+}
+
+.turned-module-card p {
+  font-size: 0.72rem;
+  line-height: 1.34;
+  color: #57534e;
+}
+
+.turned-module-card.bonus-card {
+  background: #fefce8;
+  border-color: #facc15;
+}
+
+.turned-module-card.bonus-card h4 {
+  color: #854d0e;
+}
+
+/* ==========================================================================
+   BOUTONS DÉBLOQUER RIGOUREUSEMENT ALIGNÉS SUR LA MÊME LIGNE
+   ========================================================================== */
+
+.page-bottom-actions {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+.btn-unlock-formation-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.52rem 0.95rem;
+  background: linear-gradient(135deg, #1c1917 0%, #292524 100%);
+  color: #fceec5;
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(229, 179, 88, 0.5);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  transition: all 0.2s ease;
+}
+
+.btn-unlock-formation-card:hover {
+  background: linear-gradient(135deg, #0c0a09 0%, #1c1917 100%);
+  border-color: #f7d786;
+  transform: translateY(-1px);
+}
+
+.video-card-btn {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #bae6fd;
+}
+
+.video-card-btn:hover {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+  border-color: #38bdf8;
+}
+
+/* Bouton pour une formation déjà débloquée */
+.btn-unlock-formation-card.book-unlocked-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
+}
+
+.btn-unlock-formation-card.book-unlocked-btn:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border-color: #6ee7b7 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5) !important;
+}
+
+.unlocked-icon-check {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (MOBILE & TABLETTE)
+   ========================================================================== */
+
+.book-mobile-tab-switch {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .formations-book-viewport {
+    top: 4.2rem;
+    padding: 0.4rem 0.6rem 0.6rem 0.6rem;
+  }
+
+  .book-mobile-tab-switch {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    z-index: 30;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .mobile-tab-btn {
+    flex: 1;
+    padding: 0.4rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .mobile-tab-btn.active {
+    background: #fbf9f4;
+    color: #1c1917;
+    border-color: #fbf9f4;
+  }
+
+  .book-multipage-wrapper {
+    width: 100%;
+    height: 94%;
+  }
+
+  .book-pages-stack-edge {
+    display: none;
+  }
+
+  .open-book-spread.ivory-book-theme {
+    grid-template-columns: 1fr;
+    height: 100%;
+    max-width: 480px;
+  }
+
+  .red-ribbon-bookmark {
+    display: none;
+  }
+
+  .book-center-spine {
+    display: none;
+  }
+
+  .book-page {
+    padding: 1.1rem 1rem;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .mobile-visible {
+    display: flex !important;
+  }
+
+  .book-sticker-container {
+    height: 130px;
+  }
+
+  .book-sticker-img {
+    max-height: 125px;
+  }
+
+  .formation-book-title {
+    font-size: 1.1rem;
+  }
+}

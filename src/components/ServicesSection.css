@@ -1,0 +1,115 @@
+.services-section {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 3.5rem;
+}
+
+.services-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.services-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.services-desc {
+  max-width: 480px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+/* Liste sobre sans carte */
+.services-clean-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.service-clean-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.service-clean-line:last-child {
+  border-bottom: none;
+}
+
+.service-clean-line:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.service-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex-grow: 1;
+}
+
+.service-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.service-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.service-mini-tag {
+  font-size: 0.64rem;
+  color: var(--accent-gold);
+  background: rgba(234, 179, 8, 0.08);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs);
+  font-weight: 600;
+}
+
+.service-note {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.service-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #34d399;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.service-clean-line:hover .service-action-link {
+  transform: translateX(3px);
+}
+
+@media (max-width: 600px) {
+  .service-clean-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .service-action-link {
+    align-self: flex-end;
+  }
+}

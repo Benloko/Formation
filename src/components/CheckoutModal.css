@@ -1,0 +1,1491 @@
+/* ==========================================================================
+   MODALE D'ACTIVATION ÉPURÉE MR BEN
+   AUTHENTIFICATION GOOGLE NAVIGATEUR • PAIEMENT MINIMALISTE • LIVRE 3D DÉBLOQUÉ
+   ========================================================================== */
+
+.flow-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(4, 6, 9, 0.88);
+  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  animation: flowOverlayFadeIn 0.22s ease-out forwards;
+}
+
+@keyframes flowOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Conteneur principal raffiné et compact */
+.flow-modal-container {
+  position: relative;
+  width: 92vw;
+  max-width: 440px;
+  background: #0f1118;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 14px;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(234, 179, 8, 0.06);
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flow-modal-container.showcase-mode {
+  max-width: 480px;
+  background: radial-gradient(circle at center, #151824 0%, #0a0c12 100%);
+  border-color: rgba(234, 179, 8, 0.45);
+}
+
+/* Petite croix rouge discrète et élégante */
+.flow-close-red-cross {
+  position: absolute;
+  top: 0.85rem;
+  right: 1rem;
+  color: #ef4444;
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 20;
+  line-height: 1;
+  padding: 0.2rem;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.flow-close-red-cross:hover {
+  transform: scale(1.2);
+  opacity: 0.85;
+}
+
+/* Contenu aéré et sans surcharge */
+.flow-card-content {
+  padding: 1.8rem 1.8rem 1.5rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-fade-in {
+  animation: flowFadeIn 0.24s ease-out forwards;
+}
+
+@keyframes flowFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* En-tête épurée (SANS bouton ou badge 'Accès Sécurisé') */
+.clean-top-meta {
+  text-align: center;
+  margin-bottom: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.clean-modal-title {
+  font-family: var(--font-serif, serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.clean-price-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 0.1rem;
+}
+
+.clean-price-pill strong {
+  color: #f59e0b;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   BANNIÈRE DE NOTIFICATION RÉALISTE GMAIL (PUSH AU HAUT DE L'ÉCRAN)
+   ========================================================================== */
+
+.gmail-push-notification-banner {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 460px;
+  background: #1e293b;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  z-index: 10000;
+  animation: slideDownNotification 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDownNotification {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.gmail-push-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gmail-mail-icon {
+  color: #ea4335;
+}
+
+.gmail-push-content {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.gmail-push-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.15rem;
+}
+
+.gmail-app-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ea4335;
+}
+
+.gmail-btn-dismiss {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+
+.gmail-btn-dismiss:hover {
+  color: #ffffff;
+}
+
+.gmail-push-sender {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gmail-push-subject {
+  font-size: 0.82rem;
+  color: #ffffff;
+  margin: 0.1rem 0;
+}
+
+.gmail-push-subject strong {
+  color: #f59e0b;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.gmail-push-snippet {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.gmail-btn-autofill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: #ea4335;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.gmail-btn-autofill:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   EN-TÊTE DE CHOIX DU COMPTE & ICÔNE SÉCURITÉ
+   ========================================================================== */
+
+.account-chooser-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gmail-shield-icon-wrap {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(234, 179, 8, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.shield-icon {
+  color: #f59e0b;
+}
+
+.chooser-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.chooser-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   LISTE DES COMPTES GMAIL VÉRIFIÉS
+   ========================================================================== */
+
+.verified-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.verified-account-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.verified-account-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+}
+
+.verified-avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-color-0 { background: #2563eb; }
+.avatar-color-1 { background: #059669; }
+.avatar-color-2 { background: #d97706; }
+.avatar-color-3 { background: #7c3aed; }
+
+.verified-account-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.verified-account-email {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.verified-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  color: #10b981;
+  font-weight: 500;
+  margin-top: 0.1rem;
+}
+
+.btn-delete-account-row {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-delete-account-row:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.account-row-arrow {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.verified-account-row:hover .account-row-arrow {
+  transform: translateX(2px);
+  color: #f59e0b;
+}
+
+.account-chooser-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-add-another-account {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-another-account:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.btn-reset-everything-link {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.7rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  transition: color 0.2s ease;
+}
+
+.btn-reset-everything-link:hover {
+  color: #f87171;
+}
+
+/* ==========================================================================
+   FORMULAIRE D'AJOUT DE COMPTE (AVEC CONTRÔLE STRICT)
+   ========================================================================== */
+
+.google-official-btn-wrapper {
+  width: 100%;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.btn-google-sign-in {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #dadce0;
+  padding: 0.8rem 1.15rem;
+  border-radius: 12px;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+.btn-google-sign-in:hover {
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-color: #cbd5e1;
+}
+
+.google-official-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.google-btn-text-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  line-height: 1.25;
+}
+
+.google-btn-main {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.google-btn-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 0.1rem;
+}
+
+.google-btn-chevron {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-google-sign-in:hover .google-btn-chevron {
+  transform: translateX(3px);
+  color: #3b82f6;
+}
+
+.auth-separator-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0.2rem 0 1rem 0;
+}
+
+.auth-sep-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.auth-separator-row span {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: lowercase;
+}
+
+.add-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 0.8rem;
+}
+
+.email-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.email-input-field-box {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.email-input-field-box:focus-within {
+  border-color: #f59e0b;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.field-mail-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.email-clean-text-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.email-clean-text-input::placeholder {
+  color: #64748b;
+}
+
+.field-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #ef4444;
+  font-size: 0.74rem;
+  text-align: left;
+  padding-left: 0.25rem;
+}
+
+.btn-send-code-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.78rem 1.2rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0c0a09;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-send-code-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-1px);
+}
+
+.btn-send-code-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-back-to-accounts {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.4rem 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.btn-back-to-accounts:hover {
+  opacity: 0.85;
+}
+
+/* Séparateur élégant */
+.auth-or-separator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.auth-or-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.auth-or-text {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: lowercase;
+}
+
+/* Formulaire direct par e-mail */
+.direct-email-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 0.6rem;
+}
+
+.direct-email-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.direct-email-input-wrap:focus-within {
+  border-color: #f59e0b;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.direct-email-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.direct-email-field {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-family: inherit;
+}
+
+.direct-email-field::placeholder {
+  color: #64748b;
+}
+
+.btn-direct-email-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-direct-email-submit:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fbbf24;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   SAISIE DU CODE OTP À 6 CHIFFRES
+   ========================================================================== */
+
+.otp-verification-header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.otp-mail-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+}
+
+.otp-badge-icon {
+  color: #ea4335;
+}
+
+.pending-email-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  color: #f1f5f9;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.btn-change-pending-email {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.7rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.otp-inputs-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.otp-digit-box {
+  width: 44px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: monospace, sans-serif;
+}
+
+.otp-digit-box:focus {
+  border-color: #f59e0b;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+  transform: translateY(-2px);
+}
+
+.otp-digit-box.filled {
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.otp-digit-box.has-error {
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+.otp-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  color: #f87171;
+  font-size: 0.76rem;
+  font-weight: 500;
+  margin-bottom: 0.85rem;
+  text-align: center;
+}
+
+.btn-validate-otp-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.78rem 1.2rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+  margin-bottom: 0.85rem;
+}
+
+.btn-validate-otp-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+}
+
+.btn-validate-otp-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resend-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.resend-countdown-text {
+  color: #94a3b8;
+}
+
+.resend-countdown-text strong {
+  color: #f59e0b;
+}
+
+.btn-resend-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.25rem 0.5rem;
+}
+
+.btn-resend-active:hover {
+  opacity: 0.85;
+}
+
+.pill-verified-tag {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   ÉTAPE 2 : PAIEMENT ÉPURÉ (SANS GROSSES CARTES)
+   ========================================================================== */
+
+.connected-google-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  margin-bottom: 0.35rem;
+}
+
+.user-email-text {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.btn-switch-account {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.72rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  margin-left: 0.2rem;
+}
+
+/* Encadré d'information passerelle FedaPay épuré */
+.gateway-summary-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem;
+  margin-bottom: 1.1rem;
+  text-align: center;
+}
+
+.gateway-networks-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.gateway-net-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fbbf24;
+  letter-spacing: 0.2px;
+}
+
+.gateway-summary-desc {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* Bouton de confirmation épuré */
+.btn-confirm-payment-clean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1.15rem;
+  padding: 0.78rem 1.2rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0c0a09;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-confirm-payment-clean:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.45);
+}
+
+/* ==========================================================================
+   VÉRIFICATION VISUELLE EN COURS
+   ========================================================================== */
+
+.verifying-box {
+  align-items: center;
+  text-align: center;
+  padding: 2.2rem 1.5rem;
+}
+
+.verifying-spinner-wrap {
+  margin-bottom: 1rem;
+}
+
+.verifying-spinner {
+  color: #f59e0b;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.verifying-title {
+  font-family: var(--font-serif, serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.3rem 0;
+}
+
+.verifying-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 1.2rem;
+  max-width: 320px;
+}
+
+.verifying-desc strong {
+  color: #38bdf8;
+}
+
+.verifying-progress-bar {
+  width: 100%;
+  max-width: 300px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.6rem;
+}
+
+.verifying-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+  border-radius: 5px;
+  transition: width 0.4s ease-out;
+}
+
+.verifying-status-text {
+  font-size: 0.74rem;
+  color: #f59e0b;
+  font-style: italic;
+}
+
+/* ==========================================================================
+   ÉTAPE 3 : LE GRAND LIVRE DÉBLOQUÉ EN MAJESTÉ (DEMANDE SPÉCIFIQUE AUDIO)
+   ========================================================================== */
+
+.flow-showcase-content {
+  padding: 2rem 1.8rem 1.8rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.unlocked-golden-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  padding: 0.28rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fef08a;
+  margin-bottom: 0.4rem;
+}
+
+.badge-sparkle {
+  color: #fbbf24;
+}
+
+.showcase-trust-title {
+  font-family: var(--font-serif, serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fbe3a1;
+  margin: 0.45rem 0 0.15rem 0;
+  letter-spacing: 0.02em;
+}
+
+.showcase-title {
+  font-family: var(--font-serif, serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0.15rem 0 0.8rem 0;
+  max-width: 380px;
+  line-height: 1.25;
+  opacity: 0.95;
+}
+
+/* Le grand livre 3D seul, majestueux sans fond parasite */
+.showcase-book-3d-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.2rem 0 1.2rem 0;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.showcase-book-3d-wrapper:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+.book-3d-glow {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+  filter: blur(25px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.showcase-book-3d-img {
+  position: relative;
+  max-height: 250px;
+  width: auto;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.85))
+          drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.showcase-book-hover-pill {
+  position: absolute;
+  bottom: 10px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fef08a;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.24rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+
+.showcase-book-3d-wrapper:hover .showcase-book-hover-pill {
+  opacity: 1;
+  transform: scale(1.04);
+  background: #f59e0b;
+  color: #0c0a09;
+}
+
+/* Petit bouton épuré pour ouvrir la formation (pas gros !) */
+.showcase-actions-group {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-start-training-clean {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0c0a09;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 800;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-start-training-clean:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.5);
+}
+.fedapay-security-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+  font-size: 0.73rem;
+  color: #a8a29e;
+  font-weight: 500;
+  width: 100%;
+}
+
+.fedapay-security-pill svg {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+/* Bouton épuré : J'ai un code d'accès */
+.has-access-code-wrapper {
+  margin-top: 0.95rem;
+  text-align: center;
+}
+
+.btn-has-code-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: none;
+  border: none;
+  color: #38bdf8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btn-has-code-link:hover {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* Carte de saisie du code d'accès */
+.redeem-code-card {
+  margin-top: 1rem;
+  padding: 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.redeem-code-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.redeem-key-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.redeem-text-col {
+  text-align: left;
+}
+
+.redeem-title {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.redeem-desc {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.redeem-desc strong {
+  color: #fbbf24;
+}
+
+.redeem-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.redeem-input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: monospace, inherit;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-align: center;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.redeem-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.redeem-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.btn-redeem-back {
+  padding: 0.68rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-redeem-back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.btn-redeem-validate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.68rem 1rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  border-radius: 8px;
+  color: #0c0a09;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-redeem-validate:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-1px);
+}
+
+.btn-redeem-validate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Champ de saisie Mobile Money épuré et moderne */
+.flow-phone-field-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+  text-align: left;
+}
+
+.flow-phone-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e7e5e4;
+}
+
+.flow-phone-label svg {
+  color: #f59e0b;
+}
+
+.flow-phone-input-row {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.flow-country-select {
+  padding: 0.55rem 0.65rem;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  color: #f5f5f4;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.flow-country-select:focus {
+  border-color: #f59e0b;
+}
+
+.flow-phone-number-input {
+  flex: 1;
+  padding: 0.55rem 0.85rem;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  color: #f5f5f4;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flow-phone-number-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.flow-phone-hint {
+  font-size: 0.71rem;
+  color: #a8a29e;
+  line-height: 1.3;
+}
+
+/* ==========================================================================
+   RESPONSIVE (MOBILE)
+   ========================================================================== */
+
+@media (max-width: 520px) {
+  .flow-card-content,
+  .flow-showcase-content {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .showcase-book-3d-img {
+    max-height: 210px;
+  }
+
+  .clean-modal-title {
+    font-size: 1.15rem;
+  }
+
+  .btn-start-training-clean {
+    width: 100%;
+  }
+}

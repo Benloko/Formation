@@ -1,0 +1,62 @@
+/* ==========================================================================
+   STYLE ÉDITORIAL MR BEN - LUXE, MINIMALISTE & PLEIN ÉCRAN
+   ========================================================================== */
+
+:root {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Playfair Display', Georgia, serif;
+  --font-cool-slant: 'Playfair Display', serif;
+  --font-heading: 'Playfair Display', serif;
+  --font-stylish: 'Playfair Display', serif;
+
+  --bg-deep: #07080c;
+  --bg-surface: #0f1118;
+
+  --accent-gold: #e5b358;
+  --accent-gold-light: #fbe3a1;
+  --accent-gold-dark: #b8862d;
+
+  --text-primary: #f8fafc;
+  --text-muted: #8892a4;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Aucune page à scroller en bas, cadré sur la page d'accueil */
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Playfair Display', Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Lueur dorée douce et feutrée au centre */
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 750px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(229, 179, 88, 0.09) 0%, rgba(184, 134, 45, 0.03) 45%, transparent 70%);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+}

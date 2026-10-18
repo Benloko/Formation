@@ -1,0 +1,1048 @@
+/* ==========================================================================
+   BOOK READER - INTERFACE DE LECTURE PROFESSIONNELLE, SOBRE & ÉPURÉE
+   ========================================================================== */
+
+.book-reader-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* ==========================================================================
+   THEMES : PAPIER BLANC SOBRE (DÉFAUT) VS SOMBRE SOBRE
+   ========================================================================== */
+
+/* 1. Mode Papier Blanc Sobre (Doux pour les yeux, papier d'édition noble) */
+.book-reader-container.theme-paper {
+  background-color: #f4f3ef;
+  color: #1c1917;
+}
+
+.book-reader-container.theme-paper .reader-navbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e7e5e4;
+}
+
+.book-reader-container.theme-paper .reader-curriculum-sidebar {
+  background: #faf9f6;
+  border-right: 1px solid #e7e5e4;
+}
+
+.book-reader-container.theme-paper .reader-paper-page {
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.book-reader-container.theme-paper .article-main-title {
+  color: #111827;
+}
+
+.book-reader-container.theme-paper .article-chapter-breadcrumb {
+  color: #78716c;
+}
+
+.book-reader-container.theme-paper .art-h2 {
+  color: #1f2937;
+  border-bottom: 1px solid #f0eee9;
+}
+
+.book-reader-container.theme-paper .art-h3 {
+  color: #374151;
+}
+
+.book-reader-container.theme-paper .art-p,
+.book-reader-container.theme-paper .art-ul li {
+  color: #334155;
+}
+
+.book-reader-container.theme-paper .art-p strong,
+.book-reader-container.theme-paper .art-ul li strong {
+  color: #0f172a;
+}
+
+.book-reader-container.theme-paper .art-tip-callout {
+  background: #fbfbfa;
+  border-left: 3px solid #d97706;
+  color: #44403c;
+}
+
+.book-reader-container.theme-paper .art-checklist-card {
+  background: #fbfbfa;
+  border: 1px solid #e7e5e4;
+}
+
+.book-reader-container.theme-paper .curriculum-lesson-row {
+  color: #57534e;
+}
+
+.book-reader-container.theme-paper .curriculum-lesson-row:hover {
+  background: #f0eee9;
+  color: #1c1917;
+}
+
+.book-reader-container.theme-paper .curriculum-lesson-row.active-lesson {
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* 2. Mode Sombre Sobre (Anthracite mat, sans reflets bleus criards) */
+.book-reader-container.theme-dark {
+  background-color: #0f1115;
+  color: #e2e8f0;
+}
+
+.book-reader-container.theme-dark .reader-navbar {
+  background: #16181f;
+  border-bottom: 1px solid #272a34;
+}
+
+.book-reader-container.theme-dark .reader-curriculum-sidebar {
+  background: #13151b;
+  border-right: 1px solid #272a34;
+}
+
+.book-reader-container.theme-dark .reader-paper-page {
+  background: #181a22;
+  border: 1px solid #272a34;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.book-reader-container.theme-dark .article-main-title {
+  color: #ffffff;
+}
+
+.book-reader-container.theme-dark .article-chapter-breadcrumb {
+  color: #94a3b8;
+}
+
+.book-reader-container.theme-dark .art-h2 {
+  color: #f1f5f9;
+  border-bottom: 1px solid #272a34;
+}
+
+.book-reader-container.theme-dark .art-h3 {
+  color: #e2e8f0;
+}
+
+.book-reader-container.theme-dark .art-p,
+.book-reader-container.theme-dark .art-ul li {
+  color: #cbd5e1;
+}
+
+.book-reader-container.theme-dark .art-p strong,
+.book-reader-container.theme-dark .art-ul li strong {
+  color: #fbe3a1;
+}
+
+.book-reader-container.theme-dark .art-tip-callout {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid #f59e0b;
+  color: #e2e8f0;
+}
+
+.book-reader-container.theme-dark .art-checklist-card {
+  background: #14161c;
+  border: 1px solid #272a34;
+}
+
+.book-reader-container.theme-dark .curriculum-lesson-row {
+  color: #94a3b8;
+}
+
+.book-reader-container.theme-dark .curriculum-lesson-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.book-reader-container.theme-dark .curriculum-lesson-row.active-lesson {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbe3a1;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   1. BARRE DE NAVIGATION SUPÉRIEURE
+   ========================================================================== */
+
+.reader-navbar {
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 10;
+  gap: 1rem;
+}
+
+.reader-nav-left,
+.reader-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reader-back-action,
+.reader-toggle-sidebar-btn,
+.reader-theme-toggle {
+  background: transparent;
+  border: 1px solid rgba(140, 140, 140, 0.25);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.reader-back-action:hover,
+.reader-toggle-sidebar-btn:hover,
+.reader-theme-toggle:hover {
+  border-color: rgba(140, 140, 140, 0.5);
+  background: rgba(140, 140, 140, 0.08);
+}
+
+.reader-nav-center {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.reader-book-main-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.reader-progress-tag {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   2. ESPACE DE TRAVAIL (SIDEBAR + MAIN STAGE)
+   ========================================================================== */
+
+.reader-workspace {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 54px);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Volet des Chapitres (Sidebar) */
+.reader-curriculum-sidebar {
+  width: 320px;
+  height: 100%;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, width 0.25s ease, opacity 0.2s ease;
+}
+
+.reader-curriculum-sidebar.closed {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.curriculum-sidebar-header {
+  padding: 1rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(140, 140, 140, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.curriculum-chapters-list {
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.curriculum-chapter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chapter-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.chapter-num-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(140, 140, 140, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.chapter-lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-left: 0.5rem;
+}
+
+.curriculum-lesson-row {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.lesson-row-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lesson-lock-icon {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   3. ZONE DE LECTURE DU LIVRE (MAIN STAGE)
+   ========================================================================== */
+
+.reader-main-stage {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2.5rem 2rem 5rem 2rem;
+  box-sizing: border-box;
+  display: block;
+}
+
+.reader-paper-page {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  border-radius: 12px;
+  padding: 3rem 3.5rem;
+  box-sizing: border-box;
+  display: block;
+  min-height: auto;
+}
+
+/* En-tête de l'article */
+.article-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(140, 140, 140, 0.15);
+}
+
+.article-chapter-breadcrumb {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+
+.article-main-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* Contenu textuel soigné */
+.article-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.art-h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 1rem 0 0.2rem 0;
+  padding-bottom: 0.3rem;
+}
+
+.art-h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin: 0.6rem 0 0.1rem 0;
+}
+
+.art-p {
+  margin: 0;
+}
+
+.art-ul,
+.art-ol {
+  margin: 0.35rem 0 0.75rem 1.4rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.art-ul li,
+.art-ol li {
+  line-height: 1.65;
+}
+
+.art-hr-divider {
+  border: none;
+  border-top: 1px solid rgba(140, 140, 140, 0.22);
+  margin: 2.25rem 0 1.75rem 0;
+}
+
+.art-figure {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.art-img {
+  max-width: 100%;
+  width: auto;
+  max-height: 520px;
+  object-fit: contain;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 22px rgba(15, 23, 42, 0.08);
+  display: block;
+  margin: 0 auto;
+}
+
+.art-figcaption {
+  font-size: 0.82rem;
+  color: #64748b;
+  text-align: center;
+  font-style: italic;
+  margin-top: 0.35rem;
+  max-width: 480px;
+}
+
+/* Carte blanche de prompt avec bouton de copie élégant */
+.art-code-block {
+  margin: 1.5rem 0;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.art-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.art-code-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: 0.01em;
+}
+
+.art-code-sparkle-icon {
+  color: #d97706;
+}
+
+.art-copy-code-btn {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #1e293b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.art-copy-code-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.copy-icon-double-square {
+  stroke-width: 2px;
+  color: #64748b;
+}
+
+.copy-icon-success {
+  color: #10b981;
+}
+
+.art-code-block pre {
+  margin: 0;
+  padding: 1.15rem 1.35rem;
+  background: #ffffff;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #0f172a;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+/* En mode sombre */
+.book-reader-container.theme-dark .art-code-block {
+  background: #171822;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+
+.book-reader-container.theme-dark .art-code-header {
+  background: #202230;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.book-reader-container.theme-dark .art-code-lang {
+  color: #f1f5f9;
+}
+
+.book-reader-container.theme-dark .art-copy-code-btn {
+  background: #282b3d;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+}
+
+.book-reader-container.theme-dark .art-copy-code-btn:hover {
+  background: #33374e;
+  color: #ffffff;
+}
+
+.book-reader-container.theme-dark .art-code-block pre {
+  background: #171822;
+  color: #e2e8f0;
+}
+
+/* Galerie de captures d'écran pratiques */
+.art-screenshots-gallery {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: rgba(140, 140, 140, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(140, 140, 140, 0.15);
+}
+
+.art-gallery-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.85rem;
+  color: #d97706;
+}
+
+.art-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.art-screenshot-card {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.art-gallery-img {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid rgba(140, 140, 140, 0.2);
+  background: #000;
+  display: block;
+}
+
+.art-screenshot-caption {
+  font-size: 0.78rem;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* Encadré d'exemple sobre */
+.art-example-card {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  background: rgba(140, 140, 140, 0.06);
+  border-left: 3px solid #d97706;
+  border-radius: 0 6px 6px 0;
+}
+
+.art-example-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #d97706;
+  margin-bottom: 0.4rem;
+}
+
+.art-example-text {
+  margin: 0;
+  font-style: italic;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* Checklist sobre */
+.art-checklist-card {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+}
+
+.art-checklist-title {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  opacity: 0.85;
+}
+
+.art-checklist-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.art-checklist-items li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.art-check-icon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Astuce de pro sobre */
+.art-tip-callout {
+  margin: 1.25rem 0;
+  padding: 0.85rem 1.15rem;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+/* Carte de promotion vers la formation Vidéos IA */
+.art-promo-card {
+  margin: 2.25rem 0 1.5rem 0;
+  padding: 1.5rem 1.6rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.07) 0%, rgba(217, 119, 6, 0.02) 100%);
+  border: 1.5px solid rgba(217, 119, 6, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.book-reader-container.theme-dark .art-promo-card {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.12) 0%, rgba(21, 23, 30, 0.95) 100%);
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.art-promo-header {
+  margin-bottom: 0.75rem;
+}
+
+.art-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  background: rgba(217, 119, 6, 0.15);
+  color: #b45309;
+}
+
+.book-reader-container.theme-dark .art-promo-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.art-promo-sparkle {
+  color: #d97706;
+}
+
+.book-reader-container.theme-dark .art-promo-sparkle {
+  color: #fbbf24;
+}
+
+.art-promo-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: inherit;
+}
+
+.art-promo-subtitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin: 0 0 0.75rem 0;
+  color: #b45309;
+}
+
+.book-reader-container.theme-dark .art-promo-subtitle {
+  color: #fbbf24;
+}
+
+.art-promo-desc {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  opacity: 0.88;
+  margin: 0 0 1.25rem 0;
+}
+
+.art-promo-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.art-promo-price-tag {
+  display: flex;
+  flex-direction: column;
+}
+
+.art-promo-price-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #b45309;
+}
+
+.book-reader-container.theme-dark .art-promo-price-val {
+  color: #f59e0b;
+}
+
+.art-promo-price-lbl {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.art-promo-cta-btn {
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+}
+
+.art-promo-cta-btn:hover {
+  background: #b45309;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
+}
+
+/* Bouton épuré et compact de recommandation */
+.art-promo-btn-container {
+  margin: 1.25rem 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.art-promo-inline-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.72rem 1.4rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Cas 1 : Déjà débloqué -> Bouton JAUNE */
+.art-promo-inline-btn.btn-unlocked-yellow {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #1a1a1a;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.art-promo-inline-btn.btn-unlocked-yellow:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.48);
+}
+
+.book-reader-container.theme-dark .art-promo-inline-btn.btn-unlocked-yellow {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #181920;
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35);
+}
+
+.book-reader-container.theme-dark .art-promo-inline-btn.btn-unlocked-yellow:hover {
+  background: #fef08a;
+  color: #000000;
+  box-shadow: 0 6px 22px rgba(251, 191, 36, 0.55);
+}
+
+/* Cas 2 : Pas encore débloqué -> Bouton ROUGE */
+.art-promo-inline-btn.btn-locked-red {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.art-promo-inline-btn.btn-locked-red:hover {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.48);
+}
+
+.book-reader-container.theme-dark .art-promo-inline-btn.btn-locked-red {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+}
+
+.book-reader-container.theme-dark .art-promo-inline-btn.btn-locked-red:hover {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+/* Pied de page et pagination */
+.reader-page-bottom-nav {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(140, 140, 140, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nav-page-btn {
+  background: transparent;
+  border: 1px solid rgba(140, 140, 140, 0.3);
+  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.nav-page-btn:hover:not(:disabled) {
+  border-color: rgba(140, 140, 140, 0.6);
+  background: rgba(140, 140, 140, 0.08);
+}
+
+.nav-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.reader-footer-page-num {
+  font-size: 0.82rem;
+  opacity: 0.65;
+}
+
+/* Écran de verrouillage paywall sobre */
+.reader-locked-curtain {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.locked-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.reader-locked-curtain h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 0.6rem 0;
+}
+
+.reader-locked-curtain p {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  opacity: 0.8;
+  margin: 0 0 1.5rem 0;
+}
+
+.locked-actions-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.btn-unlock-gold {
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-unlock-gold:hover {
+  background: #b45309;
+}
+
+.btn-unlock-code {
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(140, 140, 140, 0.3);
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-unlock-code:hover {
+  background: rgba(140, 140, 140, 0.08);
+}
+
+/* Responsive Mobile */
+@media (max-width: 860px) {
+  .reader-workspace {
+    flex-direction: column;
+  }
+  
+  .reader-curriculum-sidebar {
+    width: 100%;
+    max-height: 250px;
+    border-right: none;
+    border-bottom: 1px solid rgba(140, 140, 140, 0.15);
+  }
+
+  .reader-main-stage {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .reader-paper-page {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .reader-navbar {
+    padding: 0 0.85rem;
+  }
+
+  .reader-book-main-title {
+    font-size: 0.85rem;
+  }
+}

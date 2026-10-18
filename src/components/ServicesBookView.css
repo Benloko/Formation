@@ -1,0 +1,590 @@
+/* ==========================================================================
+   PAGE SERVICES - GRANDE PAGE UNIQUE DU LIVRE D'ART MR BEN
+   PAPIER IVOIRE / BLANC CASSÉ NOBLE - POSITIONNÉ SOUS LE HEADER
+   TRANCHES MULTI-PAGES & CROIX ROUGE ÉPURÉE SANS CARTE
+   ========================================================================== */
+
+.services-book-viewport {
+  position: fixed;
+  top: 4.2rem; /* Sous le Header qui reste 100% visible */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  height: calc(100vh - 4.2rem);
+  z-index: 40;
+  background: radial-gradient(circle at center, rgba(18, 20, 28, 0.94) 0%, rgba(5, 6, 8, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 2.2rem 1.6rem 2.2rem;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: servicesViewportFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes servicesViewportFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   CONTENEUR DU LIVRE (UNE SEULE GRANDE PAGE CENTRALE ÉLÉGANTE)
+   ========================================================================== */
+
+.single-book-wrapper {
+  position: relative;
+  width: 88vw;
+  max-width: 1140px;
+  height: calc(100vh - 6.6rem);
+  max-height: 720px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* Épaisseur des feuillets sur les tranches gauche & droite */
+.single-book-stack-edge {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 15px;
+  background: repeating-linear-gradient(
+    90deg,
+    #e8e3d5,
+    #e8e3d5 1px,
+    #f2eee2 2px,
+    #ded7c5 3px
+  );
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+  z-index: 2;
+  border-radius: 4px 0 0 4px;
+}
+
+.single-book-stack-edge.left-stack {
+  left: -13px;
+  border-left: 2px solid #8c8273;
+  transform: skewY(-0.8deg);
+}
+
+.single-book-stack-edge.right-stack {
+  right: -13px;
+  border-right: 2px solid #8c8273;
+  border-radius: 0 4px 4px 0;
+  transform: skewY(0.8deg);
+}
+
+/* ==========================================================================
+   LA GRANDE PAGE DU LIVRE (IVOIRE / BLANC CASSÉ NOBLE D'ART)
+   ========================================================================== */
+
+.single-book-page-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fbf9f4;
+  border-radius: 6px;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    0 8px 24px rgba(0, 0, 0, 0.55),
+    inset 0 0 70px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bordure de couverture rigide en cuir sombre en dessous */
+.single-book-page-sheet::before {
+  content: "";
+  position: absolute;
+  inset: -6px -14px;
+  background: linear-gradient(135deg, #221c15 0%, #12141a 50%, #241d15 100%);
+  border-radius: 8px;
+  z-index: -2;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+}
+
+/* Effet d'ombrage de pliure de reliure sur le bord gauche */
+.single-book-page-sheet::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.03) 60%, transparent 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* ==========================================================================
+   PETITE CROIX ROUGE DE FERMETURE (SANS CARTE NI CADRE)
+   ========================================================================== */
+
+.book-close-red-cross {
+  position: absolute;
+  top: 0.8rem;
+  right: 1.1rem;
+  color: #ef4444;
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 50;
+  line-height: 1;
+  padding: 0.2rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.book-close-red-cross:hover {
+  transform: scale(1.25);
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   RUBAN ROUGE MARQUE-PAGE : COURT, DISCRET ET POSITIONNÉ EN MARGE
+   IL NE RECOUVRE AUCUN TEXTE NI TITRE
+   ========================================================================== */
+
+.single-page-red-ribbon {
+  position: absolute;
+  top: 0;
+  left: 1.2rem; /* Positionné dans la marge vide, aucun texte dessous */
+  width: 14px;
+  height: 36px; /* Taille raccourcie pour rester très propre et discret */
+  background: linear-gradient(
+    90deg,
+    #991b1b 0%,
+    #dc2626 35%,
+    #ef4444 55%,
+    #b91c1c 100%
+  );
+  box-shadow: 
+    1px 3px 8px rgba(0, 0, 0, 0.35);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.single-page-red-ribbon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.08) 3px,
+    rgba(255, 255, 255, 0.08) 4px
+  );
+}
+
+/* Encoche en pointe biseautée */
+.single-page-red-ribbon .ribbon-tail {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: #fbf9f4;
+  clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+}
+
+/* ==========================================================================
+   CONTENU DE LA PAGE DE LIVRE (PROPRE, LISIBLE, SANS SCROLLBAR INUTILE)
+   ========================================================================== */
+
+.single-page-scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.3rem 3.2rem 1.6rem 3.2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.single-page-scrollable-content::-webkit-scrollbar {
+  width: 5px;
+}
+.single-page-scrollable-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+}
+.single-page-scrollable-content::-webkit-scrollbar-thumb {
+  background: rgba(180, 160, 130, 0.4);
+  border-radius: 4px;
+}
+
+/* En-tête de la page de livre */
+.single-page-header {
+  margin-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(180, 150, 100, 0.2);
+  padding-bottom: 0.75rem;
+}
+
+.header-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.service-category-tag {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #854d0e;
+  background: #fef08a;
+  padding: 0.18rem 0.65rem;
+  border-radius: 4px;
+}
+
+.single-page-main-title {
+  font-family: var(--font-serif);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #1c1917;
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+
+.single-page-subtitle {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #57534e;
+  max-width: 820px;
+}
+
+/* ==========================================================================
+   GRILLE DES 5 SERVICES PROFESSIONNELS (HARMONIEUSE 3 + 2 SUR DESKTOP)
+   ========================================================================== */
+
+.services-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
+}
+
+.service-book-card:nth-child(1),
+.service-book-card:nth-child(2),
+.service-book-card:nth-child(3) {
+  grid-column: span 2;
+}
+
+.service-book-card:nth-child(4),
+.service-book-card:nth-child(5) {
+  grid-column: span 3;
+}
+
+.service-book-card {
+  background: #ffffff;
+  border: 1px solid rgba(180, 150, 100, 0.22);
+  border-radius: 8px;
+  padding: 0.95rem 1.15rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(35, 25, 10, 0.04);
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.service-book-card:hover {
+  background: #fffdfa;
+  border-color: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(180, 120, 40, 0.12);
+}
+
+.service-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.service-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #fef3c7;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.service-book-card:hover .service-icon-box {
+  background: #fde68a;
+  color: #92400e;
+  transform: scale(1.08);
+}
+
+.service-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.service-index-number {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #a8a29e;
+}
+
+.service-status-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.12rem 0.5rem;
+  border-radius: 3px;
+  background: #f5f5f4;
+  color: #44403c;
+  border: 1px solid #e7e5e4;
+  transition: all 0.2s ease;
+}
+
+.service-book-card:hover .service-status-pill {
+  background: #fef08a;
+  color: #713f12;
+  border-color: #fde047;
+}
+
+.service-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1c1917;
+  margin-bottom: 0.35rem;
+  line-height: 1.25;
+}
+
+.service-card-desc {
+  font-size: 0.81rem;
+  line-height: 1.45;
+  color: #57534e;
+  margin-bottom: 0.75rem;
+  flex: 1;
+}
+
+.service-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #b45309;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding-top: 0.45rem;
+  border-top: 1px dashed rgba(180, 150, 100, 0.2);
+  transition: color 0.2s ease;
+}
+
+.service-book-card:hover .service-card-footer {
+  color: #92400e;
+}
+
+.order-link-arrow {
+  transition: transform 0.2s ease;
+}
+
+.service-book-card:hover .order-link-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* ==========================================================================
+   ENCART BAS DE PAGE : PROJET SUR-MESURE & DOUBLE BOUTON COMPACT
+   ========================================================================== */
+
+.services-custom-box {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  background: #ffffff;
+  border: 1.5px solid rgba(217, 119, 6, 0.35);
+  border-radius: 8px;
+  padding: 0.8rem 1.25rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.custom-box-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.custom-box-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fef3c7;
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.custom-box-left strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #1c1917;
+  margin-bottom: 0.15rem;
+}
+
+.custom-box-left p {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #57534e;
+  margin: 0;
+}
+
+/* Groupe de mini boutons propres et pas trop gros */
+.custom-box-mini-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-mini-contact-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-mini-contact-action.whatsapp-mini {
+  background: #25d366;
+  color: #072913;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.28);
+}
+
+.btn-mini-contact-action.whatsapp-mini:hover {
+  background: #20ba59;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+}
+
+.btn-mini-contact-action.gmail-mini {
+  background: #ea4335;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(234, 67, 53, 0.25);
+}
+
+.btn-mini-contact-action.gmail-mini:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 67, 53, 0.38);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (TABLETTE & MOBILE)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .services-book-viewport {
+    top: 4.2rem;
+    padding: 0.4rem 1rem 1rem 1rem;
+  }
+
+  .single-book-wrapper {
+    width: 95vw;
+    height: calc(100vh - 5.5rem);
+  }
+
+  .single-page-scrollable-content {
+    padding: 1.2rem 1.5rem;
+  }
+
+  .services-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .service-book-card:nth-child(1),
+  .service-book-card:nth-child(2),
+  .service-book-card:nth-child(3),
+  .service-book-card:nth-child(4),
+  .service-book-card:nth-child(5) {
+    grid-column: auto;
+  }
+
+  .service-book-card:nth-child(5) {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .single-book-wrapper {
+    width: 100%;
+    height: 98%;
+  }
+
+  .single-book-stack-edge {
+    display: none;
+  }
+
+  .single-page-scrollable-content {
+    padding: 1rem 0.9rem;
+  }
+
+  .single-page-red-ribbon {
+    left: 0.8rem;
+    height: 28px;
+  }
+
+  .single-page-main-title {
+    font-size: 1.25rem;
+  }
+
+  .services-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .service-book-card:nth-child(5) {
+    grid-column: auto;
+  }
+
+  .services-custom-box {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 0.8rem;
+  }
+
+  .custom-box-left {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .custom-box-mini-actions {
+    justify-content: center;
+  }
+}

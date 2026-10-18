@@ -1,0 +1,326 @@
+.site-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 1.5rem 3rem;
+  background: linear-gradient(180deg, rgba(7, 8, 12, 0.8) 0%, transparent 100%);
+}
+
+.header-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Beau logo en rond au style MR */
+.logo-brand {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.logo-circle-wrapper {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(229, 179, 88, 0.6);
+  box-shadow: 0 0 16px rgba(229, 179, 88, 0.35);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: #000;
+}
+
+.logo-circle-wrapper:hover {
+  transform: scale(1.06) rotate(3deg);
+  box-shadow: 0 0 22px rgba(229, 179, 88, 0.55);
+}
+
+.logo-mr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Menu de navigation avec animation et soulignement doré */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 2.8rem;
+}
+
+.nav-btn {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  position: relative;
+  padding: 0.45rem 0.2rem;
+  transition: color 0.25s ease;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nav-btn-text {
+  display: inline-block;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.nav-btn:hover .nav-btn-text {
+  color: #fbe3a1;
+  transform: translateY(-1px);
+}
+
+/* Le soulignement doré animé */
+.nav-underline {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #fbe3a1 50%, transparent 100%);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  border-radius: 2px;
+}
+
+.nav-btn:hover .nav-underline {
+  transform: scaleX(0.6);
+  opacity: 0.6;
+}
+
+/* État actif quand c'est cliqué */
+.nav-btn.active .nav-btn-text {
+  color: #fbe3a1;
+  text-shadow: 0 0 14px rgba(229, 179, 88, 0.45);
+}
+
+.nav-btn.active .nav-underline {
+  transform: scaleX(1);
+  opacity: 1;
+  box-shadow: 0 0 10px rgba(251, 227, 161, 0.85);
+}
+
+/* Icône À Propos & Admin à droite */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.header-admin-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(229, 179, 88, 0.35);
+  color: #fbe3a1;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.header-admin-quick-btn:hover {
+  background: rgba(229, 179, 88, 0.2);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(229, 179, 88, 0.35);
+}
+
+.header-admin-pill-text {
+  font-family: var(--font-serif, serif);
+  text-transform: uppercase;
+}
+
+/* Profil utilisateur connecté dans le header */
+.header-profile-container {
+  position: relative;
+}
+
+.header-user-avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-user-avatar-btn:hover {
+  transform: scale(1.08);
+}
+
+.header-user-avatar-btn:hover .header-avatar-circle {
+  border-color: #fbe3a1;
+  box-shadow: 0 0 16px rgba(229, 179, 88, 0.6);
+}
+
+.header-avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  color: #0c0a09;
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(229, 179, 88, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(229, 179, 88, 0.25);
+  transition: all 0.25s ease;
+}
+
+.dropdown-user-fullname {
+  font-family: var(--font-serif, serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fbe3a1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.1rem;
+}
+
+/* Menu déroulant du profil */
+.header-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  background: #111827;
+  border: 1px solid rgba(229, 179, 88, 0.3);
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  animation: dropdownFade 0.2s ease forwards;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dropdown-avatar-big {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  color: #0c0a09;
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown-user-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.dropdown-email {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #10b981;
+  font-weight: 500;
+  margin-top: 0.15rem;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.6rem 0;
+}
+
+.dropdown-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.84rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.dropdown-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fbe3a1;
+}
+
+.dropdown-menu-item.text-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.dropdown-menu-item.text-admin {
+  color: #fbe3a1;
+}
+
+.dropdown-menu-item.text-admin:hover {
+  background: rgba(229, 179, 88, 0.15);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    padding: 1rem 1.25rem;
+  }
+  .nav-menu {
+    gap: 1.2rem;
+  }
+  .nav-btn {
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+  }
+  .logo-circle-wrapper {
+    width: 38px;
+    height: 38px;
+  }
+}

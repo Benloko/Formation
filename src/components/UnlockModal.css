@@ -1,0 +1,121 @@
+.unlock-modal {
+  padding: 2.2rem;
+  max-width: 440px;
+  text-align: center;
+}
+
+.unlock-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.key-icon-glow {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+}
+
+.unlock-header h3 {
+  font-size: 1.45rem;
+}
+
+.unlock-header p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.unlock-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  margin-bottom: 1.1rem;
+  text-align: left;
+}
+
+.unlock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.code-input-wrapper input {
+  width: 100%;
+  background: #090c14;
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  color: var(--text-primary);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.code-input-wrapper input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.unlock-btn {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 0.95rem;
+}
+
+.unlock-help-note {
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.unlock-help-note a {
+  color: var(--accent-gold-light);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* Écran de Succès Déblocage */
+.unlock-success-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.success-icon-glow {
+  color: #10b981;
+}
+
+.unlock-success-content h3 {
+  font-size: 1.45rem;
+}
+
+.unlock-success-content p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}

@@ -38,10 +38,10 @@ export function Header({ activeTab, onSelectTab, onOpenAbout, onOpenAdmin }) {
   }, [showProfileMenu]);
 
   const navItems = [
-    { id: 'HOME', label: 'HOME' },
-    { id: 'FORMATIONS', label: 'NOS FORMATIONS' },
-    { id: 'SERVICES', label: 'NOS SERVICES' },
-    { id: 'CONTACT', label: 'CONTACT' }
+    { id: 'HOME', label: 'HOME', shortLabel: 'HOME' },
+    { id: 'FORMATIONS', label: 'NOS FORMATIONS', shortLabel: 'FORMATIONS' },
+    { id: 'SERVICES', label: 'NOS SERVICES', shortLabel: 'SERVICES' },
+    { id: 'CONTACT', label: 'CONTACT', shortLabel: 'CONTACT' }
   ];
 
   const handleDisconnect = () => {
@@ -89,7 +89,8 @@ export function Header({ activeTab, onSelectTab, onOpenAbout, onOpenAdmin }) {
                 className={`nav-btn ${isActive ? 'active' : ''}`}
                 onClick={() => onSelectTab(item.id)}
               >
-                <span className="nav-btn-text">{item.label}</span>
+                <span className="nav-btn-text text-desktop">{item.label}</span>
+                <span className="nav-btn-text text-mobile">{item.shortLabel}</span>
                 <span className="nav-underline"></span>
               </button>
             );

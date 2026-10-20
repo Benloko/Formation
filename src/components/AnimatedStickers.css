@@ -251,17 +251,36 @@
 
 @media (max-width: 768px) {
   .stickers-stage-container {
-    bottom: 4.5rem;
-    height: 160px;
+    bottom: calc(4.4rem + env(safe-area-inset-bottom, 0px));
+    height: 120px;
+    z-index: 15;
   }
 
   .sticker-walker {
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
   }
 
   .encounter-greeting-text {
-    font-size: 1.05rem;
-    top: 8px;
+    font-size: 0.85rem;
+    top: 4px;
+  }
+
+  .sticker-popup-bubble {
+    top: -34px;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.55rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .stickers-stage-container {
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    height: 105px;
+  }
+
+  .sticker-walker {
+    width: 78px;
+    height: 78px;
   }
 }

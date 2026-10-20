@@ -308,19 +308,141 @@
   color: #ffffff;
 }
 
+.about-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1.5px solid rgba(229, 179, 88, 0.45);
+  color: #fbe3a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(229, 179, 88, 0.15);
+}
+
+.about-icon-btn:hover {
+  background: rgba(229, 179, 88, 0.2);
+  border-color: #fbe3a1;
+  color: #ffffff;
+  transform: scale(1.08);
+  box-shadow: 0 0 16px rgba(229, 179, 88, 0.5);
+}
+
+.text-desktop {
+  display: inline-block;
+}
+
+.text-mobile {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .site-header {
-    padding: 1rem 1.25rem;
+    padding: 0.6rem 0.65rem;
+    padding-top: max(0.6rem, env(safe-area-inset-top, 0px));
+    padding-left: max(0.65rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
+    box-sizing: border-box;
+    width: 100%;
   }
-  .nav-menu {
-    gap: 1.2rem;
+
+  .header-inner {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
   }
-  .nav-btn {
-    font-size: 0.82rem;
-    letter-spacing: 0.05em;
+
+  .logo-brand {
+    flex-shrink: 0;
   }
+
   .logo-circle-wrapper {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav-menu {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .nav-btn {
+    padding: 0.35rem 0.2rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+  }
+
+  .text-desktop {
+    display: none;
+  }
+
+  .text-mobile {
+    display: inline-block;
+  }
+
+  .header-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .header-user-avatar-btn,
+  .about-icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .about-icon-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .header-profile-dropdown {
+    width: 230px;
+    right: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header {
+    padding: 0.5rem 0.35rem;
+  }
+
+  .nav-menu {
+    gap: 0.2rem;
+  }
+
+  .nav-btn {
+    font-size: 0.67rem;
+    padding: 0.3rem 0.12rem;
+  }
+
+  .logo-circle-wrapper {
+    width: 30px;
+    height: 30px;
+  }
+
+  .header-avatar-circle,
+  .about-icon-btn {
+    width: 28px;
+    height: 28px;
   }
 }

@@ -1,0 +1,36 @@
+name: Déploiement Automatique vers Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Récupération du code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Installation des dépendances
+        run: npm install
+
+      - name: 🏗️ Compilation du projet (Vite Production)
+        run: npm run build
+
+      - name: 🚀 Déploiement automatique vers Hostinger (formation.gpower-store.com)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./public_html/formation/
+          protocol: ftp
+          port: 21

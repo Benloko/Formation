@@ -115,19 +115,7 @@
   flex-direction: column;
 }
 
-/* Effet d'ombrage de pliure de reliure sur le bord gauche */
-.contact-book-viewport .single-book-page-sheet::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 12px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.03) 60%, transparent 100%);
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-  pointer-events: none;
-  z-index: 25;
-}
+
 
 /* ==========================================================================
    PETITE CROIX ROUGE DE FERMETURE (SANS CARTE NI CADRE)
@@ -231,11 +219,11 @@
   border-radius: 4px;
 }
 
-/* En-tête de la page de carnet avec bannière promoteur */
+/* En-tête épuré de la page de carnet */
 .contact-book-viewport .single-page-header {
-  margin-bottom: 1.1rem;
+  margin-bottom: 0.85rem;
   border-bottom: 1px solid rgba(180, 150, 100, 0.2);
-  padding-bottom: 0.85rem;
+  padding-bottom: 0.65rem;
   padding-right: 2.8rem;
 }
 
@@ -243,7 +231,6 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-bottom: 0.45rem;
 }
 
 .contact-category-tag {
@@ -258,81 +245,57 @@
   border-radius: 4px;
 }
 
-.promoter-banner-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.2rem;
-  background: #ffffff;
-  border: 1.5px solid rgba(217, 119, 6, 0.35);
-  border-radius: 12px;
-  padding: 0.95rem 1.25rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+/* ==========================================================================
+   GRILLE DES CANAUX DE CONTACT (4 CARTES AUX FORMES RONDES ET STYLES UNIQUES)
+   ========================================================================== */
+
+.contact-round-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.1rem;
+  margin-bottom: 1.2rem;
 }
 
-.promoter-banner-text-side {
-  flex: 1;
-  min-width: 0;
+/* 0. CARTE PROMOTEUR (PRESTIGE OR / AMBRE) - FORMAT IDENTIQUE AUX AUTRES CARTES */
+.card-promoter-style {
+  background: linear-gradient(145deg, #ffffff 0%, #fffdf5 100%);
+  border: 1.5px solid rgba(217, 119, 6, 0.45);
+  border-radius: 20px;
+  grid-column: 1 / -1; /* Prends toute la largeur sur desktop au dessus des 3 canaux */
 }
 
-.promoter-banner-title {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.25;
-  margin: 0 0 0.35rem 0;
+.card-promoter-style:hover {
+  border-color: #d97706;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.16);
 }
 
-.promoter-banner-desc {
-  font-size: 0.88rem;
-  line-height: 1.52;
-  color: #334155;
-  margin: 0;
-  font-weight: 500;
+.circle-promoter {
+  background: #fef3c7;
+  color: #b45309;
+  border: 2px solid #fde68a;
 }
 
-.promoter-quick-icons {
+.badge-promoter {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+.promoter-highlight {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.promoter-footer-actions {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  flex-shrink: 0;
+  width: 100%;
 }
 
-.promoter-mini-icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
+.promoter-footer-actions .round-action-btn {
+  flex: 1;
   justify-content: center;
-  cursor: pointer;
-  border: none;
-  transition: all 0.22s ease;
-  padding: 0;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
-}
-
-.promoter-mini-icon-btn.whatsapp-icon-btn {
-  background: #25d366;
-  color: #ffffff;
-}
-
-.promoter-mini-icon-btn.whatsapp-icon-btn:hover {
-  background: #22bf5b;
-  transform: scale(1.1);
-  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4);
-}
-
-.promoter-mini-icon-btn.gmail-icon-btn {
-  background: #ea4335;
-  color: #ffffff;
-}
-
-.promoter-mini-icon-btn.gmail-icon-btn:hover {
-  background: #dc2626;
-  transform: scale(1.1);
-  box-shadow: 0 6px 18px rgba(234, 67, 53, 0.4);
 }
 
 /* ==========================================================================
@@ -696,39 +659,7 @@
     margin-bottom: 0.85rem;
   }
 
-  .promoter-banner-card {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: left;
-    padding: 0.95rem 1rem;
-    gap: 0.65rem;
-    border-radius: 10px;
-  }
 
-  .promoter-banner-title {
-    font-size: 1.15rem;
-    line-height: 1.25;
-    margin-bottom: 0.25rem;
-  }
-
-  .promoter-banner-desc {
-    font-size: 0.85rem;
-    line-height: 1.48;
-  }
-
-  .promoter-quick-icons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.2rem;
-  }
-
-  .promoter-mini-icon-btn {
-    width: 38px;
-    height: 38px;
-  }
 
   /* Cartes prenant bien la largeur de l'écran tout en restant des cartes élégantes */
   .contact-round-grid {

@@ -343,10 +343,10 @@
 
 @media (max-width: 768px) {
   .site-header {
-    padding: 0.6rem 0.65rem;
-    padding-top: max(0.6rem, env(safe-area-inset-top, 0px));
-    padding-left: max(0.65rem, env(safe-area-inset-left, 0px));
-    padding-right: max(0.65rem, env(safe-area-inset-right, 0px));
+    padding: 0.55rem 0.5rem;
+    padding-top: max(0.55rem, env(safe-area-inset-top, 0px));
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
     box-sizing: border-box;
     width: 100%;
   }
@@ -355,8 +355,8 @@
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
+    justify-content: flex-start;
+    gap: 0.3rem;
   }
 
   .logo-brand {
@@ -364,24 +364,23 @@
   }
 
   .logo-circle-wrapper {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 
   .nav-menu {
-    flex: 1;
-    min-width: 0;
+    flex: 0 1 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-left: 0.45rem;
-    padding-right: 0.15rem;
+    justify-content: flex-start;
+    margin-left: 0.25rem;
+    gap: clamp(0.3rem, 1.8vw, 0.65rem);
   }
 
   .nav-btn {
-    padding: 0.35rem 0.25rem;
-    font-size: 0.73rem;
-    letter-spacing: 0.03em;
+    padding: 0.25rem 0.15rem;
+    font-size: 0.69rem;
+    letter-spacing: 0.02em;
     flex-shrink: 0;
   }
 
@@ -394,6 +393,7 @@
   }
 
   .header-right {
+    margin-left: auto;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -401,19 +401,19 @@
 
   .header-user-avatar-btn,
   .about-icon-btn {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 
   .header-avatar-circle {
-    width: 32px;
-    height: 32px;
-    font-size: 0.85rem;
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
   }
 
   .about-icon-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
   }
 
   .header-profile-dropdown {
@@ -424,26 +424,28 @@
 
 @media (max-width: 380px) {
   .site-header {
-    padding: 0.5rem 0.35rem;
+    padding: 0.45rem 0.3rem;
   }
 
   .nav-menu {
-    margin-left: 0.35rem;
+    margin-left: 0.2rem;
+    gap: 0.25rem;
   }
 
   .nav-btn {
-    font-size: 0.67rem;
-    padding: 0.3rem 0.15rem;
+    font-size: 0.64rem;
+    padding: 0.2rem 0.1rem;
   }
 
   .logo-circle-wrapper {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .header-avatar-circle,
   .about-icon-btn {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
+    font-size: 0.75rem;
   }
 }

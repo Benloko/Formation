@@ -80,43 +80,57 @@ export function ContactBookView({ onClose }) {
           </div>
 
           <div className="single-page-scrollable-content">
-            {/* En-tête : Devenir Promoteur & Gagner 1 000 FCFA avec les deux icônes cool WhatsApp & Gmail */}
-            <div className="single-page-header promoter-contact-header">
+            {/* En-tête épuré et sobre */}
+            <div className="single-page-header">
               <div className="header-meta-row">
-                <span className="contact-category-tag">🌟 Gagnez 1 000 FCFA / Vente</span>
-              </div>
-              <div className="promoter-banner-card">
-                <div className="promoter-banner-text-side">
-                  <h1 className="promoter-banner-title">Devenez Promoteur & Touchez Vos Commissions</h1>
-                  <p className="promoter-banner-desc">
-                    Recevez votre <strong>Code Promo officiel</strong> à partager. À chaque achat effectué avec votre code, vous encaissez immédiatement <strong>1 000 FCFA</strong>. Pour l'activer, écrivez-nous :
-                  </p>
-                </div>
-                <div className="promoter-quick-icons">
-                  <button 
-                    type="button"
-                    className="promoter-mini-icon-btn whatsapp-icon-btn"
-                    onClick={handlePromoterWhatsApp}
-                    title="Demander mon code promo sur WhatsApp"
-                    aria-label="Contacter sur WhatsApp"
-                  >
-                    <MessageCircle size={19} />
-                  </button>
-                  <button 
-                    type="button"
-                    className="promoter-mini-icon-btn gmail-icon-btn"
-                    onClick={handlePromoterEmail}
-                    title="Demander mon code promo par Gmail"
-                    aria-label="Contacter par Gmail"
-                  >
-                    <Mail size={19} />
-                  </button>
-                </div>
+                <span className="contact-category-tag">Canaux Directs & Partenariat</span>
               </div>
             </div>
 
-            {/* Grille stylisée des 3 canaux aux formes arrondies et uniques */}
+            {/* Grille stylisée des canaux (avec la Carte Promoteur en tête, identique en largeur et format) */}
             <div className="contact-round-grid">
+              {/* CARTE 0 : DEVENIR PROMOTEUR (Format et largeur identiques aux autres cartes) */}
+              <div 
+                className="contact-round-card card-promoter-style"
+                onClick={handlePromoterWhatsApp}
+              >
+                <div className="round-card-header">
+                  <div className="round-icon-circle circle-promoter">
+                    <Sparkles size={22} />
+                  </div>
+                  <span className="round-badge badge-promoter">🌟 Gagnez 1 000 F / Vente</span>
+                </div>
+
+                <div className="round-card-content">
+                  <h3 className="round-title">Devenez Promoteur Officiel</h3>
+                  <p className="round-coord promoter-highlight">1 000 FCFA cash sur chaque vente</p>
+                  <p className="round-desc">
+                    Recevez votre <strong>Code Promo officiel</strong> à partager. À chaque achat effectué avec votre code, vous encaissez immédiatement <strong>1 000 FCFA</strong>. Pour l'activer, écrivez-nous :
+                  </p>
+                </div>
+
+                <div className="round-card-footer promoter-footer-actions">
+                  <button 
+                    className="round-action-btn btn-whatsapp-pill"
+                    onClick={(e) => { e.stopPropagation(); handlePromoterWhatsApp(e); }}
+                    title="Demander mon code sur WhatsApp"
+                  >
+                    <MessageCircle size={14} />
+                    <span>WhatsApp</span>
+                    <ArrowUpRight size={13} />
+                  </button>
+                  <button 
+                    className="round-action-btn btn-mail-pill"
+                    onClick={(e) => { e.stopPropagation(); handlePromoterEmail(e); }}
+                    title="Demander mon code par Gmail"
+                  >
+                    <Mail size={14} />
+                    <span>Gmail</span>
+                    <ArrowUpRight size={13} />
+                  </button>
+                </div>
+              </div>
+
               {/* CANAL 1 : WHATSAPP (Capsule Organique Émeraude) */}
               <div 
                 className="contact-round-card card-whatsapp-style"

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://formation.gpower-store.com/sitemap.xml

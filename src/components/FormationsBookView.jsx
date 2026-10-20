@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BOOKS_DATA } from '../data/booksData';
 import { storageService } from '../services/storageService';
-import { Sparkles, ArrowRight, CheckCircle2, Award, Info } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, Award, Info, X } from 'lucide-react';
 import './FormationsBookView.css';
 
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
@@ -119,7 +119,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             aria-label="Fermer"
             title="Fermer"
           >
-            ✕
+            <X size={18} strokeWidth={2.5} />
           </button>
 
           {/* LE RUBAN ROUGE MARQUE-PAGE AU MILIEU DU LIVRE */}

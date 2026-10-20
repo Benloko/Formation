@@ -52,6 +52,17 @@
   margin: 0 auto;
 }
 
+/* Couverture rigide en cuir sombre en dessous du carnet */
+.contact-book-viewport .single-book-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -6px -14px;
+  background: linear-gradient(135deg, #221c15 0%, #12141a 50%, #241d15 100%);
+  border-radius: 8px;
+  z-index: 1;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
+}
+
 /* Épaisseur des feuillets sur les tranches gauche & droite */
 .contact-book-viewport .single-book-stack-edge {
   position: absolute;
@@ -104,17 +115,6 @@
   flex-direction: column;
 }
 
-/* Bordure de couverture rigide en cuir sombre en dessous */
-.contact-book-viewport .single-book-page-sheet::before {
-  content: "";
-  position: absolute;
-  inset: -6px -14px;
-  background: linear-gradient(135deg, #221c15 0%, #12141a 50%, #241d15 100%);
-  border-radius: 8px;
-  z-index: -2;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9);
-}
-
 /* Effet d'ombrage de pliure de reliure sur le bord gauche */
 .contact-book-viewport .single-book-page-sheet::after {
   content: "";
@@ -135,24 +135,30 @@
 
 .contact-book-viewport .book-close-red-cross {
   position: absolute;
-  top: 0.8rem;
-  right: 1.1rem;
-  color: #ef4444;
-  font-size: 1.4rem;
-  font-weight: 900;
-  background: none;
-  border: none;
+  top: 0.85rem;
+  right: 0.95rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  z-index: 50;
-  line-height: 1;
-  padding: 0.2rem;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  z-index: 70;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
 }
 
 .contact-book-viewport .book-close-red-cross:hover {
-  transform: scale(1.25);
-  opacity: 0.85;
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 /* ==========================================================================
@@ -570,48 +576,68 @@
    RESPONSIVE DESIGN (TABLETTE & MOBILE)
    ========================================================================== */
 
-@media (max-width: 992px) {
+@media (max-width: 900px) {
   .contact-book-viewport {
-    top: 4.2rem;
-    padding: 0.4rem 1rem 1rem 1rem;
+    top: calc(3.3rem + env(safe-area-inset-top, 0px));
+    bottom: 0;
+    height: calc(100vh - 3.3rem);
+    height: calc(100dvh - 3.3rem);
+    padding: 0.25rem 0.45rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) 0.45rem;
+    justify-content: flex-start;
   }
 
-  .contact-book-viewport .single-book-wrapper {
-    width: 95vw;
-    height: calc(100vh - 5.5rem);
-  }
-
-  .contact-book-viewport .single-page-scrollable-content {
-    padding: 1.2rem 1.5rem;
-  }
-
-  .contact-round-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 640px) {
   .contact-book-viewport .single-book-wrapper {
     width: 100%;
-    height: 98%;
+    max-width: 580px;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    margin: 0 auto;
+  }
+
+  .contact-book-viewport .single-book-wrapper::before {
+    display: none !important;
   }
 
   .contact-book-viewport .single-book-stack-edge {
     display: none;
   }
 
-  .contact-book-viewport .single-page-scrollable-content {
-    padding: 1rem 0.9rem;
+  .contact-book-viewport .single-book-page-sheet {
+    background: #fbf9f4 !important;
+    border-radius: 8px;
   }
 
   .contact-book-viewport .single-page-red-ribbon {
-    left: 0.8rem;
-    height: 28px;
+    display: none;
   }
 
-  .contact-book-viewport .single-page-main-title {
-    font-size: 1.25rem;
+  .contact-book-viewport .single-page-scrollable-content {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    padding: 0.85rem 0.65rem calc(6.5rem + env(safe-area-inset-bottom, 24px)) 0.65rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    background: #fbf9f4 !important;
+  }
+
+  .contact-book-viewport .single-page-header {
+    padding-right: 3rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .contact-round-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    width: 100%;
+  }
+
+  .contact-round-card {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .seal-guarantees-row {

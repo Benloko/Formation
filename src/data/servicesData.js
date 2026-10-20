@@ -27,14 +27,14 @@ export const SERVICES_DATA = [
     id: "comptes-tiktok",
     title: "Création de Compte TikTok Monétisable",
     shortDesc: "Nous vous créons un compte TikTok monétisable (Programme de récompenses) pour vous permettre de gagner de l'argent avec vos contenus.",
-    tag: "Création de Compte",
+    tag: "Disponible",
     whatsappMessage: "Bonjour Mr Ben, je suis intéressé par la création d'un Compte TikTok monétisable."
   },
   {
     id: "comptes-facebook",
     title: "Création de Page Facebook Monétisable",
     shortDesc: "Nous vous créons une page Facebook monétisable éligible aux outils de monétisation pour rentabiliser vos vidéos et publications.",
-    tag: "Création de Page",
+    tag: "Disponible",
     whatsappMessage: "Bonjour Mr Ben, je suis intéressé par la création d'une Page Facebook monétisable."
   },
   {

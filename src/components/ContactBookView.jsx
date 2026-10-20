@@ -8,7 +8,8 @@ import {
   Check, 
   Sparkles, 
   Clock, 
-  Globe 
+  Globe,
+  X 
 } from 'lucide-react';
 import { CREATOR_PROFILE } from '../data/servicesData';
 import './ContactBookView.css';
@@ -57,7 +58,7 @@ export function ContactBookView({ onClose }) {
             aria-label="Fermer"
             title="Fermer"
           >
-            ✕
+            <X size={18} strokeWidth={2.5} />
           </button>
 
           {/* RUBAN ROUGE MARQUE-PAGE COURT ET POSITIONNÉ EN MARGE (NE TOUCHE AUCUN TEXTE) */}

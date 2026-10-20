@@ -9,7 +9,8 @@ import {
   ArrowUpRight, 
   MessageCircle, 
   Mail, 
-  Sparkles 
+  Sparkles,
+  X 
 } from 'lucide-react';
 import './ServicesBookView.css';
 
@@ -54,7 +55,7 @@ export function ServicesBookView({ onClose }) {
             aria-label="Fermer"
             title="Fermer"
           >
-            ✕
+            <X size={18} strokeWidth={2.5} />
           </button>
 
           {/* RUBAN ROUGE MARQUE-PAGE COURT ET POSITIONNÉ EN MARGE (NE TOUCHE AUCUN TEXTE) */}

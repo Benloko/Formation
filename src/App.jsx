@@ -140,21 +140,102 @@ export function App() {
     };
   }, []);
 
-  const handleSelectTab = (tab) => {
+  const getTabHash = (tab, book = null) => {
+    if (tab === 'FORMATIONS') return '#formations';
+    if (tab === 'SERVICES') return '#services';
+    if (tab === 'CONTACT') return '#contact';
+    if (tab === 'ABOUT') return '#a-propos';
+    if (tab === 'READER') {
+      const bId = book?.id || selectedBookForAction?.id;
+      return bId ? `#lecture?book=${encodeURIComponent(bId)}` : '#lecture';
+    }
+    return '';
+  };
+
+  const handleSelectTab = (tab, book = null) => {
+    if (tab === activeTab && !book) return;
+
+    const newHash = getTabHash(tab, book);
+    const targetUrl = newHash || window.location.pathname;
+
+    // Si on change de vue, on ajoute une entrée dans l'historique du navigateur
+    if (window.location.hash !== newHash) {
+      window.history.pushState({ tab, bookId: book?.id }, '', targetUrl);
+    }
+
+    if (book) setSelectedBookForAction(book);
     setActiveTab(tab);
+  };
+
+  const handleCloseView = () => {
+    if (activeTab === 'READER') {
+      handleSelectTab('FORMATIONS');
+    } else {
+      if (window.location.hash && window.history.length > 1) {
+        window.history.back();
+      } else {
+        handleSelectTab('HOME');
+      }
+    }
   };
 
   const handleOpenBookUnlock = (book) => {
     const target = book || BOOKS_DATA[0];
     setSelectedBookForAction(target);
     if (storageService.isBookUnlocked(target.id)) {
-      setActiveTab('READER');
+      handleSelectTab('READER', target);
     } else {
+      window.history.pushState({ modal: 'checkout', bookId: target.id }, '', window.location.hash || '#formations');
       setIsCheckoutOpen(true);
     }
   };
 
-  // Synchronisation permanente de l'URL hash et de sessionStorage lors des changements d'onglet
+  const handleCloseCheckout = () => {
+    if (window.history.state?.modal === 'checkout') {
+      window.history.back();
+    } else {
+      setIsCheckoutOpen(false);
+    }
+  };
+
+  const handleOpenAdmin = () => {
+    window.history.pushState({ modal: 'admin' }, '', '#admin');
+    setIsAdminOpen(true);
+  };
+
+  const handleCloseAdmin = () => {
+    if (window.location.hash === '#admin' || window.history.state?.modal === 'admin') {
+      window.history.back();
+    } else {
+      setIsAdminOpen(false);
+    }
+  };
+
+  const handleOpenPromoter = () => {
+    window.history.pushState({ modal: 'promoter' }, '', '#promoteur');
+    setIsPromoterOpen(true);
+  };
+
+  const handleClosePromoter = () => {
+    if ((window.location.hash || '').toLowerCase().startsWith('#promoteur') || window.history.state?.modal === 'promoter') {
+      window.history.back();
+    } else {
+      setIsPromoterOpen(false);
+    }
+  };
+
+  // Initialisation de l'historique au montage (évite de fermer le site sur retour téléphone)
+  React.useEffect(() => {
+    const initialHash = window.location.hash;
+    if (initialHash && initialHash !== '#' && initialHash !== '#accueil') {
+      window.history.replaceState({ tab: 'HOME' }, '', window.location.pathname);
+      window.history.pushState({ tab: initialNav.tab }, '', initialHash);
+    } else {
+      window.history.replaceState({ tab: 'HOME' }, '', window.location.pathname);
+    }
+  }, []);
+
+  // Synchronisation de sessionStorage
   React.useEffect(() => {
     try {
       sessionStorage.setItem('mrben_active_tab', activeTab);
@@ -162,33 +243,9 @@ export function App() {
         sessionStorage.setItem('mrben_selected_book_id', selectedBookForAction.id);
       }
     } catch {}
-
-    let newHash = '';
-    if (activeTab === 'FORMATIONS') newHash = '#formations';
-    else if (activeTab === 'SERVICES') newHash = '#services';
-    else if (activeTab === 'CONTACT') newHash = '#contact';
-    else if (activeTab === 'ABOUT') newHash = '#a-propos';
-    else if (activeTab === 'READER') {
-      newHash = selectedBookForAction?.id 
-        ? `#lecture?book=${encodeURIComponent(selectedBookForAction.id)}` 
-        : '#lecture';
-    } else {
-      newHash = '';
-    }
-
-    // Ne pas écraser le hash si l'admin est ouvert via #admin
-    if (window.location.hash !== '#admin') {
-      if (newHash === '') {
-        if (window.location.hash && window.location.hash !== '#') {
-          window.history.replaceState(null, '', window.location.pathname);
-        }
-      } else if (window.location.hash !== newHash) {
-        window.history.replaceState(null, '', newHash);
-      }
-    }
   }, [activeTab, selectedBookForAction]);
 
-  // Écouteur pour navigation par l'historique (boutons précédent/suivant) et raccourcis
+  // Écouteur pour la navigation par bouton Retour système du téléphone (Android / iOS Swipe)
   React.useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
@@ -197,7 +254,30 @@ export function App() {
       }
     };
 
-    const handleHashChange = () => {
+    const handleHistoryPop = () => {
+      // 1. Si une modale est ouverte, le bouton retour du téléphone la ferme sans quitter le site
+      if (isCheckoutOpen) {
+        setIsCheckoutOpen(false);
+        return;
+      }
+      if (isUnlockOpen) {
+        setIsUnlockOpen(false);
+        return;
+      }
+      if (isBonusOpen) {
+        setIsBonusOpen(false);
+        return;
+      }
+      if (isPromoterOpen) {
+        setIsPromoterOpen(false);
+        return;
+      }
+      if (isAdminOpen) {
+        setIsAdminOpen(false);
+        return;
+      }
+
+      // 2. Gestion des ancres spécifiques
       if (window.location.hash === '#admin') {
         setIsAdminOpen(true);
         return;
@@ -206,6 +286,8 @@ export function App() {
         setIsPromoterOpen(true);
         return;
       }
+
+      // 3. Navigation d'onglet fluide
       const parsed = parseHash();
       if (parsed?.tab) {
         if (parsed.tab === 'READER') {
@@ -217,7 +299,6 @@ export function App() {
           if (!storageService.isBookUnlocked(book.id)) {
             setActiveTab('FORMATIONS');
             setSelectedBookForAction(book);
-            setIsCheckoutOpen(true);
             return;
           }
         }
@@ -226,18 +307,21 @@ export function App() {
           const found = BOOKS_DATA.find(b => b.id === parsed.bookId);
           if (found) setSelectedBookForAction(found);
         }
-      } else if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#accueil') {
+      } else {
+        // Retour sur la page d'accueil sans fermer le site
         setActiveTab('HOME');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHistoryPop);
+    window.addEventListener('hashchange', handleHistoryPop);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHistoryPop);
+      window.removeEventListener('hashchange', handleHistoryPop);
     };
-  }, []);
+  }, [isCheckoutOpen, isUnlockOpen, isBonusOpen, isPromoterOpen, isAdminOpen]);
 
   return (
     <div className="home-screen-container">
@@ -245,8 +329,8 @@ export function App() {
       <Header 
         activeTab={activeTab}
         onSelectTab={handleSelectTab}
-        onOpenAbout={() => setActiveTab('ABOUT')}
-        onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenAbout={() => handleSelectTab('CONTACT')}
+        onOpenAdmin={handleOpenAdmin}
       />
 
       {/* 2. Photo d'accueil qui prend tout l'écran */}
@@ -280,7 +364,7 @@ export function App() {
                 return (
                   <button 
                     className="btn-unlock-formation book-already-unlocked-cta"
-                    onClick={() => setActiveTab('FORMATIONS')}
+                    onClick={() => handleSelectTab('FORMATIONS')}
                   >
                     <span className="shimmer-sweep-ray"></span>
                     <Sparkles size={14} className="cta-sparkle-icon" />
@@ -295,7 +379,7 @@ export function App() {
               return (
                 <button 
                   className={`btn-unlock-formation ${activePromoBanner ? 'has-promo' : ''}`}
-                  onClick={() => setActiveTab('FORMATIONS')}
+                  onClick={() => handleSelectTab('FORMATIONS')}
                 >
                   <span className="shimmer-sweep-ray"></span>
                   <Sparkles size={activePromoBanner ? 16 : 14} className="cta-sparkle-icon" />
@@ -324,24 +408,21 @@ export function App() {
       {activeTab === 'FORMATIONS' && (
         <FormationsBookView 
           activePromo={activePromoBanner}
-          onClose={() => setActiveTab('HOME')}
+          onClose={handleCloseView}
           onUnlockBook={handleOpenBookUnlock}
-          onOpenCheckout={(book) => {
-            setSelectedBookForAction(book || BOOKS_DATA[0]);
-            setIsCheckoutOpen(true);
-          }}
-          onGoToServices={() => setActiveTab('SERVICES')}
+          onOpenCheckout={handleOpenBookUnlock}
+          onGoToServices={() => handleSelectTab('SERVICES')}
         />
       )}
 
       {/* 5. VUE SERVICES : GRANDE PAGE UNIQUE DU LIVRE D'ART PROPRE ET ÉLÉGANTE */}
       {activeTab === 'SERVICES' && (
-        <ServicesBookView onClose={() => setActiveTab('HOME')} />
+        <ServicesBookView onClose={handleCloseView} />
       )}
 
       {/* 6. VUE CONTACT / À PROPOS : GRANDE PAGE DU LIVRE D'ART PROPRE ET ÉLÉGANTE */}
       {(activeTab === 'CONTACT' || activeTab === 'ABOUT') && (
-        <ContactBookView onClose={() => setActiveTab('HOME')} />
+        <ContactBookView onClose={handleCloseView} />
       )}
 
       {/* 7. VUE LECTEUR DE FORMATION DÉBLOQUÉE */}
@@ -351,12 +432,9 @@ export function App() {
             book={selectedBookForAction}
             isUnlocked={storageService.isBookUnlocked(selectedBookForAction?.id)}
             activeCode={storageService.getLoggedInGmail() || "Accès à vie"}
-            onBack={() => setActiveTab('FORMATIONS')}
-            onClose={() => setActiveTab('FORMATIONS')}
-            onOpenCheckout={(targetBk) => {
-              if (targetBk) setSelectedBookForAction(targetBk);
-              setIsCheckoutOpen(true);
-            }}
+            onBack={handleCloseView}
+            onClose={handleCloseView}
+            onOpenCheckout={(targetBk) => handleOpenBookUnlock(targetBk)}
             onSelectBook={(newBook) => {
               if (newBook) {
                 setSelectedBookForAction(newBook);
@@ -376,7 +454,7 @@ export function App() {
               const matched = BOOKS_DATA.find(b => b.id === order.itemId);
               if (matched) setSelectedBookForAction(matched);
             }
-            setActiveTab('READER');
+            handleSelectTab('READER');
           }}
         />
       )}
@@ -386,11 +464,11 @@ export function App() {
         <CheckoutModal 
           book={selectedBookForAction}
           item={selectedBookForAction}
-          onClose={() => setIsCheckoutOpen(false)}
+          onClose={handleCloseCheckout}
           onOpenTraining={(book) => {
             if (book) setSelectedBookForAction(book);
             setIsCheckoutOpen(false);
-            setActiveTab('READER');
+            handleSelectTab('READER', book);
           }}
         />
       )}
@@ -405,17 +483,12 @@ export function App() {
 
       {/* Espace Administrateur Mr Ben (Dashboard & Générateur de Codes Sécurisés) */}
       {isAdminOpen && (
-        <AdminDashboard onClose={() => setIsAdminOpen(false)} />
+        <AdminDashboard onClose={handleCloseAdmin} />
       )}
 
       {/* Espace Partenaire Promoteur Mr Ben */}
       {isPromoterOpen && (
-        <PromoterPortal onClose={() => {
-          setIsPromoterOpen(false);
-          if ((window.location.hash || '').toLowerCase().startsWith('#promoteur')) {
-            window.location.hash = '';
-          }
-        }} />
+        <PromoterPortal onClose={handleClosePromoter} />
       )}
     </div>
   );

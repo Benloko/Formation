@@ -204,13 +204,15 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   </div>
                 </div>
 
-                {/* Super Bonus offert */}
-                <div className="bonus-mini-callout">
-                  <Award size={14} className="bonus-icon" />
-                  <span><strong>Super Bonus offert :</strong> Publicité de votre page après la formation</span>
+                {/* Assistance Privée & Choix de Niche */}
+                <div className="guidance-mini-callout">
+                  <Sparkles size={14} className="guidance-icon" />
+                  <span>
+                    <strong>Accompagnement Privé & Choix de Niche :</strong> Vous n'avez plus à vous soucier de quelle thématique ou niche entamer pour vous lancer. Suivez notre formation pas-à-pas pour développer vos réseaux sociaux, et profitez de notre assistance privée dédiée pour vous guider dans toutes vos étapes de croissance.
+                  </span>
                 </div>
 
-                {/* Note discrète placée en bas du Super Bonus */}
+                {/* Note discrète */}
                 <div className="formation-discrete-note">
                   <Info size={13} className="discrete-note-icon" />
                   <span>
@@ -346,13 +348,15 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   </div>
                 </div>
 
-                {/* Super Bonus offert */}
-                <div className="bonus-mini-callout">
-                  <Award size={14} className="bonus-icon" />
-                  <span><strong>Super Bonus offert :</strong> Publicité de votre page après la formation</span>
+                {/* Assistance Privée & Choix de Niche */}
+                <div className="guidance-mini-callout">
+                  <Sparkles size={14} className="guidance-icon" />
+                  <span>
+                    <strong>Accompagnement Privé & Choix de Niche :</strong> Vous n'avez plus à vous soucier de quelle thématique ou niche entamer pour vous lancer. Suivez notre formation pas-à-pas pour développer vos réseaux sociaux, et profitez de notre assistance privée dédiée pour vous guider dans toutes vos étapes de croissance.
+                  </span>
                 </div>
 
-                {/* Note discrète placée en bas du Super Bonus */}
+                {/* Note discrète */}
                 <div className="formation-discrete-note">
                   <Info size={13} className="discrete-note-icon" />
                   <span>

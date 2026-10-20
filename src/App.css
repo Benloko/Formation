@@ -136,6 +136,76 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7), 0 0 14px rgba(201, 152, 62, 0.4);
 }
 
+.btn-unlock-formation.has-promo {
+  padding: 0.55rem 1.6rem;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #fff3d6 0%, #f7d786 45%, #d49a37 100%);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 18px rgba(212, 154, 55, 0.45);
+}
+
+.btn-unlock-formation.book-already-unlocked-cta {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border-color: rgba(110, 231, 183, 0.6);
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4);
+}
+
+.btn-unlock-formation.book-already-unlocked-cta .cta-sparkle-icon,
+.btn-unlock-formation.book-already-unlocked-cta .cta-arrow-icon {
+  color: #ffffff;
+}
+
+.btn-unlock-formation.book-already-unlocked-cta:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.btn-promo-content-group {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.btn-promo-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-promo-discount-badge {
+  background: #7c3aed;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.4);
+}
+
+.btn-promo-callout {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #26211a;
+  letter-spacing: normal;
+  text-transform: none;
+  opacity: 0.95;
+  line-height: 1.2;
+}
+
+.btn-promo-callout strong {
+  color: #5b21b6;
+  font-weight: 800;
+}
+
 .btn-text-content {
   position: relative;
   z-index: 2;
@@ -359,5 +429,23 @@
   .btn-unlock-formation {
     font-size: 0.84rem;
     padding: 0.5rem 1.2rem;
+  }
+
+  .btn-unlock-formation.has-promo {
+    padding: 0.45rem 1.1rem;
+    gap: 0.5rem;
+  }
+
+  .btn-promo-main-row .btn-text-content {
+    font-size: 0.8rem;
+  }
+
+  .btn-promo-discount-badge {
+    font-size: 0.65rem;
+    padding: 0.08rem 0.35rem;
+  }
+
+  .btn-promo-callout {
+    font-size: 0.62rem;
   }
 }

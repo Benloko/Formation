@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Copy,
   Check,
-  Key
+  Key,
+  Tag
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { storageService } from '../services/storageService';
@@ -39,7 +40,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
 
   const isVideo = activeBook?.id === 'livre-videos-ia';
   const bookCover = isVideo ? '/books/book_video_cover.png?v=2' : '/books/book_bd_cover.png';
-  const bookPrice = activeBook?.price || (isVideo ? 3100 : 2500);
+  const bookPrice = storageService.getFormationPrice(activeBook?.id) || activeBook?.price || (isVideo ? 3100 : 2500);
 
   // Liste des comptes vérifiés sur cet appareil
   const [accounts, setAccounts] = useState(() => storageService.getGoogleAccounts());
@@ -67,6 +68,52 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   const [inputAccessCode, setInputAccessCode] = useState('');
   const [codeError, setCodeError] = useState('');
   const [isVerifyingCodeInput, setIsVerifyingCodeInput] = useState(false);
+
+  // Code Promo Réduction Partenaire
+  const [promoInput, setPromoInput] = useState('');
+  const [promoError, setPromoError] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+
+  useEffect(() => {
+    try {
+      const detectedCode = storageService.detectAndSavePromoFromUrl();
+      if (detectedCode) {
+        const res = storageService.validatePromoCode(detectedCode, activeBook.id);
+        if (res.valid) {
+          setAppliedPromo(res);
+          setPromoInput(detectedCode.toUpperCase());
+        }
+      }
+    } catch {}
+  }, [activeBook?.id]);
+
+  const handleApplyPromo = (e) => {
+    if (e) e.preventDefault();
+    setPromoError('');
+    if (!promoInput.trim()) {
+      setPromoError("Veuillez saisir un code promo.");
+      return;
+    }
+    const clean = promoInput.trim().toUpperCase();
+    const res = storageService.validatePromoCode(clean, activeBook.id);
+    if (res.valid) {
+      setAppliedPromo(res);
+      setPromoError('');
+      storageService.setPendingPromoCode(clean);
+    } else {
+      setPromoError(res.message || "Code promo invalide.");
+      setAppliedPromo(null);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoError('');
+    storageService.clearPendingPromoCode();
+  };
+
+  const payablePrice = appliedPromo ? appliedPromo.finalPrice : bookPrice;
 
 
 
@@ -462,7 +509,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
         public_key: fedapayKey,
         environment: isLiveKey ? 'live' : 'sandbox',
         transaction: {
-          amount: Math.round(Number(bookPrice) || 2500),
+          amount: Math.round(Number(payablePrice) || 2500),
           description: `Formation Mr Ben : ${activeBook.title}`
         },
         currency: {
@@ -495,8 +542,21 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
                   clientPhone: resp.transaction?.customer?.phone_number || '',
                   itemId: activeBook.id,
                   itemTitle: activeBook.title,
-                  amount: bookPrice
+                  amount: payablePrice,
+                  promoCode: appliedPromo ? appliedPromo.promoter.codePromo : null,
+                  discountAmount: appliedPromo ? appliedPromo.discountAmount : 0
                 });
+
+                if (appliedPromo?.promoter?.codePromo) {
+                  storageService.recordPromoSale(appliedPromo.promoter.codePromo, {
+                    bookId: activeBook.id,
+                    bookTitle: activeBook.title,
+                    buyerName: selectedGmail.split('@')[0],
+                    buyerEmail: selectedGmail,
+                    orderId: order?.id || '',
+                    paidAmount: payablePrice
+                  });
+                }
 
                 storageService.setLoggedInGmail(selectedGmail);
                 setCompletedOrder(order);
@@ -528,6 +588,60 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
       setIsProcessingPayment(false);
       setPaymentError("Erreur d'initialisation du paiement FedaPay. Veuillez réessayer.");
     }
+  };
+
+  // Simulation instantanée de paiement réussi (Mode Test / Démo sans carte ni mobile money)
+  const handleSimulatePaymentSuccess = () => {
+    setPaymentError('');
+    setIsProcessingPayment(true);
+    setStep('verifying');
+    setVerificationProgress(35);
+
+    setTimeout(() => {
+      setVerificationProgress(75);
+      setTimeout(() => {
+        setVerificationProgress(100);
+
+        const order = storageService.createOrder({
+          clientName: (selectedGmail || 'client.test').split('@')[0],
+          clientEmail: selectedGmail || 'testeur@mrben.bj',
+          clientPhone: '+229 97 00 00 01 (Test)',
+          itemId: activeBook.id,
+          itemTitle: activeBook.title,
+          amount: payablePrice,
+          promoCode: appliedPromo ? appliedPromo.promoter.codePromo : null,
+          discountAmount: appliedPromo ? appliedPromo.discountAmount : 0
+        });
+
+        if (appliedPromo?.promoter?.codePromo) {
+          storageService.recordPromoSale(appliedPromo.promoter.codePromo, {
+            bookId: activeBook.id,
+            bookTitle: activeBook.title,
+            buyerName: (selectedGmail || 'client.test').split('@')[0],
+            buyerEmail: selectedGmail || 'testeur@mrben.bj',
+            orderId: order?.id || '',
+            paidAmount: payablePrice
+          });
+        }
+
+        storageService.setLoggedInGmail(selectedGmail || 'testeur@mrben.bj');
+        setCompletedOrder(order);
+
+        try {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        } catch {}
+
+        setTimeout(() => {
+          setIsProcessingPayment(false);
+          setStep('unlocked_showcase');
+          if (onSuccess) onSuccess(order);
+        }, 600);
+      }, 600);
+    }, 500);
   };
 
   // 5. Validation sécurisée d'un code d'accès accordé par Mr Ben
@@ -829,9 +943,57 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
               </div>
 
               <h2 className="clean-modal-title">{activeBook.title}</h2>
-              <div className="clean-price-pill">
-                <strong>{bookPrice.toLocaleString()} FCFA</strong>
-                <span>• Accès à Vie</span>
+              {appliedPromo ? (
+                <div className="clean-price-pill with-discount">
+                  <div className="discount-prices-flex">
+                    <span className="price-struck">{appliedPromo.originalPrice.toLocaleString()} FCFA</span>
+                    <strong className="discounted-price">{appliedPromo.finalPrice.toLocaleString()} FCFA</strong>
+                  </div>
+                  <span className="savings-tag">Économie : -{appliedPromo.discountAmount.toLocaleString()} FCFA (-{appliedPromo.reductionPct}%)</span>
+                </div>
+              ) : (
+                <div className="clean-price-pill">
+                  <strong>{bookPrice.toLocaleString()} FCFA</strong>
+                  <span>• Accès à Vie</span>
+                </div>
+              )}
+
+              {/* Saisie ou badge de Code Promo */}
+              <div className="checkout-promo-box">
+                {!appliedPromo ? (
+                  <form onSubmit={handleApplyPromo} className="checkout-promo-input-row">
+                    <Tag size={13} className="promo-input-glyph" />
+                    <input 
+                      type="text" 
+                      placeholder="Code promo (ex: ALEX15)"
+                      value={promoInput}
+                      onChange={(e) => {
+                        setPromoInput(e.target.value.toUpperCase());
+                        setPromoError('');
+                      }}
+                      className="checkout-promo-input"
+                    />
+                    <button type="submit" className="btn-checkout-apply-promo">
+                      Appliquer
+                    </button>
+                  </form>
+                ) : (
+                  <div className="checkout-promo-applied-badge">
+                    <div className="promo-applied-text">
+                      <CheckCircle2 size={13} className="text-green" />
+                      <span>Code <strong>{appliedPromo.promoter.codePromo}</strong> appliqué (-{appliedPromo.reductionPct}%)</span>
+                    </div>
+                    <button 
+                      type="button" 
+                      className="btn-checkout-remove-promo"
+                      onClick={handleRemovePromo}
+                      title="Retirer ce code"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                {promoError && <div className="checkout-promo-error">{promoError}</div>}
               </div>
             </div>
 
@@ -858,7 +1020,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
                     </>
                   ) : (
                     <>
-                      <span>Payer {bookPrice.toLocaleString()} FCFA</span>
+                      <span>Payer {payablePrice.toLocaleString()} FCFA</span>
                       <ArrowRight size={15} />
                     </>
                   )}
@@ -869,7 +1031,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
                   <span>Passerelle officielle FedaPay • Encaissement immédiat</span>
                 </div>
 
-                <div className="has-access-code-wrapper">
+                <div className="checkout-aux-actions">
                   <button
                     type="button"
                     className="btn-has-code-link"
@@ -882,6 +1044,16 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
                     <Key size={13} />
                     <span>J'ai un code</span>
                   </button>
+
+                  <button
+                    type="button"
+                    className="btn-simulation-link"
+                    onClick={handleSimulatePaymentSuccess}
+                    title="Tester immédiatement le déblocage sans carte ni Mobile Money"
+                  >
+                    <Sparkles size={13} />
+                    <span>🧪 Simuler le paiement (Test sans frais)</span>
+                  </button>
                 </div>
               </>
             ) : (
@@ -891,9 +1063,9 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
                     <Key size={16} />
                   </div>
                   <div className="redeem-text-col">
-                    <h4 className="redeem-title">Débloquer avec un code promo</h4>
+                    <h4 className="redeem-title">Débloquer avec un code VIP offert</h4>
                     <p className="redeem-desc">
-                      Entrez le code promo de votre créateur pour débloquer cette formation avec une réduction
+                      Entrez votre code d'accès offert par Mr Ben pour débloquer immédiatement sans paiement
                     </p>
                   </div>
                 </div>

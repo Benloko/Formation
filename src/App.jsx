@@ -10,6 +10,7 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { BonusModal } from './components/BonusModal';
 import { BookReader } from './components/BookReader';
 import { AdminDashboard } from './components/AdminDashboard';
+import { PromoterPortal } from './components/PromoterPortal';
 import { storageService } from './services/storageService';
 import { BOOKS_DATA, DUO_PACK } from './data/booksData';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -20,11 +21,13 @@ const parseHash = () => {
   const hash = window.location.hash || '';
   if (!hash) return null;
   
+  const cleanHash = hash.toLowerCase();
   if (hash === '#admin') {
     return { isAdmin: true };
   }
-
-  const cleanHash = hash.toLowerCase();
+  if (cleanHash.startsWith('#promoteur') || cleanHash.startsWith('#espace-promoteur')) {
+    return { isPromoter: true };
+  }
   if (cleanHash.startsWith('#formation')) {
     return { tab: 'FORMATIONS' };
   }
@@ -99,6 +102,43 @@ export function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(() => initialNav.openCheckout || false);
   const [isBonusOpen, setIsBonusOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(() => window.location.hash === '#admin');
+  const [isPromoterOpen, setIsPromoterOpen] = useState(() => (window.location.hash || '').toLowerCase().startsWith('#promoteur'));
+
+  // Bannière de code promo détecté via lien d'un promoteur
+  const [activePromoBanner, setActivePromoBanner] = useState(() => {
+    try {
+      const code = storageService.detectAndSavePromoFromUrl();
+      if (code) {
+        const promoter = storageService.getPromoterByCode(code);
+        if (promoter && promoter.status !== 'BLOQUÉ') {
+          return { code, reductionPct: promoter.reductionPct };
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  React.useEffect(() => {
+    const checkPromo = () => {
+      try {
+        const code = storageService.detectAndSavePromoFromUrl();
+        if (code) {
+          const promoter = storageService.getPromoterByCode(code);
+          if (promoter && promoter.status !== 'BLOQUÉ') {
+            setActivePromoBanner({ code, reductionPct: promoter.reductionPct });
+          }
+        }
+      } catch {}
+    };
+
+    checkPromo();
+    window.addEventListener('hashchange', checkPromo);
+    window.addEventListener('mrben_promo_detected', checkPromo);
+    return () => {
+      window.removeEventListener('hashchange', checkPromo);
+      window.removeEventListener('mrben_promo_detected', checkPromo);
+    };
+  }, []);
 
   const handleSelectTab = (tab) => {
     setActiveTab(tab);
@@ -160,6 +200,10 @@ export function App() {
     const handleHashChange = () => {
       if (window.location.hash === '#admin') {
         setIsAdminOpen(true);
+        return;
+      }
+      if ((window.location.hash || '').toLowerCase().startsWith('#promoteur')) {
+        setIsPromoterOpen(true);
         return;
       }
       const parsed = parseHash();
@@ -224,17 +268,54 @@ export function App() {
           {/* Stickers de personnages animés (Garçon & Fille) */}
           <AnimatedStickers />
 
-          {/* Bouton en bas : "Débloquer ma formation" -> Ouvre le Grand Livre */}
+          {/* Bouton en bas : "Débloquer ma formation" (adapté si déjà débloqué ou avec code promo) */}
           <div className="bottom-cta-container">
-            <button 
-              className="btn-unlock-formation"
-              onClick={() => setActiveTab('FORMATIONS')}
-            >
-              <span className="shimmer-sweep-ray"></span>
-              <Sparkles size={14} className="cta-sparkle-icon" />
-              <span className="btn-text-content">Débloquer ma formation</span>
-              <ArrowRight size={14} className="cta-arrow-icon" />
-            </button>
+            {(() => {
+              const isBDUnlocked = storageService.isBookUnlocked('livre-bd-storytelling');
+              const isVideoUnlocked = storageService.isBookUnlocked('livre-videos-ia');
+              const isAllUnlocked = isBDUnlocked && isVideoUnlocked;
+              const isOneUnlocked = (isBDUnlocked && !isVideoUnlocked) || (!isBDUnlocked && isVideoUnlocked);
+
+              if (isAllUnlocked) {
+                return (
+                  <button 
+                    className="btn-unlock-formation book-already-unlocked-cta"
+                    onClick={() => setActiveTab('FORMATIONS')}
+                  >
+                    <span className="shimmer-sweep-ray"></span>
+                    <Sparkles size={14} className="cta-sparkle-icon" />
+                    <span className="btn-text-content">Accéder à mes formations</span>
+                    <ArrowRight size={14} className="cta-arrow-icon" />
+                  </button>
+                );
+              }
+
+              const buttonTitle = isOneUnlocked ? "Débloquer la 2ème formation" : "Débloquer ma formation";
+
+              return (
+                <button 
+                  className={`btn-unlock-formation ${activePromoBanner ? 'has-promo' : ''}`}
+                  onClick={() => setActiveTab('FORMATIONS')}
+                >
+                  <span className="shimmer-sweep-ray"></span>
+                  <Sparkles size={activePromoBanner ? 16 : 14} className="cta-sparkle-icon" />
+                  {activePromoBanner ? (
+                    <div className="btn-promo-content-group">
+                      <div className="btn-promo-main-row">
+                        <span className="btn-text-content">{buttonTitle}</span>
+                        <span className="btn-promo-discount-badge">-{activePromoBanner.reductionPct}%</span>
+                      </div>
+                      <span className="btn-promo-callout">
+                        Code <strong>{activePromoBanner.code}</strong> appliqué • Cliquez pour voir
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="btn-text-content">{buttonTitle}</span>
+                  )}
+                  <ArrowRight size={activePromoBanner ? 16 : 14} className="cta-arrow-icon" />
+                </button>
+              );
+            })()}
           </div>
         </>
       )}
@@ -242,6 +323,7 @@ export function App() {
       {/* 4. VUE FORMATIONS : LE GRAND LIVRE BLANC OUVERT PLEIN ÉCRAN AVEC RUBAN ROUGE */}
       {activeTab === 'FORMATIONS' && (
         <FormationsBookView 
+          activePromo={activePromoBanner}
           onClose={() => setActiveTab('HOME')}
           onUnlockBook={handleOpenBookUnlock}
           onOpenCheckout={(book) => {
@@ -324,6 +406,16 @@ export function App() {
       {/* Espace Administrateur Mr Ben (Dashboard & Générateur de Codes Sécurisés) */}
       {isAdminOpen && (
         <AdminDashboard onClose={() => setIsAdminOpen(false)} />
+      )}
+
+      {/* Espace Partenaire Promoteur Mr Ben */}
+      {isPromoterOpen && (
+        <PromoterPortal onClose={() => {
+          setIsPromoterOpen(false);
+          if ((window.location.hash || '').toLowerCase().startsWith('#promoteur')) {
+            window.location.hash = '';
+          }
+        }} />
       )}
     </div>
   );

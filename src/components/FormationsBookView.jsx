@@ -1,17 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BOOKS_DATA } from '../data/booksData';
 import { storageService } from '../services/storageService';
 import { Sparkles, ArrowRight, CheckCircle2, Award, Info } from 'lucide-react';
 import './FormationsBookView.css';
 
-export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
+export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
+  const [prices, setPrices] = useState(() => storageService.getFormationPrices());
+  const [activePromo, setActivePromo] = useState(() => {
+    if (propActivePromo) return propActivePromo;
+    try {
+      const code = storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
+      if (code) {
+        const promoter = storageService.getPromoterByCode(code);
+        if (promoter && promoter.status !== 'BLOQUÉ') {
+          return {
+            code: promoter.codePromo,
+            reductionPct: promoter.reductionPct,
+            targetBookId: promoter.targetBookId
+          };
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  useEffect(() => {
+    if (propActivePromo) {
+      setActivePromo(propActivePromo);
+    }
+  }, [propActivePromo]);
+
+  useEffect(() => {
+    const updatePrices = (e) => {
+      setPrices(e.detail || storageService.getFormationPrices());
+    };
+    const updatePromo = () => {
+      try {
+        const code = storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
+        if (code) {
+          const promoter = storageService.getPromoterByCode(code);
+          if (promoter && promoter.status !== 'BLOQUÉ') {
+            setActivePromo({
+              code: promoter.codePromo,
+              reductionPct: promoter.reductionPct,
+              targetBookId: promoter.targetBookId
+            });
+            return;
+          }
+        }
+        setActivePromo(null);
+      } catch {}
+    };
+
+    window.addEventListener('mrben_price_changed', updatePrices);
+    window.addEventListener('mrben_promo_detected', updatePromo);
+    window.addEventListener('storage', () => {
+      setPrices(storageService.getFormationPrices());
+      updatePromo();
+    });
+    return () => {
+      window.removeEventListener('mrben_price_changed', updatePrices);
+      window.removeEventListener('mrben_promo_detected', updatePromo);
+    };
+  }, []);
 
   const bookBD = BOOKS_DATA.find((b) => b.id === 'livre-bd-storytelling') || BOOKS_DATA[0];
   const bookVideo = BOOKS_DATA.find((b) => b.id === 'livre-videos-ia') || BOOKS_DATA[1];
 
   const isBDUnlocked = storageService.isBookUnlocked(bookBD.id);
   const isVideoUnlocked = storageService.isBookUnlocked(bookVideo.id);
+
+  // Calcul des réductions avec code promo
+  const baseBdPrice = prices['livre-bd-storytelling'] || 2500;
+  const isBdEligible = activePromo && (!activePromo.targetBookId || activePromo.targetBookId === 'all' || activePromo.targetBookId === bookBD.id);
+  const bdReductionPct = isBdEligible ? (activePromo.reductionPct || 0) : 0;
+  const finalBdPrice = bdReductionPct > 0 
+    ? Math.max(0, Math.round(baseBdPrice * (1 - bdReductionPct / 100))) 
+    : baseBdPrice;
+
+  const baseVideoPrice = prices['livre-videos-ia'] || 3100;
+  const isVideoEligible = activePromo && (!activePromo.targetBookId || activePromo.targetBookId === 'all' || activePromo.targetBookId === bookVideo.id);
+  const videoReductionPct = isVideoEligible ? (activePromo.reductionPct || 0) : 0;
+  const finalVideoPrice = videoReductionPct > 0 
+    ? Math.max(0, Math.round(baseVideoPrice * (1 - videoReductionPct / 100))) 
+    : baseVideoPrice;
 
   return (
     <div className="formations-book-viewport">
@@ -64,6 +137,11 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
             <div className="page-inner-content page-fade-in">
               <div className="page-header-row">
                 <span className="page-category-tag">Bandes dessinées</span>
+                {bdReductionPct > 0 && !isBDUnlocked && (
+                  <span className="promo-applied-chip">
+                    ✨ Code <strong>{activePromo.code}</strong> actif (-{bdReductionPct}%)
+                  </span>
+                )}
               </div>
 
               {/* Sticker du Livre 1 100% détouré sans fond */}
@@ -73,9 +151,23 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
                   alt="Livre BD & Storytelling Mr Ben" 
                   className="book-sticker-img"
                 />
-                <div className={`book-price-badge ${isBDUnlocked ? 'is-unlocked' : ''}`}>
-                  <span className="price-tag">{isBDUnlocked ? "✓ Débloqué" : "2 500 FCFA"}</span>
-                  {!isBDUnlocked && <span className="badge-highlight">Best-Seller</span>}
+                <div className={`book-price-badge ${isBDUnlocked ? 'is-unlocked' : ''} ${bdReductionPct > 0 && !isBDUnlocked ? 'has-discount' : ''}`}>
+                  {isBDUnlocked ? (
+                    <span className="price-tag">✓ Débloqué</span>
+                  ) : bdReductionPct > 0 ? (
+                    <>
+                      <div className="promo-badge-prices">
+                        <span className="promo-old-price">{baseBdPrice.toLocaleString()} F</span>
+                        <span className="price-tag promo-new-price">{finalBdPrice.toLocaleString()} FCFA</span>
+                      </div>
+                      <span className="badge-highlight promo-pill-badge">-{bdReductionPct}% PROMO</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="price-tag">{baseBdPrice.toLocaleString()} FCFA</span>
+                      <span className="badge-highlight">Best-Seller</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -139,7 +231,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
                 {isBDUnlocked ? (
                   <button 
                     className="btn-unlock-formation-card book-unlocked-btn"
-                    onClick={() => onUnlockBook(bookBD)}
+                    onClick={() => onUnlockBook({ ...bookBD, price: baseBdPrice })}
                   >
                     <CheckCircle2 size={15} className="unlocked-icon-check" />
                     <span>Formation Débloquée • Ouvrir</span>
@@ -147,11 +239,17 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
                   </button>
                 ) : (
                   <button 
-                    className="btn-unlock-formation-card"
-                    onClick={() => onUnlockBook(bookBD)}
+                    className={`btn-unlock-formation-card ${bdReductionPct > 0 ? 'card-has-promo' : ''}`}
+                    onClick={() => onUnlockBook({ ...bookBD, price: finalBdPrice, originalPrice: baseBdPrice })}
                   >
                     <Sparkles size={14} />
-                    <span>Débloquer cette formation (2 500 F)</span>
+                    {bdReductionPct > 0 ? (
+                      <span className="btn-card-text-promo">
+                        Débloquer cette formation (<strong>{finalBdPrice.toLocaleString()} F</strong> <del className="btn-slashed-original">{baseBdPrice.toLocaleString()} F</del>)
+                      </span>
+                    ) : (
+                      <span>Débloquer cette formation ({baseBdPrice.toLocaleString()} F)</span>
+                    )}
                     <ArrowRight size={14} />
                   </button>
                 )}
@@ -166,6 +264,11 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
             <div className="page-inner-content page-fade-in">
               <div className="page-header-row">
                 <span className="page-category-tag video-tag">Vidéo avec IA</span>
+                {videoReductionPct > 0 && !isVideoUnlocked && (
+                  <span className="promo-applied-chip video-chip">
+                    ✨ Code <strong>{activePromo.code}</strong> actif (-{videoReductionPct}%)
+                  </span>
+                )}
               </div>
 
               {/* Sticker du Livre 2 100% détouré sans artefact */}
@@ -175,9 +278,23 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
                   alt="Livre Vidéos Virales IA Mr Ben" 
                   className="book-sticker-img"
                 />
-                <div className={`book-price-badge video-price ${isVideoUnlocked ? 'is-unlocked' : ''}`}>
-                  <span className="price-tag">{isVideoUnlocked ? "✓ Débloqué" : "3 100 FCFA"}</span>
-                  {!isVideoUnlocked && <span className="badge-highlight">Tendance 2026</span>}
+                <div className={`book-price-badge video-price ${isVideoUnlocked ? 'is-unlocked' : ''} ${videoReductionPct > 0 && !isVideoUnlocked ? 'has-discount' : ''}`}>
+                  {isVideoUnlocked ? (
+                    <span className="price-tag">✓ Débloqué</span>
+                  ) : videoReductionPct > 0 ? (
+                    <>
+                      <div className="promo-badge-prices">
+                        <span className="promo-old-price video-old">{baseVideoPrice.toLocaleString()} F</span>
+                        <span className="price-tag promo-new-price video-new">{finalVideoPrice.toLocaleString()} FCFA</span>
+                      </div>
+                      <span className="badge-highlight promo-pill-badge video-pill">-{videoReductionPct}% PROMO</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="price-tag">{baseVideoPrice.toLocaleString()} FCFA</span>
+                      <span className="badge-highlight">Tendance 2026</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -241,7 +358,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
                 {isVideoUnlocked ? (
                   <button 
                     className="btn-unlock-formation-card video-card-btn book-unlocked-btn"
-                    onClick={() => onUnlockBook(bookVideo)}
+                    onClick={() => onUnlockBook({ ...bookVideo, price: baseVideoPrice })}
                   >
                     <CheckCircle2 size={15} className="unlocked-icon-check" />
                     <span>Formation Débloquée • Ouvrir</span>
@@ -249,11 +366,17 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices }) {
                   </button>
                 ) : (
                   <button 
-                    className="btn-unlock-formation-card video-card-btn"
-                    onClick={() => onUnlockBook(bookVideo)}
+                    className={`btn-unlock-formation-card video-card-btn ${videoReductionPct > 0 ? 'card-has-promo' : ''}`}
+                    onClick={() => onUnlockBook({ ...bookVideo, price: finalVideoPrice, originalPrice: baseVideoPrice })}
                   >
                     <Sparkles size={14} />
-                    <span>Débloquer cette formation (3 100 F)</span>
+                    {videoReductionPct > 0 ? (
+                      <span className="btn-card-text-promo">
+                        Débloquer cette formation (<strong>{finalVideoPrice.toLocaleString()} F</strong> <del className="btn-slashed-original">{baseVideoPrice.toLocaleString()} F</del>)
+                      </span>
+                    ) : (
+                      <span>Débloquer cette formation ({baseVideoPrice.toLocaleString()} F)</span>
+                    )}
                     <ArrowRight size={14} />
                   </button>
                 )}

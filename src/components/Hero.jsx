@@ -1,9 +1,23 @@
-import React from 'react';
-import { Sparkles, BookOpen, Video, Award, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, BookOpen, Video, ChevronRight } from 'lucide-react';
+import { storageService } from '../services/storageService';
 import './Hero.css';
 import { LAUNCH_BONUS } from '../data/servicesData';
 
 export function Hero({ selectedBookId, onSelectBook, onOpenBonusModal }) {
+  const [prices, setPrices] = useState(() => storageService.getFormationPrices());
+
+  useEffect(() => {
+    const updatePrices = (e) => {
+      setPrices(e.detail || storageService.getFormationPrices());
+    };
+    window.addEventListener('mrben_price_changed', updatePrices);
+    window.addEventListener('storage', () => setPrices(storageService.getFormationPrices()));
+    return () => {
+      window.removeEventListener('mrben_price_changed', updatePrices);
+    };
+  }, []);
+
   return (
     <section className="hero-section">
       {/* Badge discret */}
@@ -36,7 +50,7 @@ export function Hero({ selectedBookId, onSelectBook, onOpenBonusModal }) {
         >
           <BookOpen size={14} />
           <span>Livre 1 : BD & Storytelling</span>
-          <span className="segment-price">2 500 F</span>
+          <span className="segment-price">{(prices['livre-bd-storytelling'] || 2500).toLocaleString()} F</span>
         </button>
 
         <button 
@@ -45,16 +59,7 @@ export function Hero({ selectedBookId, onSelectBook, onOpenBonusModal }) {
         >
           <Video size={14} />
           <span>Livre 2 : Vidéos IA</span>
-          <span className="segment-price">3 100 F</span>
-        </button>
-
-        <button 
-          className={`segment-btn pack-segment ${selectedBookId === 'pack-duo-mr-ben' ? 'active' : ''}`}
-          onClick={() => onSelectBook('pack-duo-mr-ben')}
-        >
-          <Award size={14} />
-          <span>Pack Duo</span>
-          <span className="segment-price gold">4 600 F</span>
+          <span className="segment-price">{(prices['livre-videos-ia'] || 3100).toLocaleString()} F</span>
         </button>
       </div>
     </section>

@@ -1236,10 +1236,13 @@
   flex-shrink: 0;
 }
 
-/* Bouton épuré : J'ai un code d'accès */
-.has-access-code-wrapper {
-  margin-top: 0.95rem;
-  text-align: center;
+/* Boutons secondaires : J'ai un code d'accès & Mode test simulation */
+.checkout-aux-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .btn-has-code-link {
@@ -1263,6 +1266,30 @@
 .btn-has-code-link:hover {
   color: #7dd3fc;
   background: rgba(56, 189, 248, 0.08);
+}
+
+.btn-simulation-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px dashed rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-simulation-link:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.6);
+  color: #6ee7b7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }
 
 /* Carte de saisie du code d'accès */
@@ -1489,3 +1516,150 @@
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   CODE PROMO & PRIX RÉDUIT DANS LE CHECKOUT
+   ========================================================================== */
+
+.clean-price-pill.with-discount {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.65rem 1rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.discount-prices-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.price-struck {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.discounted-price {
+  font-size: 1.35rem;
+  color: #10b981;
+  font-weight: 800;
+}
+
+.savings-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #86efac;
+  background: rgba(16, 185, 129, 0.18);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+.checkout-promo-box {
+  width: 100%;
+  max-width: 380px;
+  margin: 0.65rem auto 0;
+}
+
+.checkout-promo-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.25rem 0.35rem 0.25rem 0.65rem;
+  transition: all 0.2s ease;
+}
+
+.checkout-promo-input-row:focus-within {
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.promo-input-glyph {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.checkout-promo-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  outline: none;
+  letter-spacing: 0.04em;
+}
+
+.checkout-promo-input::placeholder {
+  color: #64748b;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+.btn-checkout-apply-promo {
+  padding: 0.4rem 0.75rem;
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-checkout-apply-promo:hover {
+  background: rgba(139, 92, 246, 0.45);
+}
+
+.checkout-promo-applied-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+}
+
+.promo-applied-text {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  color: #86efac;
+}
+
+.promo-applied-text strong {
+  color: #ffffff;
+  font-family: monospace;
+}
+
+.btn-checkout-remove-promo {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.btn-checkout-remove-promo:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.checkout-promo-error {
+  font-size: 0.7rem;
+  color: #fca5a5;
+  margin-top: 0.35rem;
+  text-align: left;
+}
+

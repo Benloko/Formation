@@ -96,7 +96,21 @@ export function BookReader({
   });
   const [themeMode, setThemeMode] = useState('paper'); // 'paper' (blanc sobre doux) | 'dark' (anthracite sobre)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [currentPrice, setCurrentPrice] = useState(() => storageService.getFormationPrice(book?.id) || book?.price || 2500);
   const mainStageRef = useRef(null);
+
+  useEffect(() => {
+    setCurrentPrice(storageService.getFormationPrice(book?.id) || book?.price || 2500);
+    const handlePriceChange = () => {
+      setCurrentPrice(storageService.getFormationPrice(book?.id) || book?.price || 2500);
+    };
+    window.addEventListener('mrben_price_changed', handlePriceChange);
+    window.addEventListener('storage', handlePriceChange);
+    return () => {
+      window.removeEventListener('mrben_price_changed', handlePriceChange);
+      window.removeEventListener('storage', handlePriceChange);
+    };
+  }, [book?.id, book?.price]);
 
   // Aplatir toutes les pages du livre avec référence à leur chapitre
   const allPages = React.useMemo(() => {
@@ -294,9 +308,9 @@ export function BookReader({
                   <button 
                     type="button" 
                     className="btn-unlock-gold" 
-                    onClick={() => onOpenCheckout(book)}
+                    onClick={() => onOpenCheckout({ ...book, price: currentPrice })}
                   >
-                    Débloquer la formation ({book.price.toLocaleString()} {book.currency})
+                    Débloquer la formation ({currentPrice.toLocaleString()} {book.currency || 'FCFA'})
                   </button>
                   <button 
                     type="button" 

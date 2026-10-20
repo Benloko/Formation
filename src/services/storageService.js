@@ -4,7 +4,15 @@ const STORAGE_KEYS = {
   UNLOCKED_CODES: "mrben_unlocked_codes",
   ORDERS: "mrben_orders_list",
   ACTIVE_USER: "mrben_current_user",
-  ADMIN_CODES: "mrben_admin_generated_codes"
+  ADMIN_CODES: "mrben_admin_generated_codes",
+  FORMATION_PRICES: "mrben_formation_prices",
+  PROMOTERS: "mrben_promoters_list",
+  PENDING_PROMO: "mrben_pending_promo_code"
+};
+
+const DEFAULT_PRICES = {
+  "livre-bd-storytelling": 2500,
+  "livre-videos-ia": 3100
 };
 
 // Zéro commande de test par défaut : données réelles uniquement
@@ -85,17 +93,24 @@ export const storageService = {
 
       const cleanEmail = email.trim().toLowerCase();
 
+      // Liste des codes admin révoqués / bloqués
+      const adminCodes = storageService.getAdminGeneratedCodes();
+      const blockedCodesList = new Set(
+        adminCodes.filter(c => c.status === "BLOQUÉ").map(c => c.code)
+      );
+
       // 1. Vérifier si une commande officielle (achat ou duo) est associée à ce compte Google
       const orders = storageService.getAllOrders();
       const hasOrder = orders.some(o => 
         o.clientEmail && 
         o.clientEmail.toLowerCase() === cleanEmail && 
-        (o.itemId === bookId || o.itemId === "pack-duo-mr-ben")
+        (o.itemId === bookId || o.itemId === "pack-duo-mr-ben") &&
+        o.status !== "BLOQUÉ" &&
+        (!o.code || !blockedCodesList.has(o.code))
       );
       if (hasOrder) return true;
 
-      // 2. Vérifier si un code admin à usage unique a été activé par ce compte
-      const adminCodes = storageService.getAdminGeneratedCodes();
+      // 2. Vérifier si un code admin à usage unique actif a été activé par ce compte
       const hasAdminCode = adminCodes.some(c => 
         c.status === "UTILISÉ" && 
         c.usedBy && 
@@ -108,7 +123,8 @@ export const storageService = {
       const codes = storageService.getUnlockedCodes();
       return codes.some(c => 
         (c.itemId === bookId || c.itemId === "pack-duo-mr-ben") &&
-        c.userEmail && c.userEmail.toLowerCase() === cleanEmail
+        c.userEmail && c.userEmail.toLowerCase() === cleanEmail &&
+        (!c.code || !blockedCodesList.has(c.code))
       );
     } catch {
       return false;
@@ -296,6 +312,14 @@ export const storageService = {
     );
 
     if (adminMatch) {
+      // Sécurité : Vérifier si le code a été bloqué par l'administrateur Mr Ben
+      if (adminMatch.status === "BLOQUÉ") {
+        return { 
+          success: false, 
+          message: "Ce code d'accès a été bloqué par l'administrateur. L'accès à la formation est révoqué." 
+        };
+      }
+
       // Sécurité : Vérifier si le code a déjà été utilisé
       if (adminMatch.status === "UTILISÉ") {
         if (cleanEmail && adminMatch.usedBy && adminMatch.usedBy.toLowerCase() === cleanEmail) {
@@ -393,7 +417,7 @@ export const storageService = {
   },
 
   // Créer une commande suite à un paiement
-  createOrder: ({ clientName, clientEmail, clientPhone, itemId, itemTitle, amount }) => {
+  createOrder: ({ clientName, clientEmail, clientPhone, itemId, itemTitle, amount, promoCode, discountAmount }) => {
     const orders = storageService.getAllOrders();
     
     // Génération d'un code unique lisible
@@ -411,6 +435,8 @@ export const storageService = {
       amount,
       currency: "FCFA",
       code: generatedCode,
+      promoCode: promoCode ? String(promoCode).trim().toUpperCase() : null,
+      discountAmount: Number(discountAmount) || 0,
       date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()),
       status: "Actif"
     };
@@ -450,7 +476,15 @@ export const storageService = {
   getAdminStats: () => {
     const orders = storageService.getAllOrders();
     const totalRevenue = orders.reduce((sum, ord) => sum + (Number(ord.amount) || 0), 0);
-    const totalStudents = orders.length;
+    
+    // Un élève correspond à un compte unique (adresse email Google distincte)
+    const uniqueEmails = new Set(
+      orders
+        .map(o => (o.clientEmail || '').trim().toLowerCase())
+        .filter(email => email.length > 0)
+    );
+    const totalStudents = uniqueEmails.size;
+    const totalOrders = orders.length;
     
     const countBD = orders.filter(o => o.itemId === "livre-bd-storytelling").length;
     const countVideo = orders.filter(o => o.itemId === "livre-videos-ia").length;
@@ -459,6 +493,7 @@ export const storageService = {
     return {
       totalRevenue,
       totalStudents,
+      totalOrders,
       countBD,
       countVideo,
       countDuo
@@ -506,15 +541,111 @@ export const storageService = {
     return newCodeEntry;
   },
 
-  // Supprimer un code admin de la liste
+  // Bloquer un code d'accès gratuit (révoque immédiatement l'accès de l'élève)
+  blockAdminCode: (codeId) => {
+    try {
+      const codes = storageService.getAdminGeneratedCodes();
+      const codeItem = codes.find(c => c.id === codeId || c.code === codeId);
+      if (!codeItem) return false;
+
+      codeItem.status = "BLOQUÉ";
+      codeItem.blockedAt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date());
+      localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(codes));
+
+      // 1. Purger ce code de la liste des codes débloqués
+      const unlocked = storageService.getUnlockedCodes();
+      const nextUnlocked = unlocked.filter(u => u.code !== codeItem.code);
+      localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(nextUnlocked));
+
+      // 2. Marquer la commande correspondante comme bloquée
+      const orders = storageService.getAllOrders();
+      const nextOrders = orders.map(o => {
+        if (o.code === codeItem.code) {
+          return { ...o, status: "BLOQUÉ" };
+        }
+        return o;
+      });
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(nextOrders));
+
+      // 3. Déconnexion immédiate de l'utilisateur concerné s'il est actif sur cet appareil
+      const currentEmail = storageService.getLoggedInGmail();
+      if (currentEmail && codeItem.usedBy && codeItem.usedBy.toLowerCase() === currentEmail.toLowerCase()) {
+        storageService.logout();
+        window.dispatchEvent(new Event('mrben_auth_changed'));
+      }
+
+      window.dispatchEvent(new Event('storage'));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  // Débloquer / Réactiver un code d'accès gratuit
+  unblockAdminCode: (codeId) => {
+    try {
+      const codes = storageService.getAdminGeneratedCodes();
+      const codeItem = codes.find(c => c.id === codeId || c.code === codeId);
+      if (!codeItem) return false;
+
+      if (codeItem.usedBy) {
+        codeItem.status = "UTILISÉ";
+
+        // Réactiver la commande
+        const orders = storageService.getAllOrders();
+        const nextOrders = orders.map(o => {
+          if (o.code === codeItem.code) {
+            return { ...o, status: "ACTIF" };
+          }
+          return o;
+        });
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(nextOrders));
+
+        // Réactiver dans les codes débloqués
+        const unlocked = storageService.getUnlockedCodes();
+        if (!unlocked.some(u => u.code === codeItem.code)) {
+          unlocked.push({
+            code: codeItem.code,
+            itemId: codeItem.itemId,
+            itemTitle: codeItem.itemTitle,
+            userEmail: codeItem.usedBy,
+            unlockedAt: new Date().toISOString()
+          });
+          localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(unlocked));
+        }
+      } else {
+        codeItem.status = "DISPONIBLE";
+      }
+
+      delete codeItem.blockedAt;
+      localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(codes));
+      window.dispatchEvent(new Event('storage'));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  // Supprimer un code admin (directement possible s'il n'a pas encore été utilisé, ou s'il est bloqué)
   deleteAdminCode: (codeId) => {
     try {
       let codes = storageService.getAdminGeneratedCodes();
+      const target = codes.find(c => c.id === codeId || c.code === codeId);
+      
+      // Sécurité : Si le code est actuellement UTILISÉ par un élève actif, exiger son blocage préalable
+      if (target && target.status === "UTILISÉ") {
+        return { 
+          success: false, 
+          message: "Ce code est actuellement activé par un élève. Veuillez d'abord cliquer sur « Bloquer » pour révoquer son accès avant de le supprimer." 
+        };
+      }
+
       codes = codes.filter(c => c.id !== codeId && c.code !== codeId);
       localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(codes));
-      return codes;
+      window.dispatchEvent(new Event('storage'));
+      return { success: true };
     } catch {
-      return [];
+      return { success: false };
     }
   },
 
@@ -528,5 +659,321 @@ export const storageService = {
       itemTitle,
       amount: amount || 0
     });
+  },
+
+  // Récupérer tous les prix configurés des formations
+  getFormationPrices: () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.FORMATION_PRICES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          "livre-bd-storytelling": Number(parsed["livre-bd-storytelling"]) || DEFAULT_PRICES["livre-bd-storytelling"],
+          "livre-videos-ia": Number(parsed["livre-videos-ia"]) || DEFAULT_PRICES["livre-videos-ia"]
+        };
+      }
+      return { ...DEFAULT_PRICES };
+    } catch {
+      return { ...DEFAULT_PRICES };
+    }
+  },
+
+  // Récupérer le prix d'une formation spécifique
+  getFormationPrice: (bookId) => {
+    const prices = storageService.getFormationPrices();
+    return Number(prices[bookId]) || DEFAULT_PRICES[bookId] || 2500;
+  },
+
+  // Mettre à jour les prix des formations par l'administrateur Mr Ben
+  setFormationPrices: (newPrices) => {
+    try {
+      const current = storageService.getFormationPrices();
+      const updated = {
+        "livre-bd-storytelling": Math.max(0, Math.round(Number(newPrices["livre-bd-storytelling"]) || current["livre-bd-storytelling"])),
+        "livre-videos-ia": Math.max(0, Math.round(Number(newPrices["livre-videos-ia"]) || current["livre-videos-ia"]))
+      };
+      localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: updated }));
+      window.dispatchEvent(new Event('storage'));
+      return updated;
+    } catch {
+      return DEFAULT_PRICES;
+    }
+  },
+
+  // Rétablir les prix par défaut
+  resetFormationPrices: () => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(DEFAULT_PRICES));
+      window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: DEFAULT_PRICES }));
+      window.dispatchEvent(new Event('storage'));
+      return { ...DEFAULT_PRICES };
+    } catch {
+      return { ...DEFAULT_PRICES };
+    }
+  },
+
+  // =========================================================================
+  // GESTION DES CODES PROMO & PROMOTEURS (COMMISSION & ESPACE PRIVÉ)
+  // =========================================================================
+  // Sauvegarder un code promo provenant du lien du promoteur
+  setPendingPromoCode: (code) => {
+    try {
+      if (!code) return;
+      const clean = String(code).trim().toUpperCase();
+      sessionStorage.setItem(STORAGE_KEYS.PENDING_PROMO, clean);
+      localStorage.setItem(STORAGE_KEYS.PENDING_PROMO, clean);
+      window.dispatchEvent(new CustomEvent('mrben_promo_detected', { detail: { code: clean } }));
+    } catch {}
+  },
+
+  // Récupérer le code promo actuellement mémorisé
+  getPendingPromoCode: () => {
+    try {
+      const code = sessionStorage.getItem(STORAGE_KEYS.PENDING_PROMO) || 
+                   localStorage.getItem(STORAGE_KEYS.PENDING_PROMO) || 
+                   null;
+      return code ? String(code).trim().toUpperCase() : null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Nettoyer le code promo mémorisé
+  clearPendingPromoCode: () => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEYS.PENDING_PROMO);
+      localStorage.removeItem(STORAGE_KEYS.PENDING_PROMO);
+    } catch {}
+  },
+
+  // Détecter et mémoriser automatiquement un code promo depuis l'URL (search params ou hash)
+  detectAndSavePromoFromUrl: () => {
+    try {
+      let promo = null;
+
+      // 1. Depuis window.location.search (?promo=...)
+      if (typeof window !== 'undefined' && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        promo = params.get('promo');
+      }
+
+      // 2. Depuis window.location.hash (#formations?promo=... ou #?promo=...)
+      if (!promo && typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('promo=')) {
+        const queryStr = window.location.hash.includes('?') 
+          ? window.location.hash.split('?')[1] 
+          : window.location.hash.replace('#', '');
+        const params = new URLSearchParams(queryStr);
+        promo = params.get('promo');
+      }
+
+      if (promo) {
+        const clean = String(promo).trim().toUpperCase();
+        storageService.setPendingPromoCode(clean);
+        return clean;
+      }
+    } catch {}
+    return storageService.getPendingPromoCode();
+  },
+
+  getAllPromoters: () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PROMOTERS);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  getPromoterById: (id) => {
+    const list = storageService.getAllPromoters();
+    return list.find(p => p.id === id) || null;
+  },
+
+  getPromoterByCode: (code) => {
+    if (!code) return null;
+    const clean = String(code).trim().toUpperCase();
+    const list = storageService.getAllPromoters();
+    return list.find(p => (p.codePromo || '').toUpperCase() === clean) || null;
+  },
+
+  createPromoter: ({ nom, prenom, codePromo, whatsapp, targetBookId, reductionPct, commissionPct }) => {
+    try {
+      const list = storageService.getAllPromoters();
+      const cleanCode = (codePromo || '').trim().toUpperCase();
+
+      if (!cleanCode) {
+        return { success: false, message: "Le code promo ne peut pas être vide." };
+      }
+
+      // Vérifier si le code existe déjà
+      const existing = list.find(p => (p.codePromo || '').toUpperCase() === cleanCode);
+      if (existing) {
+        return { success: false, message: `Le code promo "${cleanCode}" existe déjà. Veuillez en choisir un autre.` };
+      }
+
+      const newPromoter = {
+        id: `prom_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        nom: (nom || '').trim(),
+        prenom: (prenom || '').trim(),
+        codePromo: cleanCode,
+        whatsapp: (whatsapp || '').trim(),
+        targetBookId: targetBookId || 'all', // 'livre-bd-storytelling' | 'livre-videos-ia' | 'all'
+        reductionPct: Math.max(1, Math.min(90, Math.round(Number(reductionPct) || 15))),
+        commissionPct: Math.max(1, Math.min(90, Math.round(Number(commissionPct) || 20))),
+        password: '', // défini par le promoteur lors de son 1er accès
+        status: 'ACTIF', // 'ACTIF' | 'BLOQUÉ'
+        salesCount: 0,
+        totalEarned: 0,
+        salesHistory: [],
+        createdAt: new Date().toLocaleDateString('fr-FR', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        })
+      };
+
+      const updated = [newPromoter, ...list];
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage'));
+      return { success: true, promoter: newPromoter };
+    } catch {
+      return { success: false, message: "Erreur lors de la création du promoteur." };
+    }
+  },
+
+  // Définir le mot de passe initial du promoteur lors de sa 1ère connexion
+  setPromoterPassword: (promoterId, password) => {
+    try {
+      const list = storageService.getAllPromoters();
+      const idx = list.findIndex(p => p.id === promoterId);
+      if (idx === -1) return { success: false, message: "Promoteur introuvable." };
+
+      list[idx].password = String(password).trim();
+      list[idx].passwordSetAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+      window.dispatchEvent(new Event('storage'));
+      return { success: true, promoter: list[idx] };
+    } catch {
+      return { success: false, message: "Erreur lors de l'enregistrement du mot de passe." };
+    }
+  },
+
+  // Vérifier la connexion du promoteur
+  verifyPromoterLogin: (promoterId, password) => {
+    const promoter = storageService.getPromoterById(promoterId);
+    if (!promoter) return { success: false, message: "Compte promoteur introuvable." };
+    if (promoter.status === 'BLOQUÉ') {
+      return { success: false, message: "Ce compte promoteur a été bloqué par l'administration." };
+    }
+    if (!promoter.password) {
+      return { success: false, needsSetup: true, message: "Vous devez d'abord créer votre mot de passe." };
+    }
+    if (promoter.password !== String(password).trim()) {
+      return { success: false, message: "Mot de passe incorrect." };
+    }
+    return { success: true, promoter };
+  },
+
+  // Bloquer / Débloquer un promoteur
+  togglePromoterStatus: (promoterId) => {
+    try {
+      const list = storageService.getAllPromoters();
+      const idx = list.findIndex(p => p.id === promoterId);
+      if (idx === -1) return null;
+      list[idx].status = list[idx].status === 'ACTIF' ? 'BLOQUÉ' : 'ACTIF';
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+      window.dispatchEvent(new Event('storage'));
+      return list[idx];
+    } catch {
+      return null;
+    }
+  },
+
+  // Supprimer définitivement un promoteur
+  deletePromoter: (promoterId) => {
+    try {
+      const list = storageService.getAllPromoters();
+      const filtered = list.filter(p => p.id !== promoterId);
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(filtered));
+      window.dispatchEvent(new Event('storage'));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  // Calculer et valider un code promo appliqué par un acheteur
+  validatePromoCode: (code, bookId) => {
+    if (!code) return { valid: false, message: "Veuillez saisir un code promo." };
+    const promoter = storageService.getPromoterByCode(code);
+    if (!promoter) {
+      return { valid: false, message: "Ce code promo n'existe pas." };
+    }
+    if (promoter.status === 'BLOQUÉ') {
+      return { valid: false, message: "Ce code promo a été désactivé." };
+    }
+    if (promoter.targetBookId && promoter.targetBookId !== 'all' && promoter.targetBookId !== bookId) {
+      return { valid: false, message: "Ce code promo n'est pas valable pour cette formation." };
+    }
+
+    const originalPrice = storageService.getFormationPrice(bookId);
+    const reductionPct = promoter.reductionPct || 0;
+    const discountAmount = Math.round((originalPrice * reductionPct) / 100);
+    const finalPrice = Math.max(0, originalPrice - discountAmount);
+    
+    // Commission du promoteur calculée sur le montant payé par l'élève
+    const commissionPct = promoter.commissionPct || 0;
+    const commissionAmount = Math.round((finalPrice * commissionPct) / 100);
+    const mrBenShare = Math.max(0, finalPrice - commissionAmount);
+
+    return {
+      valid: true,
+      promoter,
+      originalPrice,
+      reductionPct,
+      discountAmount,
+      finalPrice,
+      commissionPct,
+      commissionAmount,
+      mrBenShare
+    };
+  },
+
+  // Enregistrer une vente réussie réalisée avec un code promo
+  recordPromoSale: (promoCode, { bookId, bookTitle, buyerName, buyerEmail, orderId, paidAmount }) => {
+    try {
+      const list = storageService.getAllPromoters();
+      const cleanCode = (promoCode || '').trim().toUpperCase();
+      const idx = list.findIndex(p => (p.codePromo || '').toUpperCase() === cleanCode);
+      if (idx === -1) return false;
+
+      const promoter = list[idx];
+      const commissionPct = promoter.commissionPct || 0;
+      const commissionAmount = Math.round((paidAmount * commissionPct) / 100);
+
+      const saleRecord = {
+        id: `sale_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        date: new Date().toLocaleDateString('fr-FR', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }),
+        orderId: orderId || '',
+        bookId,
+        bookTitle: bookTitle || 'Formation Mr Ben',
+        buyerName: buyerName || 'Élève',
+        buyerEmail: buyerEmail || '',
+        paidAmount,
+        commissionEarned: commissionAmount
+      };
+
+      promoter.salesCount = (promoter.salesCount || 0) + 1;
+      promoter.totalEarned = (promoter.totalEarned || 0) + commissionAmount;
+      promoter.salesHistory = [saleRecord, ...(promoter.salesHistory || [])];
+
+      list[idx] = promoter;
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+      window.dispatchEvent(new Event('storage'));
+      return true;
+    } catch {
+      return false;
+    }
   }
 };

@@ -155,16 +155,7 @@ export function Header({ activeTab, onSelectTab, onOpenAbout, onOpenAdmin }) {
                 </div>
               )}
             </div>
-          ) : (
-            <button 
-              className="about-icon-btn" 
-              onClick={onOpenAbout}
-              title="Profil / À Propos"
-              aria-label="Profil"
-            >
-              <User size={18} />
-            </button>
-          )}
+          ) : null}
         </div>
       </div>
     </header>

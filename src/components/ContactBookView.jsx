@@ -41,6 +41,19 @@ export function ContactBookView({ onClose }) {
     window.open(`mailto:${email}?subject=${encodeURIComponent("Contact Mr Ben - Échange Professionnel")}`, '_blank');
   };
 
+  const handlePromoterWhatsApp = (e) => {
+    if (e) e.stopPropagation();
+    const text = encodeURIComponent("Bonjour Mr Ben, je souhaite devenir promoteur officiel et obtenir mon Code Promo personnel pour gagner 1 000 FCFA sur chaque vente.");
+    window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
+  };
+
+  const handlePromoterEmail = (e) => {
+    if (e) e.stopPropagation();
+    const subject = encodeURIComponent("Demande de Code Promo Promoteur - Mr Ben");
+    const body = encodeURIComponent("Bonjour Mr Ben,\n\nJe souhaite devenir promoteur officiel et obtenir mon propre Code Promo pour recommander vos formations et toucher 1 000 FCFA sur chaque vente.\n\nMerci !");
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+  };
+
   return (
     <div className="contact-book-viewport">
       {/* CONTENEUR DU LIVRE D'ART (PAGE UNIQUE CONTACT) */}
@@ -67,15 +80,39 @@ export function ContactBookView({ onClose }) {
           </div>
 
           <div className="single-page-scrollable-content">
-            {/* En-tête de la page de carnet (sans mention 'Page 4' superflue) */}
-            <div className="single-page-header">
+            {/* En-tête : Devenir Promoteur & Gagner 1 000 FCFA avec les deux icônes cool WhatsApp & Gmail */}
+            <div className="single-page-header promoter-contact-header">
               <div className="header-meta-row">
-                <span className="contact-category-tag">Ligne Directe & Disponibilité</span>
+                <span className="contact-category-tag">🌟 Gagnez 1 000 FCFA / Vente</span>
               </div>
-              <h1 className="single-page-main-title">Entrer en Contact avec Mr Ben</h1>
-              <p className="single-page-subtitle">
-                Pour toute question sur nos formations, un projet sur-mesure ou une collaboration créative, vous pouvez me joindre directement via ces 3 canaux officiels.
-              </p>
+              <div className="promoter-banner-card">
+                <div className="promoter-banner-text-side">
+                  <h1 className="promoter-banner-title">Devenez Promoteur & Touchez Vos Commissions</h1>
+                  <p className="promoter-banner-desc">
+                    Recevez votre <strong>Code Promo officiel</strong> à partager. À chaque achat effectué avec votre code, vous encaissez immédiatement <strong>1 000 FCFA</strong>. Pour l'activer, écrivez-nous :
+                  </p>
+                </div>
+                <div className="promoter-quick-icons">
+                  <button 
+                    type="button"
+                    className="promoter-mini-icon-btn whatsapp-icon-btn"
+                    onClick={handlePromoterWhatsApp}
+                    title="Demander mon code promo sur WhatsApp"
+                    aria-label="Contacter sur WhatsApp"
+                  >
+                    <MessageCircle size={19} />
+                  </button>
+                  <button 
+                    type="button"
+                    className="promoter-mini-icon-btn gmail-icon-btn"
+                    onClick={handlePromoterEmail}
+                    title="Demander mon code promo par Gmail"
+                    aria-label="Contacter par Gmail"
+                  >
+                    <Mail size={19} />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Grille stylisée des 3 canaux aux formes arrondies et uniques */}

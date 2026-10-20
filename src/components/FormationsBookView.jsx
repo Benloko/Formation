@@ -94,13 +94,13 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
           className={`mobile-tab-btn ${mobileActiveTab === 'bd' ? 'active' : ''}`}
           onClick={() => setMobileActiveTab('bd')}
         >
-          <span>Page 1 : Bandes dessinées</span>
+          <span>Bandes dessinées</span>
         </button>
         <button 
           className={`mobile-tab-btn ${mobileActiveTab === 'video' ? 'active' : ''}`}
           onClick={() => setMobileActiveTab('video')}
         >
-          <span>Page 2 : Vidéo avec IA</span>
+          <span>Vidéos avec l'IA</span>
         </button>
       </div>
 
@@ -253,6 +253,21 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     <ArrowRight size={14} />
                   </button>
                 )}
+
+                {/* Petit bouton simple et discret pour passer directement à la 2ème formation */}
+                <button 
+                  type="button" 
+                  className="btn-switch-other-formation"
+                  onClick={() => {
+                    setMobileActiveTab('video');
+                    const rightPage = document.querySelector('.right-page');
+                    if (rightPage) rightPage.scrollTop = 0;
+                  }}
+                  title="Voir la formation Vidéos avec l'IA"
+                >
+                  <span>Voir la 2ème formation : Vidéos avec l'IA</span>
+                  <ArrowRight size={13} />
+                </button>
               </div>
             </div>
           </div>
@@ -380,6 +395,21 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     <ArrowRight size={14} />
                   </button>
                 )}
+
+                {/* Petit bouton simple et discret pour revenir à la 1ère formation */}
+                <button 
+                  type="button" 
+                  className="btn-switch-other-formation"
+                  onClick={() => {
+                    setMobileActiveTab('bd');
+                    const leftPage = document.querySelector('.left-page');
+                    if (leftPage) leftPage.scrollTop = 0;
+                  }}
+                  title="Voir la formation Bandes dessinées"
+                >
+                  <ArrowRight size={13} style={{ transform: 'rotate(180deg)' }} />
+                  <span>Voir la 1ère formation : Bandes dessinées</span>
+                </button>
               </div>
             </div>
           </div>

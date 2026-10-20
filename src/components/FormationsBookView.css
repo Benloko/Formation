@@ -262,19 +262,17 @@
 .page-header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-bottom: 0.45rem;
   padding-bottom: 0.3rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   gap: 0.5rem;
+  padding-right: 2.5rem; /* Espace réservé pour la croix rouge ✕ */
 }
 
-.left-page .page-header-row {
-  flex-direction: row-reverse;
-}
-
+.left-page .page-header-row,
 .right-page .page-header-row {
-  flex-direction: row;
+  flex-direction: row; /* Toujours aligné à gauche */
 }
 
 .promo-applied-chip {
@@ -738,6 +736,35 @@
   transform: translateY(-1px);
 }
 
+/* Petit bouton simple et discret pour basculer vers l'autre formation */
+.btn-switch-other-formation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: none;
+  color: #78716c;
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.45rem 0.6rem;
+  margin-top: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(120, 113, 108, 0.4);
+}
+
+.btn-switch-other-formation:hover {
+  color: #1c1917;
+  text-decoration-color: #1c1917;
+  background: rgba(0, 0, 0, 0.04);
+}
+
 .video-card-btn {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border-color: rgba(56, 189, 248, 0.5);
@@ -816,39 +843,52 @@
 
 @media (max-width: 900px) {
   .formations-book-viewport {
-    top: 4.2rem;
-    padding: 0.4rem 0.6rem 0.6rem 0.6rem;
+    top: calc(3.4rem + env(safe-area-inset-top, 0px));
+    bottom: 0;
+    height: calc(100vh - 3.4rem);
+    height: calc(100dvh - 3.4rem);
+    padding: 0.35rem 0.6rem calc(0.6rem + env(safe-area-inset-bottom, 0px)) 0.6rem;
+    justify-content: flex-start; /* Supprime le grand espace noir vide sur Android */
   }
 
   .book-mobile-tab-switch {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 0.4rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.45rem;
     z-index: 30;
     width: 100%;
     max-width: 480px;
+    flex-shrink: 0;
   }
 
   .mobile-tab-btn {
     flex: 1;
-    padding: 0.4rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    padding: 0.45rem 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    border-radius: 8px;
+    font-size: 0.82rem;
     font-weight: 700;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
 
   .mobile-tab-btn.active {
     background: #fbf9f4;
     color: #1c1917;
     border-color: #fbf9f4;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
   .book-multipage-wrapper {
     width: 100%;
-    height: 94%;
+    flex: 1;
+    min-height: 0; /* Indispensable pour le défilement tactile sur iOS Safari */
+    height: auto;
+    max-height: none;
+    margin-bottom: 0.4rem;
   }
 
   .book-pages-stack-edge {
@@ -859,6 +899,8 @@
     grid-template-columns: 1fr;
     height: 100%;
     max-width: 480px;
+    display: flex;
+    flex-direction: column;
   }
 
   .red-ribbon-bookmark {
@@ -870,7 +912,18 @@
   }
 
   .book-page {
-    padding: 1.1rem 1rem;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    padding: 1rem 1rem calc(2.4rem + env(safe-area-inset-bottom, 0px)) 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Défilement ultra-fluide sur iPhone Safari */
+    overscroll-behavior-y: contain;
+  }
+
+  .page-inner-content {
+    min-height: min-content;
+    height: auto;
   }
 
   .mobile-hidden {

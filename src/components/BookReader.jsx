@@ -14,7 +14,8 @@ import {
   X,
   Video,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  List
 } from 'lucide-react';
 import { BOOKS_DATA } from '../data/booksData';
 import { storageService } from '../services/storageService';
@@ -95,7 +96,13 @@ export function BookReader({
     }
   });
   const [themeMode, setThemeMode] = useState('paper'); // 'paper' (blanc sobre doux) | 'dark' (anthracite sobre)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Sur mobile, le sommaire est fermé par défaut pour afficher directement la leçon
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 860;
+    }
+    return false;
+  });
   const [currentPrice, setCurrentPrice] = useState(() => storageService.getFormationPrice(book?.id) || book?.price || 2500);
   const mainStageRef = useRef(null);
 
@@ -111,6 +118,17 @@ export function BookReader({
       window.removeEventListener('storage', handlePriceChange);
     };
   }, [book?.id, book?.price]);
+
+  // Fermer le sommaire sur mobile avec la touche Echap
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isSidebarOpen && window.innerWidth <= 860) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSidebarOpen]);
 
   // Aplatir toutes les pages du livre avec référence à leur chapitre
   const allPages = React.useMemo(() => {
@@ -176,30 +194,42 @@ export function BookReader({
     }
   };
 
+  const handleSelectLesson = (pageIndex) => {
+    if (pageIndex !== -1) {
+      setCurrentPageIndex(pageIndex);
+      // Sur mobile, refermer le tiroir pour laisser place à la lecture
+      if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+        setIsSidebarOpen(false);
+      }
+    }
+  };
+
   return (
     <div className={`book-reader-container theme-${themeMode}`}>
       
-      {/* 1. Barre de navigation supérieure épurée */}
+      {/* 1. Barre de navigation supérieure épurée et responsive */}
       <header className="reader-navbar">
         <div className="reader-nav-left">
           <button 
             type="button"
             className="reader-back-action" 
             onClick={onBack || onClose} 
-            title="Quitter la lecture"
+            title="Quitter la formation"
+            aria-label="Quitter la formation"
           >
-            <ChevronLeft size={17} />
-            <span>Quitter la lecture</span>
+            <ChevronLeft size={18} />
+            <span className="reader-nav-label">Quitter</span>
           </button>
           
           <button 
             type="button"
-            className="reader-toggle-sidebar-btn"
+            className={`reader-toggle-sidebar-btn ${isSidebarOpen ? 'active' : ''}`}
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            title={isSidebarOpen ? "Masquer le sommaire" : "Afficher le sommaire"}
+            title={isSidebarOpen ? "Fermer le sommaire" : "Afficher le sommaire"}
+            aria-label="Sommaire de la formation"
           >
-            <Layers size={15} />
-            <span>{isSidebarOpen ? "Masquer le sommaire" : "Voir tous les chapitres"}</span>
+            <List size={16} />
+            <span className="reader-nav-label">Sommaire</span>
           </button>
         </div>
 
@@ -213,35 +243,45 @@ export function BookReader({
             type="button" 
             className="reader-theme-toggle"
             onClick={() => setThemeMode(themeMode === 'paper' ? 'dark' : 'paper')}
-            title={themeMode === 'paper' ? "Passer en mode sombre" : "Passer en mode papier blanc sobre"}
+            title={themeMode === 'paper' ? "Mode sombre" : "Mode papier"}
+            aria-label="Changer de thème"
           >
-            {themeMode === 'paper' ? (
-              <>
-                <Moon size={14} />
-                <span>Mode sombre</span>
-              </>
-            ) : (
-              <>
-                <Sun size={14} />
-                <span>Mode papier blanc</span>
-              </>
-            )}
+            {themeMode === 'paper' ? <Moon size={15} /> : <Sun size={15} />}
+            <span className="reader-nav-label">{themeMode === 'paper' ? 'Sombre' : 'Papier'}</span>
           </button>
 
           <span className="reader-progress-tag">
-            {currentPage ? `Page ${currentPage.pageNumber} / ${totalPages}` : ''}
+            {currentPage ? `${currentPage.pageNumber}/${totalPages}` : ''}
           </span>
         </div>
       </header>
 
-      {/* 2. Espace de travail : Sommaire à gauche + Page de lecture à droite */}
+      {/* Fond sombre transparent flouté sur mobile quand le sommaire est ouvert */}
+      <div 
+        className={`reader-sidebar-backdrop ${isSidebarOpen ? 'active' : ''}`}
+        onClick={() => setIsSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* 2. Espace de travail : Sommaire + Page de lecture */}
       <div className="reader-workspace">
         
-        {/* Volet latéral : Liste complète des Chapitres et Leçons */}
+        {/* Volet latéral (Desktop) ou Tiroir Coulissant (Mobile) */}
         <aside className={`reader-curriculum-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
           <div className="curriculum-sidebar-header">
-            <BookOpen size={16} />
-            <span>Programme de la formation</span>
+            <div className="curriculum-header-left">
+              <BookOpen size={16} />
+              <span>Programme de la formation</span>
+            </div>
+            <button 
+              type="button"
+              className="curriculum-mobile-close-btn"
+              onClick={() => setIsSidebarOpen(false)}
+              title="Fermer le sommaire"
+              aria-label="Fermer le sommaire"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <div className="curriculum-chapters-list">
@@ -265,11 +305,7 @@ export function BookReader({
                           key={pg.pageNumber}
                           type="button"
                           className={`curriculum-lesson-row ${isSelected ? 'active-lesson' : ''} ${isLocked ? 'locked-lesson' : ''}`}
-                          onClick={() => {
-                            if (pageIndexInAll !== -1) {
-                              setCurrentPageIndex(pageIndexInAll);
-                            }
-                          }}
+                          onClick={() => handleSelectLesson(pageIndexInAll)}
                         >
                           <span className="lesson-row-title">{pg.title}</span>
                           {isLocked && <Lock size={12} className="lesson-lock-icon" />}
@@ -525,22 +561,32 @@ export function BookReader({
                 className="nav-page-btn prev"
                 onClick={handlePrevPage}
                 disabled={currentPageIndex === 0}
+                title="Page précédente"
               >
                 <ChevronLeft size={16} />
-                <span>Page précédente</span>
+                <span className="nav-btn-text-full">Page précédente</span>
+                <span className="nav-btn-text-short">Précédent</span>
               </button>
 
-              <span className="reader-footer-page-num">
-                {currentPage ? `Page ${currentPage.pageNumber} sur ${totalPages}` : ''}
-              </span>
+              <button 
+                type="button"
+                className="nav-page-btn-sommaire"
+                onClick={() => setIsSidebarOpen(true)}
+                title="Consulter le sommaire complet"
+              >
+                <List size={14} />
+                <span>Sommaire</span>
+              </button>
 
               <button 
                 type="button"
                 className="nav-page-btn next"
                 onClick={handleNextPage}
                 disabled={currentPageIndex >= totalPages - 1}
+                title="Page suivante"
               >
-                <span>Page suivante</span>
+                <span className="nav-btn-text-full">Page suivante</span>
+                <span className="nav-btn-text-short">Suivant</span>
                 <ChevronRight size={16} />
               </button>
             </footer>

@@ -15,6 +15,25 @@ const DEFAULT_PRICES = {
   "livre-videos-ia": 3100
 };
 
+// Codes promo officiels reconnus universellement sur tous les appareils
+const DEFAULT_PROMOTERS = [
+  {
+    id: "prom_ben200",
+    nom: "LOKO",
+    prenom: "Mr Ben",
+    codePromo: "BEN200",
+    whatsapp: "2290199728385",
+    targetBookId: "all",
+    reductionPct: 20,
+    commissionPct: 50,
+    status: "ACTIF",
+    salesCount: 0,
+    totalEarned: 0,
+    salesHistory: [],
+    createdAt: "21/10/2026, 14:00"
+  }
+];
+
 // Zéro commande de test par défaut : données réelles uniquement
 const DEFAULT_ORDERS = [];
 
@@ -751,10 +770,11 @@ export const storageService = {
   detectAndSavePromoFromUrl: () => {
     try {
       let promo = null;
+      let params = null;
 
       // 1. Depuis window.location.search (?promo=...)
       if (typeof window !== 'undefined' && window.location.search) {
-        const params = new URLSearchParams(window.location.search);
+        params = new URLSearchParams(window.location.search);
         promo = params.get('promo');
       }
 
@@ -763,13 +783,29 @@ export const storageService = {
         const queryStr = window.location.hash.includes('?') 
           ? window.location.hash.split('?')[1] 
           : window.location.hash.replace('#', '');
-        const params = new URLSearchParams(queryStr);
+        params = new URLSearchParams(queryStr);
         promo = params.get('promo');
       }
 
       if (promo) {
         const clean = String(promo).trim().toUpperCase();
         storageService.setPendingPromoCode(clean);
+
+        // Si ce promoteur est transmis via les paramètres du lien mais n'existe pas encore sur cet appareil, l'enregistrer automatiquement
+        if (params && !storageService.getPromoterByCode(clean)) {
+          const pct = Math.max(1, Math.min(90, parseInt(params.get('pct') || '20', 10) || 20));
+          const name = params.get('name') || 'Partenaire';
+          storageService.createPromoter({
+            nom: '',
+            prenom: decodeURIComponent(name),
+            codePromo: clean,
+            whatsapp: '',
+            targetBookId: 'all',
+            reductionPct: pct,
+            commissionPct: 50
+          });
+        }
+
         return clean;
       }
     } catch {}
@@ -779,9 +815,16 @@ export const storageService = {
   getAllPromoters: () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PROMOTERS);
-      return saved ? JSON.parse(saved) : [];
+      const customList = saved ? JSON.parse(saved) : [];
+      const merged = [...customList];
+      DEFAULT_PROMOTERS.forEach(def => {
+        if (!merged.some(p => (p.codePromo || '').trim().toUpperCase() === def.codePromo.toUpperCase())) {
+          merged.push(def);
+        }
+      });
+      return merged;
     } catch {
-      return [];
+      return DEFAULT_PROMOTERS;
     }
   },
 
@@ -794,7 +837,7 @@ export const storageService = {
     if (!code) return null;
     const clean = String(code).trim().toUpperCase();
     const list = storageService.getAllPromoters();
-    return list.find(p => (p.codePromo || '').toUpperCase() === clean) || null;
+    return list.find(p => (p.codePromo || '').trim().toUpperCase() === clean) || null;
   },
 
   createPromoter: ({ nom, prenom, codePromo, whatsapp, targetBookId, reductionPct, commissionPct }) => {

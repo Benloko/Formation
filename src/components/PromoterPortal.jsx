@@ -165,7 +165,7 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     setTimeout(() => setCopiedItem(null), 2000);
   };
 
-  const referralLink = `${window.location.origin}/#formations?promo=${promoter?.codePromo || ''}`;
+  const referralLink = `${window.location.origin}/#formations?promo=${promoter?.codePromo || ''}&pct=${promoter?.reductionPct || 20}&name=${encodeURIComponent(promoter?.prenom || 'Partenaire')}`;
 
   const shareText = `Bonjour ! Découvre les formations officielles de Mr Ben pour créer des Bandes Dessinées et des Vidéos Virales avec l'IA 🚀.\n\nProfite de -${promoter?.reductionPct || 20}% de réduction immédiate avec mon code promo exclusif : *${promoter?.codePromo}*\n\nAccès direct : ${referralLink}`;
 

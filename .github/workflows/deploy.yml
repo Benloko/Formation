@@ -31,7 +31,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          server-dir: domains/gpower-store.com/public_html/formation/
+          server-dir: formation/
+          dangerous-clean-slate: true
           protocol: ftp
           port: 21
           timeout: 60000

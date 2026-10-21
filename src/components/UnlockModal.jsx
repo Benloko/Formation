@@ -8,22 +8,26 @@ export function UnlockModal({ onClose, onUnlocked }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successInfo, setSuccessInfo] = useState(null);
 
-  const handleVerify = (e) => {
+  const handleVerify = async (e) => {
     e.preventDefault();
     if (!code.trim()) {
       setErrorMsg('Veuillez entrer un code d\'accès valide.');
       return;
     }
 
-    const res = storageService.unlockWithCode(code);
-    if (res.success) {
-      setSuccessInfo(res.order);
-      setErrorMsg('');
-      if (onUnlocked) {
-        onUnlocked(res.order);
+    try {
+      const res = await storageService.unlockWithCodeAsync(code);
+      if (res.success) {
+        setSuccessInfo(res.order);
+        setErrorMsg('');
+        if (onUnlocked) {
+          onUnlocked(res.order);
+        }
+      } else {
+        setErrorMsg(res.message);
       }
-    } else {
-      setErrorMsg(res.message);
+    } catch {
+      setErrorMsg("Erreur technique lors de la vérification.");
     }
   };
 

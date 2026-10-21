@@ -87,7 +87,10 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   const [copiedItem, setCopiedItem] = useState(null);
 
   // Synchronisation des données du promoteur
-  const refreshPromoterData = () => {
+  const refreshPromoterData = async () => {
+    try {
+      await storageService.initCloudSync();
+    } catch {}
     if (promoter?.id) {
       const fresh = storageService.getPromoterById(promoter.id);
       if (fresh) setPromoter(fresh);

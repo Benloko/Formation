@@ -63,7 +63,145 @@ const DEFAULT_ORDERS = [];
   } catch {}
 })();
 
+// Base d'accès API Hostinger (avec fallback transparent sur le domaine officiel en local)
+const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+  ? 'https://formation.gpower-store.com/api'
+  : '/api';
+
+const apiRequest = async (action, data = null, method = 'POST') => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const url = method === 'GET' 
+      ? `${API_BASE}/?action=${encodeURIComponent(action)}${data ? '&' + new URLSearchParams(data).toString() : ''}`
+      : `${API_BASE}/?action=${encodeURIComponent(action)}`;
+
+    const options = {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    if (method === 'POST' && data) {
+      options.body = JSON.stringify(data);
+    }
+
+    const res = await fetch(url, options);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+};
+
 export const storageService = {
+  // Synchronisation avec la base de données cloud Hostinger
+  // Synchronisation bidirectionnelle avec la base de données cloud Hostinger
+  initCloudSync: async () => {
+    try {
+      const email = storageService.getLoggedInGmail();
+      const res = await apiRequest('get_all', email ? { email } : {}, 'GET');
+      if (res && res.success) {
+        if (Array.isArray(res.promoters) && res.promoters.length > 0) {
+          const local = storageService.getAllPromoters();
+          const map = new Map();
+          local.forEach(l => {
+            const key = (l.codePromo || '').trim().toUpperCase();
+            if (key) map.set(key, l);
+          });
+          res.promoters.forEach(r => {
+            const key = (r.codePromo || '').trim().toUpperCase();
+            if (key) map.set(key, { ...(map.get(key) || {}), ...r });
+          });
+          DEFAULT_PROMOTERS.forEach(d => {
+            const key = d.codePromo.toUpperCase();
+            if (!map.has(key)) map.set(key, d);
+          });
+          localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(Array.from(map.values())));
+        }
+        if (Array.isArray(res.adminCodes)) {
+          const localCodes = storageService.getAdminGeneratedCodes();
+          const mapCodes = new Map();
+          localCodes.forEach(lc => mapCodes.set(lc.code, lc));
+          res.adminCodes.forEach(rc => mapCodes.set(rc.code, { ...(mapCodes.get(rc.code) || {}), ...rc }));
+          localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(Array.from(mapCodes.values())));
+        }
+        if (Array.isArray(res.orders)) {
+          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(res.orders));
+        }
+        if (res.prices) {
+          localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(res.prices));
+        }
+        if (email && Array.isArray(res.unlocked) && res.unlocked.length > 0) {
+          const currentUnlocked = storageService.getUnlockedCodes();
+          res.unlocked.forEach(bookId => {
+            if (!currentUnlocked.some(u => u.itemId === bookId)) {
+              currentUnlocked.push({
+                itemId: bookId,
+                code: 'CLOUD_UNLOCKED',
+                itemTitle: bookId === 'livre-bd-storytelling' ? "L'Art du Storytelling & BD" : "Création de Vidéos Virales avec l'IA",
+                userEmail: email,
+                unlockedAt: new Date().toISOString()
+              });
+            }
+          });
+          localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(currentUnlocked));
+        }
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch {}
+  },
+
+  // Déblocage avec vérification cloud instantanée pour les codes créés sur un autre appareil
+  unlockWithCodeAsync: async (inputCode, currentBookId, userEmail) => {
+    // 1. Essai de validation locale rapide
+    const localRes = storageService.unlockWithCode(inputCode, currentBookId, userEmail);
+    if (localRes.success) {
+      return localRes;
+    }
+
+    // 2. Si le code n'est pas encore synchronisé localement, interroger directement le cloud Hostinger
+    try {
+      const cleanCode = (inputCode || '').trim().toUpperCase();
+      const cleanEmail = (userEmail || storageService.getLoggedInGmail() || '').trim().toLowerCase();
+
+      const apiRes = await apiRequest('redeem_admin_code', {
+        code: cleanCode,
+        email: cleanEmail,
+        bookId: currentBookId
+      });
+
+      if (apiRes && apiRes.success) {
+        const unlocked = storageService.getUnlockedCodes();
+        if (!unlocked.some(u => u.code === cleanCode)) {
+          unlocked.push({
+            code: cleanCode,
+            itemId: apiRes.bookId || currentBookId,
+            itemTitle: apiRes.bookTitle || '',
+            userEmail: cleanEmail,
+            unlockedAt: new Date().toISOString()
+          });
+          localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(unlocked));
+        }
+
+        // Synchroniser tous les codes en local
+        await storageService.initCloudSync();
+
+        return {
+          success: true,
+          order: apiRes.order || {
+            itemId: apiRes.bookId || currentBookId,
+            itemTitle: apiRes.bookTitle || '',
+            code: cleanCode
+          }
+        };
+      } else if (apiRes && apiRes.message) {
+        return { success: false, message: apiRes.message };
+      }
+    } catch {}
+
+    return localRes;
+  },
+
   // Déconnexion complète : purge l'e-mail connecté, les codes en cache et la session
   logout: () => {
     try {
@@ -368,6 +506,13 @@ export const storageService = {
       adminMatch.usedAt = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date());
       localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(adminCodes));
 
+      // Synchronisation cloud immédiate en arrière-plan
+      apiRequest('redeem_admin_code', {
+        code: adminMatch.code,
+        email: cleanEmail,
+        bookId: adminMatch.itemId
+      }).catch(() => {});
+
       // Création de la commande officielle offerte / autorisée par Mr Ben
       const order = storageService.createOrder({
         clientName: cleanEmail ? cleanEmail.split('@')[0] : adminMatch.recipientName || 'Élève Privilégié',
@@ -474,6 +619,9 @@ export const storageService = {
     });
     localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(unlocked));
 
+    // Synchronisation cloud en arrière-plan
+    apiRequest('create_order', newOrder).catch(() => {});
+
     return newOrder;
   },
 
@@ -557,6 +705,10 @@ export const storageService = {
 
     codes.unshift(newCodeEntry);
     localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(codes));
+
+    // Synchronisation cloud en arrière-plan
+    apiRequest('create_admin_code', newCodeEntry).catch(() => {});
+
     return newCodeEntry;
   },
 
@@ -594,6 +746,10 @@ export const storageService = {
       }
 
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('block_admin_code', { codeId }).catch(() => {});
+
       return true;
     } catch {
       return false;
@@ -639,6 +795,10 @@ export const storageService = {
       delete codeItem.blockedAt;
       localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(codes));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('unblock_admin_code', { codeId }).catch(() => {});
+
       return true;
     } catch {
       return false;
@@ -662,6 +822,10 @@ export const storageService = {
       codes = codes.filter(c => c.id !== codeId && c.code !== codeId);
       localStorage.setItem(STORAGE_KEYS.ADMIN_CODES, JSON.stringify(codes));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('delete_admin_code', { codeId }).catch(() => {});
+
       return { success: true };
     } catch {
       return { success: false };
@@ -714,6 +878,10 @@ export const storageService = {
       localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(updated));
       window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: updated }));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('update_prices', { prices: updated }).catch(() => {});
+
       return updated;
     } catch {
       return DEFAULT_PRICES;
@@ -877,6 +1045,10 @@ export const storageService = {
       const updated = [newPromoter, ...list];
       localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(updated));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('create_promoter', newPromoter).catch(() => {});
+
       return { success: true, promoter: newPromoter };
     } catch {
       return { success: false, message: "Erreur lors de la création du promoteur." };
@@ -925,6 +1097,10 @@ export const storageService = {
       list[idx].status = list[idx].status === 'ACTIF' ? 'BLOQUÉ' : 'ACTIF';
       localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('toggle_promoter_status', { promoterId }).catch(() => {});
+
       return list[idx];
     } catch {
       return null;
@@ -938,6 +1114,10 @@ export const storageService = {
       const filtered = list.filter(p => p.id !== promoterId);
       localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(filtered));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud en arrière-plan
+      apiRequest('delete_promoter', { promoterId }).catch(() => {});
+
       return true;
     } catch {
       return false;
@@ -1020,3 +1200,10 @@ export const storageService = {
     }
   }
 };
+
+// Synchronisation automatique dès le chargement dans le navigateur
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    storageService.initCloudSync();
+  }, 100);
+}

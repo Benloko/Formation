@@ -96,8 +96,9 @@ export function AdminDashboard({ onClose }) {
   const [priceInputs, setPriceInputs] = useState(() => storageService.getFormationPrices());
   const [priceSuccessMsg, setPriceSuccessMsg] = useState('');
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setIsRefreshing(true);
+    await storageService.initCloudSync();
     setOrders(storageService.getAllOrders());
     setStats(storageService.getAdminStats());
     setAdminCodes(storageService.getAdminGeneratedCodes());
@@ -274,7 +275,7 @@ export function AdminDashboard({ onClose }) {
   };
 
   const handleCopyWhatsAppMessage = (codeItem) => {
-    const text = `Bonjour ! Voici votre code d'accès offert pour débloquer la formation "${codeItem.itemTitle}" sur Mr Ben :\n\n🎁 Code : ${codeItem.code}\n🔗 Accès direct : https://formation-nu-sandy.vercel.app/\n\nCliquez sur "Débloquer", connectez-vous avec votre Google, et saisissez ce code. Accès immédiat et illimité !`;
+    const text = `Bonjour ! Voici votre code d'accès offert pour débloquer la formation "${codeItem.itemTitle}" sur Mr Ben :\n\n🎁 Code : ${codeItem.code}\n🔗 Accès direct : https://formation.gpower-store.com/\n\nCliquez sur "Débloquer", connectez-vous avec votre Google, et saisissez ce code. Accès immédiat et illimité !`;
     navigator.clipboard.writeText(text);
     setWhatsappCopied(true);
     setTimeout(() => setWhatsappCopied(false), 2000);

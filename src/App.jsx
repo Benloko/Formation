@@ -119,6 +119,17 @@ export function App() {
   });
 
   React.useEffect(() => {
+    // Synchronisation initiale et périodique avec le cloud Hostinger
+    storageService.initCloudSync();
+    const syncInterval = setInterval(() => {
+      storageService.initCloudSync();
+    }, 60000);
+
+    const onWindowFocus = () => {
+      storageService.initCloudSync();
+    };
+    window.addEventListener('focus', onWindowFocus);
+
     const checkPromo = () => {
       try {
         const code = storageService.detectAndSavePromoFromUrl();
@@ -135,6 +146,8 @@ export function App() {
     window.addEventListener('hashchange', checkPromo);
     window.addEventListener('mrben_promo_detected', checkPromo);
     return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('focus', onWindowFocus);
       window.removeEventListener('hashchange', checkPromo);
       window.removeEventListener('mrben_promo_detected', checkPromo);
     };

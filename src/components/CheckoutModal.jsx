@@ -111,7 +111,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
     } catch {}
   }, [activeBook?.id]);
 
-  const handleApplyPromo = (e) => {
+  const handleApplyPromo = async (e) => {
     if (e) e.preventDefault();
     setPromoError('');
     if (!promoInput.trim()) {
@@ -119,7 +119,14 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
       return;
     }
     const clean = promoInput.trim().toUpperCase();
-    const res = storageService.validatePromoCode(clean, activeBook.id);
+    let res = storageService.validatePromoCode(clean, activeBook.id);
+    
+    // Si non trouvé dans le cache local, tenter une synchronisation cloud Hostinger
+    if (!res.valid) {
+      await storageService.initCloudSync();
+      res = storageService.validatePromoCode(clean, activeBook.id);
+    }
+
     if (res.valid) {
       setAppliedPromo(res);
       setPromoError('');
@@ -693,7 +700,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   };
 
   // 5. Validation sécurisée d'un code d'accès accordé par Mr Ben
-  const handleRedeemAccessCode = (e) => {
+  const handleRedeemAccessCode = async (e) => {
     if (e) e.preventDefault();
     setCodeError('');
     if (!inputAccessCode.trim()) {
@@ -703,8 +710,8 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
 
     setIsVerifyingCodeInput(true);
 
-    setTimeout(() => {
-      const res = storageService.unlockWithCode(inputAccessCode, activeBook.id, selectedGmail);
+    try {
+      const res = await storageService.unlockWithCodeAsync(inputAccessCode, activeBook.id, selectedGmail);
       setIsVerifyingCodeInput(false);
 
       if (res.success) {
@@ -723,7 +730,10 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
       } else {
         setCodeError(res.message);
       }
-    }, 450);
+    } catch {
+      setIsVerifyingCodeInput(false);
+      setCodeError("Erreur technique lors de la vérification. Veuillez réessayer.");
+    }
   };
 
   // Clic pour ouvrir la formation

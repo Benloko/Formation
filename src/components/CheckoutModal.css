@@ -1268,28 +1268,161 @@
   background: rgba(56, 189, 248, 0.08);
 }
 
-.btn-simulation-link {
-  display: inline-flex;
+/* Panneau d'option en cours d'implémentation & Contact Direct */
+.payment-pending-card {
+  margin-top: 0.75rem;
+  padding: 1.25rem 1.1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px dashed rgba(16, 185, 129, 0.35);
-  color: #34d399;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-simulation-link:hover {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: rgba(16, 185, 129, 0.6);
-  color: #6ee7b7;
+.payment-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 999px;
+  color: #fbbf24;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pending-badge-icon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.payment-pending-desc {
+  margin: 0.85rem 0 1.15rem 0;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  line-height: 1.48;
+  max-width: 95%;
+}
+
+.payment-pending-desc strong {
+  color: #ffffff;
+}
+
+/* Groupe des deux seules icônes WhatsApp et Gmail */
+.payment-direct-icons-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.btn-channel-icon-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  position: relative;
+}
+
+.btn-channel-icon-circle:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 3px;
+}
+
+/* Canal WhatsApp */
+.channel-whatsapp {
+  background: rgba(37, 211, 102, 0.12);
+  border: 1.5px solid rgba(37, 211, 102, 0.35);
+  color: #25d366;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.15);
+}
+
+.channel-whatsapp:hover {
+  background: rgba(37, 211, 102, 0.22);
+  border-color: rgba(37, 211, 102, 0.6);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.32);
+}
+
+.channel-whatsapp:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Canal Gmail */
+.channel-gmail {
+  background: rgba(234, 67, 53, 0.1);
+  border: 1.5px solid rgba(234, 67, 53, 0.32);
+  box-shadow: 0 4px 14px rgba(234, 67, 53, 0.15);
+}
+
+.channel-gmail:hover {
+  background: rgba(234, 67, 53, 0.2);
+  border-color: rgba(234, 67, 53, 0.6);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 8px 24px rgba(234, 67, 53, 0.3);
+}
+
+.channel-gmail:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Actions en bas du panneau de contact */
+.payment-pending-footer-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.btn-enter-received-code {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1.1rem;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9px;
+  color: #fbbf24;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-enter-received-code:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fde68a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.btn-pending-back {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.76rem;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  transition: color 0.2s ease;
+}
+
+.btn-pending-back:hover {
+  color: #ffffff;
+  text-decoration: underline;
 }
 
 /* Carte de saisie du code d'accès */

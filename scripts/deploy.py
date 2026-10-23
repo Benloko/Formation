@@ -1,97 +1,20 @@
 import ftplib
 import os
 import sys
+import json
+import time
 
-def main():
-    server = os.environ.get('FTP_SERVER')
-    username = os.environ.get('FTP_USERNAME')
-    password = os.environ.get('FTP_PASSWORD')
+def upload_directory_tree(ftp, local_dist):
+    uploaded = 0
 
-    if not server or not username or not password:
-        print("❌ Erreur : Secrets FTP manquants (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).")
-        sys.exit(1)
-
-    print(f"🚀 Connexion FTP à {server} avec l'utilisateur {username}...")
-    ftp = ftplib.FTP(server, timeout=60)
-    ftp.login(username, password)
-    ftp.set_pasv(True)
-    
-    current_dir = ftp.pwd()
-    print(f"📂 Répertoire de départ FTP (PWD) : {current_dir}")
-    
-    try:
-        root_items = ftp.nlst()
-        print(f"📄 Contenu du répertoire de départ : {root_items}")
-    except Exception as e:
-        root_items = []
-        print(f"⚠️ Impossible de lister le répertoire de départ : {e}")
-
-    # Détection automatique du bon chemin sur Hostinger
-    target_dir = None
-    
-    # Cas 1 : L'utilisateur FTP pointe déjà directement sur le dossier du site
-    if 'index.html' in root_items or 'assets' in root_items:
-        print("✅ Détection : Le compte FTP pointe déjà directement sur la racine du site !")
-        target_dir = ""
-    # Cas 2 : Dossier 'formation' présent à la racine
-    elif 'formation' in root_items:
-        # Vérifions si 'formation' contient index.html ou assets
-        try:
-            sub = ftp.nlst('formation')
-            print(f"🔍 Contenu de 'formation' : {sub}")
-            target_dir = "formation"
-        except Exception:
-            target_dir = "formation"
-    # Cas 3 : Arborescence Hostinger standard 'domains'
-    elif 'domains' in root_items:
-        target_dir = "domains/gpower-store.com/public_html/formation"
-    # Cas 4 : Arborescence 'public_html'
-    elif 'public_html' in root_items:
-        target_dir = "public_html/formation"
-    else:
-        # Repli par défaut
-        target_dir = "formation"
-
-    print(f"🎯 Répertoire cible retenu pour le déploiement : '{target_dir or '.'}'")
-
-    if target_dir:
-        # Assurer que le dossier cible existe et y entrer
-        dirs = [d for d in target_dir.split('/') if d]
-        for d in dirs:
-            try:
-                ftp.cwd(d)
-            except Exception:
-                try:
-                    ftp.mkd(d)
-                    ftp.cwd(d)
-                except Exception as err:
-                    print(f"⚠️ Erreur lors de l'accès/création du dossier {d}: {err}")
-    
-    print(f"📍 Répertoire FTP final actif : {ftp.pwd()}")
-    print("Contenu actuel dans ce répertoire cible :")
-    try:
-        ftp.dir()
-    except Exception:
-        pass
-
-    # Déploiement des fichiers depuis ./dist
-    local_dist = "./dist"
-    if not os.path.exists(local_dist):
-        print("❌ Erreur : Le dossier ./dist n'existe pas. Compilez d'abord avec npm run build.")
-        sys.exit(1)
-
-    print("\n📦 Téléversement de tous les fichiers de ./dist...")
-    uploaded_count = 0
-
-    def upload_dir(local_path):
-        nonlocal uploaded_count
+    def _walk(local_path):
+        nonlocal uploaded
         for item in os.listdir(local_path):
             l_item = os.path.join(local_path, item)
             if os.path.isfile(l_item):
                 with open(l_item, 'rb') as f:
                     ftp.storbinary(f"STOR {item}", f)
-                    uploaded_count += 1
-                    print(f"  ⬆️ {os.path.relpath(l_item, local_dist)}")
+                    uploaded += 1
             elif os.path.isdir(l_item):
                 try:
                     ftp.cwd(item)
@@ -100,12 +23,93 @@ def main():
                         ftp.mkd(item)
                         ftp.cwd(item)
                     except Exception as e:
-                        print(f"⚠️ Erreur création dossier {item}: {e}")
-                upload_dir(l_item)
+                        print(f"    ⚠️ Erreur création dossier '{item}': {e}")
+                _walk(l_item)
                 ftp.cwd('..')
 
-    upload_dir(local_dist)
-    print(f"\n🎉 Déploiement terminé avec succès ! {uploaded_count} fichiers téléversés.")
+    _walk(local_dist)
+    return uploaded
+
+def main():
+    server = os.environ.get('FTP_SERVER')
+    username = os.environ.get('FTP_USERNAME')
+    password = os.environ.get('FTP_PASSWORD')
+
+    if not server or not username or not password:
+        print("❌ Erreur : Secrets FTP manquants.")
+        sys.exit(1)
+
+    print(f"🚀 Connexion FTP à {server}...")
+    ftp = ftplib.FTP(server, timeout=60)
+    ftp.login(username, password)
+    ftp.set_pasv(True)
+
+    start_dir = ftp.pwd()
+    print(f"📂 Répertoire de base FTP : {start_dir}")
+
+    # Création du fichier de diagnostic dans dist
+    local_dist = "./dist"
+    diag_file = os.path.join(local_dist, "deploy_info.json")
+    diag_data = {
+        "deployed_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+        "commit": os.environ.get("GITHUB_SHA", "unknown")[:7],
+        "status": "ready"
+    }
+    with open(diag_file, "w") as f:
+        json.dump(diag_data, f, indent=2)
+
+    # Liste des emplacements candidats potentiels sur Hostinger
+    candidates = [
+        "",
+        "formation",
+        "public_html/formation",
+        "domains/gpower-store.com/public_html/formation",
+        "domains/gpower-store.com/public_html",
+        "public_html"
+    ]
+
+    target_dirs = []
+    print("\n🔍 Analyse des répertoires sur le serveur Hostinger...")
+    for c in candidates:
+        try:
+            ftp.cwd(start_dir)
+            if c:
+                ftp.cwd(c)
+            items = ftp.nlst()
+            basenames = [os.path.basename(i.rstrip('/')) for i in items]
+            if "index.html" in basenames or "assets" in basenames or "api" in basenames:
+                print(f"  🎯 Répertoire actif détecté avec site existant : '{c or '.'}'")
+                target_dirs.append(c)
+        except Exception:
+            pass
+
+    if not target_dirs:
+        # Si aucun n'a été détecté avec certitude, on déploie sur les répertoires standards
+        print("⚠️ Aucun index.html existant repéré, utilisation des chemins par défaut.")
+        target_dirs = ["formation", "domains/gpower-store.com/public_html/formation"]
+
+    print(f"\n📦 Déploiement vers {len(target_dirs)} emplacement(s) cible(s) : {target_dirs}")
+
+    for target in target_dirs:
+        ftp.cwd(start_dir)
+        print(f"\n➡️ Déploiement en cours dans : '{target or '.'}'")
+        if target:
+            for part in target.split('/'):
+                if not part:
+                    continue
+                try:
+                    ftp.cwd(part)
+                except Exception:
+                    try:
+                        ftp.mkd(part)
+                        ftp.cwd(part)
+                    except Exception as e:
+                        print(f"  ⚠️ Erreur dossier {part}: {e}")
+
+        count = upload_directory_tree(ftp, local_dist)
+        print(f"  ✅ {count} fichiers téléversés dans '{target or '.'}'")
+
+    print("\n🎉 Tous les déploiements se sont terminés avec succès !")
     ftp.quit()
 
 if __name__ == '__main__':

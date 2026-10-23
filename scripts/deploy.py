@@ -17,7 +17,7 @@ def send_telemetry():
         req = urllib.request.Request(
             "https://ntfy.sh/mrben_deploy_test_9934",
             data=report.encode("utf-8"),
-            headers={"Title": "Rapport Déploiement Mr Ben", "Priority": "default"}
+            headers={"Title": "Rapport Déploiement Mr Ben (Absolu)", "Priority": "default"}
         )
         urllib.request.urlopen(req, timeout=10)
     except Exception as e:
@@ -64,16 +64,16 @@ def main():
     ftp.login(username, password)
     ftp.set_pasv(True)
 
-    start_dir = ftp.pwd()
-    log(f"📂 Répertoire racine de connexion FTP : {start_dir}")
+    log(f"📂 Répertoire de connexion par défaut : {ftp.pwd()}")
 
-    # Lister le contenu du dossier racine de connexion
-    root_lines = []
+    # Vérification de la racine absolue /
     try:
-        ftp.dir(root_lines.append)
-        log(f"📄 Contenu brut du dossier de départ :\n" + "\n".join(root_lines[:15]))
+        ftp.cwd('/')
+        log(f"🌐 Navigation vers la racine absolue / réussie. PWD : {ftp.pwd()}")
+        root_items = ftp.nlst()
+        log(f"📄 Contenu à la racine absolue / : {root_items}")
     except Exception as e:
-        log(f"⚠️ Erreur listing racine : {e}")
+        log(f"⚠️ Erreur accès racine / : {e}")
 
     # Préparation du diagnostic
     local_dist = "./dist"
@@ -86,83 +86,29 @@ def main():
     with open(diag_file, "w") as f:
         json.dump(diag_data, f, indent=2)
 
-    # Recherche récursive de l'arborescence des dossiers
-    all_dirs = []
-    def explore(path, depth=0):
-        if depth > 3:
-            return
-        all_dirs.append(path)
-        try:
-            ftp.cwd(path if path else start_dir)
-            lines = []
-            ftp.dir(lines.append)
-            for line in lines:
-                parts = line.split()
-                if line.startswith('d') and len(parts) >= 9:
-                    dname = parts[-1]
-                    if dname not in ('.', '..'):
-                        sub = f"{path}/{dname}" if path else dname
-                        explore(sub, depth + 1)
-        except Exception:
-            pass
-
-    log("\n🔍 Exploration de l'arborescence du serveur...")
-    explore("", 0)
-    log(f"📁 Dossiers découverts sur le serveur : {all_dirs}")
-
-    # Identifier où se trouve le site actif (où se trouvent déjà index.html, robots.txt ou assets)
-    target_dirs = []
-    for d in all_dirs:
-        try:
-            ftp.cwd(start_dir)
-            if d:
-                ftp.cwd(d)
-            items = ftp.nlst()
-            bnames = [os.path.basename(i.rstrip('/')) for i in items]
-            if "robots.txt" in bnames or "index.html" in bnames or "assets" in bnames or "vite.svg" in bnames:
-                log(f"🎯 SITE ACTIF DÉTECTÉ DANS : '{d or '.'}'")
-                target_dirs.append(d)
-        except Exception:
-            pass
-
-    # Cibles prioritaires à couvrir impérativement sur Hostinger
-    priority_candidates = [
-        "formation",
-        "domains/gpower-store.com/public_html/formation",
-        "domains/gpower-store.com/formation",
-        "public_html/formation"
+    # Chemins absolus Hostinger à cibler
+    absolute_targets = [
+        "/domains/gpower-store.com/public_html/formation",
+        "/domains/gpower-store.com/formation",
+        "/public_html/formation",
+        "/formation"
     ]
-    
-    final_targets = []
-    for cand in target_dirs + priority_candidates:
-        if cand not in final_targets:
-            final_targets.append(cand)
 
-    log(f"\n📦 Déploiement multi-dossiers vers : {final_targets}")
+    log(f"\n📦 Déploiement vers les répertoires cibles absolus : {absolute_targets}")
 
-    for target in final_targets:
-        ftp.cwd(start_dir)
-        log(f"\n➡️ Téléversement vers '{target or '.'}'...")
-        if target:
-            for part in target.split('/'):
-                if not part:
-                    continue
-                try:
-                    ftp.cwd(part)
-                except Exception:
-                    try:
-                        ftp.mkd(part)
-                        ftp.cwd(part)
-                    except Exception as e:
-                        log(f"  ⚠️ Erreur dossier {part}: {e}")
-
+    success_targets = []
+    for target in absolute_targets:
         try:
+            ftp.cwd(target)
+            current_target = ftp.pwd()
+            log(f"\n➡️ CWD réussi dans '{current_target}' ! Début téléversement...")
             count = upload_directory_tree(ftp, local_dist)
-            log(f"  ✅ {count} fichiers téléversés dans '{target or '.'}'")
+            log(f"  ✅ {count} fichiers téléversés dans '{current_target}'")
+            success_targets.append(current_target)
         except Exception as e:
-            log(f"  ⚠️ Erreur téléversement dans '{target}': {e}")
+            log(f"  ❌ Impossible d'accéder ou téléverser dans '{target}': {e}")
 
-    log("\n🎉 Tous les téléversements sont terminés !")
+    log(f"\n🎉 Déploiement terminé ! Dossiers mis à jour : {success_targets}")
     ftp.quit()
 
     # Test HTTP direct en ligne

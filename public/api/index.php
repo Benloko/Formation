@@ -42,6 +42,16 @@ if (!empty($rawInput)) {
 }
 
 switch ($action) {
+    case 'where_am_i':
+        echo json_encode([
+            'success' => true,
+            'dir' => __DIR__,
+            'doc_root' => $_SERVER['DOCUMENT_ROOT'] ?? '',
+            'script_filename' => $_SERVER['SCRIPT_FILENAME'] ?? '',
+            'time' => date('Y-m-d H:i:s')
+        ]);
+        exit();
+
     // -------------------------------------------------------------------------
     // 1. Récupération globale pour synchronisation instantanée du frontend
     // -------------------------------------------------------------------------

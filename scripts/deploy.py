@@ -125,18 +125,22 @@ def main():
         except Exception:
             pass
 
-    if not target_dirs:
-        # Si aucune détection précise, on cible les chemins clés
-        log("⚠️ Aucun index.html ou robots.txt existant repéré, repli sur dossiers clés.")
-        for d in all_dirs:
-            if "formation" in d.lower():
-                target_dirs.append(d)
-        if not target_dirs:
-            target_dirs = [""]
+    # Cibles prioritaires à couvrir impérativement sur Hostinger
+    priority_candidates = [
+        "formation",
+        "domains/gpower-store.com/public_html/formation",
+        "domains/gpower-store.com/formation",
+        "public_html/formation"
+    ]
+    
+    final_targets = []
+    for cand in target_dirs + priority_candidates:
+        if cand not in final_targets:
+            final_targets.append(cand)
 
-    log(f"\n📦 Déploiement des nouveaux fichiers vers : {target_dirs}")
+    log(f"\n📦 Déploiement multi-dossiers vers : {final_targets}")
 
-    for target in target_dirs:
+    for target in final_targets:
         ftp.cwd(start_dir)
         log(f"\n➡️ Téléversement vers '{target or '.'}'...")
         if target:
@@ -152,11 +156,27 @@ def main():
                     except Exception as e:
                         log(f"  ⚠️ Erreur dossier {part}: {e}")
 
-        count = upload_directory_tree(ftp, local_dist)
-        log(f"  ✅ {count} fichiers téléversés dans '{target or '.'}'")
+        try:
+            count = upload_directory_tree(ftp, local_dist)
+            log(f"  ✅ {count} fichiers téléversés dans '{target or '.'}'")
+        except Exception as e:
+            log(f"  ⚠️ Erreur téléversement dans '{target}': {e}")
 
-    log("\n🎉 Déploiement terminé avec succès !")
+    log("\n🎉 Tous les téléversements sont terminés !")
     ftp.quit()
+
+    # Test HTTP direct en ligne
+    time.sleep(3)
+    try:
+        test_url = "https://formation.gpower-store.com/api/index.php?action=where_am_i"
+        log(f"\n🌐 Test en direct du endpoint live : {test_url}")
+        req = urllib.request.Request(test_url, headers={"User-Agent": "DeployTester/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            body = resp.read().decode('utf-8', errors='ignore')
+            log(f"Réponse en direct du serveur Hostinger : {body}")
+    except Exception as err:
+        log(f"⚠️ Erreur test live : {err}")
+
     send_telemetry()
 
 if __name__ == '__main__':

@@ -14,6 +14,10 @@
   color: #f1f5f9;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
@@ -26,27 +30,35 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .promoter-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(10, 15, 26, 0.85);
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(10, 15, 26, 0.92);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(16px);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100vw;
 }
 
 .topbar-brand-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .topbar-avatar-badge {
@@ -69,12 +81,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
 }
 
 .topbar-title-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
 }
 
 .portal-app-title {
@@ -83,31 +97,37 @@
   color: #ffffff;
   margin: 0;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .portal-cert-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.65rem;
+  gap: 0.25rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: #818cf8;
   background: rgba(99, 102, 241, 0.12);
   border: 1px solid rgba(99, 102, 241, 0.25);
-  padding: 0.12rem 0.45rem;
+  padding: 0.1rem 0.42rem;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 .portal-user-name {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #94a3b8;
-  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .topbar-actions-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  flex-shrink: 0;
 }
 
 .btn-topbar-tool {
@@ -121,6 +141,15 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-label-mobile {
+  display: none;
+}
+
+.btn-label-desktop {
+  display: inline;
 }
 
 .btn-topbar-tool.ghost {
@@ -156,6 +185,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* --------------------------------------------------------------------------
@@ -171,6 +202,8 @@
   border-radius: 10px;
   padding: 1rem 1.25rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  width: 100%;
   flex-wrap: wrap;
 }
 
@@ -179,7 +212,8 @@
   flex-direction: column;
   gap: 0.45rem;
   flex: 1;
-  min-width: 260px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .promo-kicker-row {
@@ -306,17 +340,21 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 @media (max-width: 820px) {
   .promoter-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 360px) {
   .promoter-kpi-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
 
@@ -329,6 +367,8 @@
   flex-direction: column;
   gap: 0.35rem;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .kpi-metric-card:hover {
@@ -416,6 +456,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .section-card-head {
@@ -457,6 +499,8 @@
   padding: 0.3rem 0.45rem;
   border-radius: 6px;
   transition: border-color 0.15s ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .referral-input-wrapper:focus-within {
@@ -465,6 +509,7 @@
 
 .referral-input-wrapper input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   color: #cbd5e1;
@@ -600,6 +645,8 @@
   border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: 8px;
   padding: 0.95rem 1.25rem;
+  box-sizing: border-box;
+  width: 100%;
   flex-wrap: wrap;
 }
 
@@ -608,7 +655,8 @@
   flex-direction: column;
   gap: 0.35rem;
   flex: 1;
-  min-width: 240px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .payout-status-row {
@@ -912,4 +960,166 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM (MOBILE COMPACT & ANTI-WOBBLE)
+   Empêche tout décalage horizontal, affine les tailles du header et cartes
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  /* Header slim, compact & maîtrisé */
+  .promoter-topbar {
+    padding: 0.55rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .topbar-avatar-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+    border-radius: 6px;
+  }
+
+  .topbar-meta {
+    gap: 0.05rem;
+  }
+
+  .topbar-title-row {
+    gap: 0.35rem;
+  }
+
+  .portal-app-title {
+    font-size: 0.82rem;
+  }
+
+  .portal-cert-pill {
+    font-size: 0.58rem;
+    padding: 0.08rem 0.35rem;
+  }
+
+  .portal-user-name {
+    font-size: 0.64rem;
+    max-width: 140px;
+  }
+
+  .topbar-actions-right {
+    gap: 0.3rem;
+  }
+
+  .btn-topbar-tool {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.68rem;
+    gap: 0.25rem;
+    border-radius: 5px;
+  }
+
+  .btn-label-desktop {
+    display: none;
+  }
+
+  .btn-label-mobile {
+    display: inline;
+  }
+
+  /* Corps principal sans aucun débordement horizontal */
+  .promoter-main-body {
+    padding: 0.75rem 0.65rem 2.5rem;
+    gap: 0.85rem;
+  }
+
+  /* Bannière Code promo compacte */
+  .promoter-promo-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.85rem 0.95rem;
+    gap: 0.85rem;
+  }
+
+  .promo-kicker-row {
+    gap: 0.35rem;
+  }
+
+  .promo-badge-tag {
+    font-size: 0.6rem;
+  }
+
+  .promo-rules-pill {
+    font-size: 0.62rem;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .promo-code-token {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .token-text {
+    font-size: 1.05rem;
+  }
+
+  .promo-card-right {
+    width: 100%;
+  }
+
+  .btn-whatsapp-action {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.78rem;
+  }
+
+  /* Métriques compactes 2x2 */
+  .kpi-metric-card {
+    padding: 0.65rem 0.75rem;
+    gap: 0.25rem;
+  }
+
+  .kpi-metric-label {
+    font-size: 0.65rem;
+  }
+
+  .kpi-metric-val {
+    font-size: 1.1rem;
+  }
+
+  .kpi-metric-footnote {
+    font-size: 0.6rem;
+  }
+
+  /* Demande de versement compacte */
+  .promoter-payout-box {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.85rem 0.95rem;
+    gap: 0.75rem;
+  }
+
+  .btn-payout-action {
+    width: 100%;
+    justify-content: center;
+    padding: 0.55rem 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .promoter-topbar {
+    padding: 0.5rem 0.6rem;
+    gap: 0.35rem;
+  }
+
+  .portal-cert-pill span {
+    display: none; /* Affiche uniquement l'icône de bouclier sur les très petits écrans */
+  }
+
+  .portal-user-name {
+    max-width: 110px;
+  }
+
+  .btn-topbar-tool {
+    padding: 0.25rem 0.38rem;
+    font-size: 0.66rem;
+  }
 }

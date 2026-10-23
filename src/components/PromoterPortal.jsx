@@ -356,7 +356,8 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                 title="Retourner sur le site"
               >
                 <Globe size={13} />
-                <span>Voir le site</span>
+                <span className="btn-label-desktop">Voir le site</span>
+                <span className="btn-label-mobile">Site</span>
               </button>
 
               <button 
@@ -366,7 +367,8 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                 title="Fermer la session"
               >
                 <LogOut size={13} />
-                <span>Déconnexion</span>
+                <span className="btn-label-desktop">Déconnexion</span>
+                <span className="btn-label-mobile">Quitter</span>
               </button>
             </div>
           </header>

@@ -32,9 +32,16 @@ import {
   Calculator,
   ExternalLink,
   Link2,
-  Menu
+  Menu,
+  Activity,
+  Eye,
+  Smartphone,
+  Laptop,
+  MousePointerClick,
+  Radio
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { analyticsService } from '../services/analyticsService';
 import './AdminDashboard.css';
 
 export function AdminDashboard({ onClose }) {
@@ -98,6 +105,47 @@ export function AdminDashboard({ onClose }) {
   const [priceInputs, setPriceInputs] = useState(() => storageService.getFormationPrices());
   const [priceSuccessMsg, setPriceSuccessMsg] = useState('');
 
+  // Statistiques de visites & Analytics réels
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('7d');
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState({
+    kpis: { totalViews: 0, uniqueVisitors: 0, totalInteractions: 0, unlockClicks: 0, whatsappClicks: 0, demoReads: 0 },
+    chartData: [],
+    topCountries: [],
+    devices: [],
+    formations: [],
+    recentVisits: []
+  });
+  const [hoveredChartPoint, setHoveredChartPoint] = useState(null);
+
+  const getCountryFlag = (code) => {
+    if (!code || code === 'XX') return '🌍';
+    const flags = {
+      'BJ': '🇧🇯', 'CI': '🇨🇮', 'SN': '🇸🇳', 'TG': '🇹🇬',
+      'CM': '🇨🇲', 'FR': '🇫🇷', 'BF': '🇧🇫', 'ML': '🇲🇱',
+      'NE': '🇳🇪', 'GA': '🇬🇦', 'CG': '🇨🇬', 'CD': '🇨🇩',
+      'GN': '🇬🇳', 'TD': '🇹🇩', 'BE': '🇧🇪', 'CA': '🇨🇦',
+      'US': '🇺🇸', 'CH': '🇨🇭', 'MA': '🇲🇦', 'TN': '🇹🇳',
+      'DZ': '🇩🇿'
+    };
+    return flags[String(code).toUpperCase()] || '🌍';
+  };
+
+  const loadAnalytics = async (period = analyticsPeriod) => {
+    setIsLoadingAnalytics(true);
+    const data = await analyticsService.fetchAnalytics(period);
+    if (data && data.success) {
+      setAnalyticsData(data);
+    }
+    setIsLoadingAnalytics(false);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadAnalytics(analyticsPeriod);
+    }
+  }, [isAuthenticated, analyticsPeriod]);
+
   const refreshData = async () => {
     setIsRefreshing(true);
     await storageService.initCloudSync();
@@ -108,6 +156,7 @@ export function AdminDashboard({ onClose }) {
     const currentPrices = storageService.getFormationPrices();
     setFormationPrices(currentPrices);
     setPriceInputs(currentPrices);
+    await loadAnalytics(analyticsPeriod);
     setTimeout(() => setIsRefreshing(false), 300);
   };
 
@@ -403,10 +452,22 @@ export function AdminDashboard({ onClose }) {
               <button 
                 className={`sidebar-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }}
-                title="Vue d'ensemble et statistiques"
+                title="Vue d'ensemble et ventes"
               >
                 <BarChart3 size={16} className="nav-icon" />
                 <span className="nav-text">Vue d'ensemble</span>
+              </button>
+
+              <button 
+                className={`sidebar-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('analytics'); setIsMobileMenuOpen(false); }}
+                title="Statistiques réelles, visiteurs, pays et appareils"
+              >
+                <Activity size={16} className="nav-icon text-sky" />
+                <span className="nav-text">Statistiques & Visites</span>
+                {analyticsData?.kpis?.uniqueVisitors > 0 && (
+                  <span className="nav-badge pulse">{analyticsData.kpis.uniqueVisitors}</span>
+                )}
               </button>
 
               <button 
@@ -499,6 +560,7 @@ export function AdminDashboard({ onClose }) {
                 <div className="header-titles">
                   <h2 className="current-section-title">
                     {activeTab === 'overview' && 'Vue d\'ensemble'}
+                    {activeTab === 'analytics' && 'Statistiques & Visites Réelles'}
                     {activeTab === 'students' && 'Gestion des Élèves'}
                     {activeTab === 'pricing' && 'Tarifs & Prix'}
                     {activeTab === 'free_codes' && 'Codes Gratuits VIP'}
@@ -506,6 +568,7 @@ export function AdminDashboard({ onClose }) {
                   </h2>
                   <span className="current-section-sub">
                     {activeTab === 'overview' && `${stats.totalStudents} élève(s) • ${orders.length} commande(s)`}
+                    {activeTab === 'analytics' && `${analyticsData.kpis?.totalViews || 0} visite(s) • ${analyticsData.topCountries?.length || 0} pays détecté(s)`}
                     {activeTab === 'students' && `${stats.totalStudents} élève(s) • ${filteredOrders.length} vente(s)`}
                     {activeTab === 'pricing' && 'Prix appliqués sur le site'}
                     {activeTab === 'free_codes' && 'Déblocage direct 100% gratuit'}
@@ -836,6 +899,372 @@ export function AdminDashboard({ onClose }) {
                         <span className="badge-tag-online"><Check size={11} /> Google OAuth</span>
                         <span className="badge-tag-online"><Check size={11} /> FedaPay Mobile Money</span>
                         <span className="badge-tag-online"><Check size={11} /> Sauvegarde Active</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* ============================================================
+                  ONGLET ANALYTICS & STATISTIQUES EN DIRECT
+                 ============================================================ */}
+              {activeTab === 'analytics' && (
+                <div className="content-tab-flow analytics-tab-flow">
+                  
+                  {/* Barre supérieure : Sélecteur de période & Statut Live */}
+                  <div className="analytics-control-bar">
+                    <div className="analytics-live-status">
+                      <span className="live-pulsing-badge">
+                        <Radio size={12} className="pulse-icon" />
+                        <span>Tracking en Direct</span>
+                      </span>
+                      <span className="analytics-updated-hint">Mise à jour en temps réel</span>
+                    </div>
+
+                    <div className="period-pills-cluster">
+                      <button 
+                        type="button" 
+                        className={`btn-period-pill ${analyticsPeriod === 'today' ? 'active' : ''}`}
+                        onClick={() => setAnalyticsPeriod('today')}
+                      >
+                        Aujourd'hui
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`btn-period-pill ${analyticsPeriod === '7d' ? 'active' : ''}`}
+                        onClick={() => setAnalyticsPeriod('7d')}
+                      >
+                        7 derniers jours
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`btn-period-pill ${analyticsPeriod === '30d' ? 'active' : ''}`}
+                        onClick={() => setAnalyticsPeriod('30d')}
+                      >
+                        30 jours
+                      </button>
+                      <button 
+                        type="button" 
+                        className={`btn-period-pill ${analyticsPeriod === 'all' ? 'active' : ''}`}
+                        onClick={() => setAnalyticsPeriod('all')}
+                      >
+                        Tout
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4 Cartes KPIs Minimalistes & Fintech */}
+                  <div className="analytics-kpi-grid">
+                    <div className="analytics-kpi-card purple">
+                      <div className="kpi-card-header">
+                        <span className="kpi-card-label">Visiteurs Uniques</span>
+                        <div className="kpi-icon-bubble purple"><Users size={14} /></div>
+                      </div>
+                      <div className="kpi-card-number">{analyticsData.kpis?.uniqueVisitors || 0}</div>
+                      <div className="kpi-card-sub">
+                        <span>Personnes réelles ayant ouvert le site</span>
+                      </div>
+                    </div>
+
+                    <div className="analytics-kpi-card sky">
+                      <div className="kpi-card-header">
+                        <span className="kpi-card-label">Pages Vues Totales</span>
+                        <div className="kpi-icon-bubble sky"><Eye size={14} /></div>
+                      </div>
+                      <div className="kpi-card-number">{analyticsData.kpis?.totalViews || 0}</div>
+                      <div className="kpi-card-sub">
+                        <span>Fréquentation totale sur la période</span>
+                      </div>
+                    </div>
+
+                    <div className="analytics-kpi-card amber">
+                      <div className="kpi-card-header">
+                        <span className="kpi-card-label">Interactions & Clics</span>
+                        <div className="kpi-icon-bubble amber"><MousePointerClick size={14} /></div>
+                      </div>
+                      <div className="kpi-card-number">{analyticsData.kpis?.totalInteractions || 0}</div>
+                      <div className="kpi-card-sub">
+                        <span>Clics d'intérêt, déblocage & WhatsApp</span>
+                      </div>
+                    </div>
+
+                    <div className="analytics-kpi-card emerald">
+                      <div className="kpi-card-header">
+                        <span className="kpi-card-label">Taux d'Intérêt</span>
+                        <div className="kpi-icon-bubble emerald"><TrendingUp size={14} /></div>
+                      </div>
+                      <div className="kpi-card-number">
+                        {analyticsData.kpis?.totalViews > 0 
+                          ? `${Math.min(100, Math.round(((analyticsData.kpis.totalInteractions || 0) / analyticsData.kpis.totalViews) * 100))}%`
+                          : '0%'}
+                      </div>
+                      <div className="kpi-card-sub">
+                        <span>Ratio de conversion & engagement</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Carte Graphique Linéaire SVG Interactif */}
+                  <div className="analytics-panel-card">
+                    <div className="panel-card-head">
+                      <div className="head-title-col">
+                        <h3>Évolution de la Fréquentation</h3>
+                        <p>Courbe quotidienne des visites et des visiteurs uniques</p>
+                      </div>
+                      <div className="chart-legend-row">
+                        <span className="legend-item views"><span className="dot views"></span> Vues</span>
+                        <span className="legend-item visitors"><span className="dot visitors"></span> Visiteurs</span>
+                      </div>
+                    </div>
+
+                    {/* Rendu du Graphique SVG Fluide & Réactif */}
+                    <div className="chart-svg-container">
+                      {analyticsData.chartData && analyticsData.chartData.length > 0 ? (() => {
+                        const data = analyticsData.chartData;
+                        const maxVal = Math.max(5, ...data.map(d => Math.max(d.views, d.visitors)));
+                        const width = 600;
+                        const height = 150;
+                        const paddingX = 30;
+                        const paddingY = 20;
+                        const graphW = width - paddingX * 2;
+                        const graphH = height - paddingY * 2;
+
+                        const getX = (i) => paddingX + (i / Math.max(1, data.length - 1)) * graphW;
+                        const getY = (val) => height - paddingY - (val / maxVal) * graphH;
+
+                        const viewPoints = data.map((d, i) => `${getX(i)},${getY(d.views)}`).join(' ');
+                        const visitorPoints = data.map((d, i) => `${getX(i)},${getY(d.visitors)}`).join(' ');
+
+                        const areaPath = `M ${getX(0)},${height - paddingY} ` +
+                          data.map((d, i) => `L ${getX(i)},${getY(d.views)}`).join(' ') +
+                          ` L ${getX(data.length - 1)},${height - paddingY} Z`;
+
+                        return (
+                          <div className="svg-wrapper">
+                            <svg viewBox={`0 0 ${width} ${height}`} className="interactive-svg-chart" preserveAspectRatio="none">
+                              <defs>
+                                <linearGradient id="viewsAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.35" />
+                                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+                                </linearGradient>
+                              </defs>
+
+                              <line x1={paddingX} y1={paddingY} x2={width - paddingX} y2={paddingY} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
+                              <line x1={paddingX} y1={paddingY + graphH / 2} x2={width - paddingX} y2={paddingY + graphH / 2} stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
+                              <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="rgba(255,255,255,0.1)" />
+
+                              <path d={areaPath} fill="url(#viewsAreaGrad)" />
+                              <polyline fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={viewPoints} />
+                              <polyline fill="none" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" points={visitorPoints} />
+
+                              {data.map((d, i) => (
+                                <g key={d.date} className="chart-dot-group">
+                                  <circle 
+                                    cx={getX(i)} 
+                                    cy={getY(d.views)} 
+                                    r="4" 
+                                    className="chart-dot views"
+                                    onMouseEnter={() => setHoveredChartPoint(d)}
+                                    onMouseLeave={() => setHoveredChartPoint(null)}
+                                  />
+                                </g>
+                              ))}
+                            </svg>
+
+                            {hoveredChartPoint && (
+                              <div className="chart-hover-tooltip">
+                                <span className="tooltip-date">{hoveredChartPoint.date}</span>
+                                <div className="tooltip-metrics">
+                                  <span className="tooltip-view-val">👁 {hoveredChartPoint.views} vue(s)</span>
+                                  <span className="tooltip-vis-val">👤 {hoveredChartPoint.visitors} visiteur(s)</span>
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="chart-x-labels">
+                              {data.map((d, i) => (
+                                (data.length <= 8 || i % Math.ceil(data.length / 7) === 0 || i === data.length - 1) ? (
+                                  <span key={d.date} className="chart-label-day">{d.label}</span>
+                                ) : null
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })() : (
+                        <div className="chart-empty-state">
+                          <span>Données en cours de synchronisation...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Grille 2 Colonnes : Top Pays & Répartition Appareils */}
+                  <div className="analytics-dual-row">
+                    
+                    {/* Colonne 1 : Top Pays */}
+                    <div className="analytics-panel-card">
+                      <div className="panel-card-head">
+                        <div className="head-title-col">
+                          <h3>Top Pays des Visiteurs</h3>
+                          <p>Origine géographique réelle des personnes intéressées</p>
+                        </div>
+                        <Globe size={15} className="panel-icon-subtle" />
+                      </div>
+
+                      <div className="countries-list-cluster">
+                        {analyticsData.topCountries && analyticsData.topCountries.length > 0 ? (
+                          analyticsData.topCountries.map((c) => (
+                            <div key={c.code} className="country-rank-row">
+                              <div className="country-name-cell">
+                                <span className="flag-icon">{getCountryFlag(c.code)}</span>
+                                <span className="country-title">{c.country}</span>
+                              </div>
+                              <div className="country-gauge-wrapper">
+                                <div className="country-gauge-track">
+                                  <div 
+                                    className="country-gauge-fill" 
+                                    style={{ width: `${Math.min(100, Math.max(6, c.pct))}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="country-stat-badge">
+                                <span className="count-num">{c.count}</span>
+                                <span className="pct-num">({c.pct}%)</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="panel-empty-row">
+                            <span>Aucune donnée géographique enregistrée sur cette période.</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Colonne 2 : Appareils & Systèmes */}
+                    <div className="analytics-panel-card">
+                      <div className="panel-card-head">
+                        <div className="head-title-col">
+                          <h3>Appareils & Systèmes</h3>
+                          <p>Mobiles Android, iPhone et ordinateurs utilisés</p>
+                        </div>
+                        <Smartphone size={15} className="panel-icon-subtle" />
+                      </div>
+
+                      <div className="devices-list-cluster">
+                        {analyticsData.devices && analyticsData.devices.length > 0 ? (
+                          analyticsData.devices.map((dev, idx) => (
+                            <div key={dev.os + idx} className="device-stat-row">
+                              <div className="device-info-left">
+                                <div className="device-icon-box">
+                                  {dev.type === 'Mobile' ? <Smartphone size={14} className="text-sky" /> : <Laptop size={14} className="text-emerald" />}
+                                </div>
+                                <div className="device-text-col">
+                                  <span className="device-os-name">{dev.os}</span>
+                                  <span className="device-type-label">{dev.type}</span>
+                                </div>
+                              </div>
+                              <div className="device-gauge-track">
+                                <div 
+                                  className="device-gauge-fill" 
+                                  style={{ width: `${Math.min(100, Math.max(6, dev.pct))}%` }}
+                                />
+                              </div>
+                              <div className="device-num-col">
+                                <span className="dev-count">{dev.count}</span>
+                                <span className="dev-pct">{dev.pct}%</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="panel-empty-row">
+                            <span>Données d'appareils en cours d'acquisition.</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Grille 2 : Intérêt Formations & Flux d'activité Récent */}
+                  <div className="analytics-dual-row">
+                    
+                    {/* Intérêt par formation */}
+                    <div className="analytics-panel-card">
+                      <div className="panel-card-head">
+                        <div className="head-title-col">
+                          <h3>Intérêt par Formation</h3>
+                          <p>Vues détaillées et clics d'intérêt par module</p>
+                        </div>
+                        <BookOpen size={15} className="panel-icon-subtle" />
+                      </div>
+
+                      <div className="formations-analytics-list">
+                        {analyticsData.formations && analyticsData.formations.length > 0 ? (
+                          analyticsData.formations.map((f) => (
+                            <div key={f.id} className="formation-analytics-row">
+                              <div className="f-info-cell">
+                                <span className="f-title">{f.title}</span>
+                              </div>
+                              <div className="f-badges-cell">
+                                <span className="f-pill views">
+                                  <Eye size={11} />
+                                  <span>{f.views} vue(s)</span>
+                                </span>
+                                <span className="f-pill clicks">
+                                  <Lock size={11} />
+                                  <span>{f.clicks} clic(s)</span>
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="panel-empty-row">
+                            <span>Aucune vue spécifique par formation pour le moment.</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Flux d'activité en direct */}
+                    <div className="analytics-panel-card">
+                      <div className="panel-card-head">
+                        <div className="head-title-col">
+                          <h3>Activité Récente en Direct</h3>
+                          <p>Les 10 dernières visites enregistrées sur le site</p>
+                        </div>
+                        <Radio size={14} className="panel-icon-subtle text-green" />
+                      </div>
+
+                      <div className="live-feed-list">
+                        {analyticsData.recentVisits && analyticsData.recentVisits.length > 0 ? (
+                          analyticsData.recentVisits.map((item, i) => (
+                            <div key={i} className="feed-item-row">
+                              <span className="feed-flag">{getCountryFlag(item.code)}</span>
+                              <div className="feed-details">
+                                <div className="feed-line-top">
+                                  <span className="feed-country">{item.country}</span>
+                                  <span className="feed-device">{item.device}</span>
+                                </div>
+                                <span className="feed-event">
+                                  {item.event === 'page_view' ? 'Consultation de la page' : 
+                                   item.event === 'unlock_click' ? '🎯 Clic Débloquer formation' :
+                                   item.event === 'demo_read' ? '📖 Lecture d\'un extrait' :
+                                   item.event === 'whatsapp_click' ? '💬 Clic WhatsApp' : item.event}
+                                </span>
+                              </div>
+                              <span className="feed-time">
+                                {item.time ? item.time.split(' ')[1] || item.time : 'Récemment'}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="panel-empty-row">
+                            <span>En attente de nouvelles visites...</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1529,7 +1958,15 @@ export function AdminDashboard({ onClose }) {
                 onClick={() => setActiveTab('overview')}
               >
                 <BarChart3 size={17} />
-                <span>Stats</span>
+                <span>Ventes</span>
+              </button>
+              <button 
+                type="button"
+                className={`mobile-nav-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => setActiveTab('analytics')}
+              >
+                <Activity size={17} className="text-sky" />
+                <span>Visites</span>
               </button>
               <button 
                 type="button"

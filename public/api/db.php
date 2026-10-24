@@ -126,6 +126,29 @@ function initMysqlTables($pdo) {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
+        "CREATE TABLE IF NOT EXISTS site_visits (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            visitor_id VARCHAR(64) NOT NULL,
+            session_id VARCHAR(64) DEFAULT '',
+            country VARCHAR(64) DEFAULT 'Bénin',
+            country_code VARCHAR(8) DEFAULT 'BJ',
+            city VARCHAR(64) DEFAULT '',
+            device_type VARCHAR(32) DEFAULT 'Mobile',
+            os VARCHAR(32) DEFAULT 'Android',
+            browser VARCHAR(32) DEFAULT 'Chrome',
+            page VARCHAR(128) DEFAULT '/',
+            formation_viewed VARCHAR(64) DEFAULT '',
+            event_type VARCHAR(64) DEFAULT 'page_view',
+            promo_code VARCHAR(64) DEFAULT '',
+            ip_hash VARCHAR(64) DEFAULT '',
+            date_day VARCHAR(16) NOT NULL,
+            visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_date (date_day),
+            INDEX idx_visitor (visitor_id),
+            INDEX idx_event (event_type),
+            INDEX idx_country (country_code)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
         "INSERT IGNORE INTO settings (setting_key, setting_value) VALUES 
         ('formation_prices', '{\"livre-bd-storytelling\":2500,\"livre-videos-ia\":3100}')",
 
@@ -222,6 +245,24 @@ function initSqliteTables($pdo) {
             setting_key TEXT PRIMARY KEY,
             setting_value TEXT NOT NULL,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )",
+        "CREATE TABLE IF NOT EXISTS site_visits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visitor_id TEXT NOT NULL,
+            session_id TEXT DEFAULT '',
+            country TEXT DEFAULT 'Bénin',
+            country_code TEXT DEFAULT 'BJ',
+            city TEXT DEFAULT '',
+            device_type TEXT DEFAULT 'Mobile',
+            os TEXT DEFAULT 'Android',
+            browser TEXT DEFAULT 'Chrome',
+            page TEXT DEFAULT '/',
+            formation_viewed TEXT DEFAULT '',
+            event_type TEXT DEFAULT 'page_view',
+            promo_code TEXT DEFAULT '',
+            ip_hash TEXT DEFAULT '',
+            date_day TEXT NOT NULL,
+            visited_at TEXT DEFAULT CURRENT_TIMESTAMP
         )",
         "INSERT OR IGNORE INTO settings (setting_key, setting_value) VALUES 
         ('formation_prices', '{\"livre-bd-storytelling\":2500,\"livre-videos-ia\":3100}')",

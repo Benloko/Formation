@@ -41,6 +41,33 @@ if (!empty($rawInput)) {
     }
 }
 
+function getCountryNameByCode($code) {
+    $map = [
+        'BJ' => 'Bénin',
+        'CI' => "Côte d'Ivoire",
+        'SN' => 'Sénégal',
+        'TG' => 'Togo',
+        'CM' => 'Cameroun',
+        'FR' => 'France',
+        'BF' => 'Burkina Faso',
+        'ML' => 'Mali',
+        'NE' => 'Niger',
+        'GA' => 'Gabon',
+        'CG' => 'Congo',
+        'CD' => 'RD Congo',
+        'GN' => 'Guinée',
+        'TD' => 'Tchad',
+        'BE' => 'Belgique',
+        'CA' => 'Canada',
+        'US' => 'États-Unis',
+        'CH' => 'Suisse',
+        'MA' => 'Maroc',
+        'TN' => 'Tunisie',
+        'DZ' => 'Algérie'
+    ];
+    return $map[strtoupper($code)] ?? $code;
+}
+
 switch ($action) {
     case 'where_am_i':
         echo json_encode([
@@ -672,6 +699,209 @@ switch ($action) {
         } else {
             echo json_encode(['success' => false, 'message' => 'Données de prix manquantes.']);
         }
+    // -------------------------------------------------------------------------
+    // 10. Enregistrement d'une visite ou interaction en direct
+    // -------------------------------------------------------------------------
+    case 'record_visit':
+        $visitorId = trim($inputData['visitorId'] ?? '');
+        $sessionId = trim($inputData['sessionId'] ?? '');
+        $page = substr(trim($inputData['page'] ?? '/'), 0, 128);
+        $eventType = substr(trim($inputData['eventType'] ?? 'page_view'), 0, 64);
+        $formationViewed = substr(trim($inputData['formationViewed'] ?? ''), 0, 64);
+        $promoCode = substr(strtoupper(trim($inputData['promoCode'] ?? '')), 0, 64);
+        $clientCountry = trim($inputData['country'] ?? '');
+        $clientCountryCode = strtoupper(trim($inputData['countryCode'] ?? ''));
+        $deviceType = trim($inputData['deviceType'] ?? 'Mobile');
+        $os = trim($inputData['os'] ?? 'Android');
+        $browser = trim($inputData['browser'] ?? 'Chrome');
+
+        if (empty($visitorId)) {
+            $visitorId = 'anon_' . substr(md5($_SERVER['REMOTE_ADDR'] ?? microtime()), 0, 16);
+        }
+
+        // Détection automatique du pays par IP si non fourni ou inconnu
+        if (empty($clientCountryCode) || $clientCountryCode === 'XX') {
+            $cfCountry = $_SERVER['HTTP_CF_IPCOUNTRY'] ?? '';
+            if (!empty($cfCountry) && strlen($cfCountry) === 2 && $cfCountry !== 'XX') {
+                $clientCountryCode = strtoupper($cfCountry);
+                $clientCountry = getCountryNameByCode($clientCountryCode);
+            }
+        }
+        if (empty($clientCountry)) {
+            $clientCountry = !empty($clientCountryCode) ? getCountryNameByCode($clientCountryCode) : 'Bénin';
+            if (empty($clientCountryCode)) $clientCountryCode = 'BJ';
+        }
+
+        $dateDay = date('Y-m-d');
+        $ipHash = substr(hash('sha256', ($_SERVER['REMOTE_ADDR'] ?? '') . 'mrben_salt'), 0, 24);
+
+        // Déduplication anti-spam (5 secondes)
+        try {
+            $stmt = $pdo->prepare("SELECT id FROM site_visits WHERE visitor_id = ? AND event_type = ? AND formation_viewed = ? AND visited_at >= (NOW() - INTERVAL 5 SECOND) LIMIT 1");
+            $stmt->execute([$visitorId, $eventType, $formationViewed]);
+            if ($stmt->fetch()) {
+                echo json_encode(['success' => true, 'dedup' => true]);
+                exit;
+            }
+        } catch (Exception $e) {}
+
+        $stmt = $pdo->prepare("INSERT INTO site_visits (
+            visitor_id, session_id, country, country_code, device_type, os, browser, page, formation_viewed, event_type, promo_code, ip_hash, date_day
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $stmt->execute([
+            $visitorId, $sessionId, $clientCountry, $clientCountryCode, $deviceType, $os, $browser, $page, $formationViewed, $eventType, $promoCode, $ipHash, $dateDay
+        ]);
+
+        echo json_encode(['success' => true]);
+        break;
+
+    // -------------------------------------------------------------------------
+    // 11. Récupération des statistiques & graphes pour l'espace Admin
+    // -------------------------------------------------------------------------
+    case 'get_analytics':
+        $period = $inputData['period'] ?? $_GET['period'] ?? '7d';
+
+        $whereClause = "1=1";
+        $daysCount = 7;
+        if ($period === 'today') {
+            $whereClause = "date_day = '" . date('Y-m-d') . "'";
+            $daysCount = 1;
+        } else if ($period === '7d') {
+            $whereClause = "date_day >= '" . date('Y-m-d', strtotime('-6 days')) . "'";
+            $daysCount = 7;
+        } else if ($period === '30d') {
+            $whereClause = "date_day >= '" . date('Y-m-d', strtotime('-29 days')) . "'";
+            $daysCount = 30;
+        }
+
+        // 1. KPI globaux
+        $stmt = $pdo->query("SELECT 
+            COUNT(*) as total_views,
+            COUNT(DISTINCT visitor_id) as unique_visitors,
+            COUNT(CASE WHEN event_type != 'page_view' THEN 1 END) as total_interactions,
+            COUNT(CASE WHEN event_type LIKE '%unlock%' THEN 1 END) as unlock_clicks,
+            COUNT(CASE WHEN event_type LIKE '%whatsapp%' THEN 1 END) as whatsapp_clicks,
+            COUNT(CASE WHEN event_type LIKE '%demo%' THEN 1 END) as demo_reads
+        FROM site_visits WHERE $whereClause");
+        $kpis = $stmt->fetch() ?: [
+            'total_views' => 0, 'unique_visitors' => 0, 'total_interactions' => 0,
+            'unlock_clicks' => 0, 'whatsapp_clicks' => 0, 'demo_reads' => 0
+        ];
+
+        // 2. Évolution par jour pour les graphes
+        $dailyData = [];
+        for ($i = $daysCount - 1; $i >= 0; $i--) {
+            $d = date('Y-m-d', strtotime("-$i days"));
+            $dailyData[$d] = [
+                'date' => $d,
+                'label' => date('d/m', strtotime($d)),
+                'views' => 0,
+                'visitors' => 0,
+                'clicks' => 0
+            ];
+        }
+
+        $stmt = $pdo->query("SELECT 
+            date_day,
+            COUNT(*) as views,
+            COUNT(DISTINCT visitor_id) as visitors,
+            COUNT(CASE WHEN event_type != 'page_view' THEN 1 END) as clicks
+        FROM site_visits WHERE $whereClause GROUP BY date_day ORDER BY date_day ASC");
+        while ($row = $stmt->fetch()) {
+            $d = $row['date_day'];
+            if (isset($dailyData[$d])) {
+                $dailyData[$d]['views'] = (int)$row['views'];
+                $dailyData[$d]['visitors'] = (int)$row['visitors'];
+                $dailyData[$d]['clicks'] = (int)$row['clicks'];
+            } else if ($period === 'all') {
+                $dailyData[$d] = [
+                    'date' => $d,
+                    'label' => date('d/m', strtotime($d)),
+                    'views' => (int)$row['views'],
+                    'visitors' => (int)$row['visitors'],
+                    'clicks' => (int)$row['clicks']
+                ];
+            }
+        }
+
+        // 3. Top Pays avec pourcentages
+        $topCountries = [];
+        $stmt = $pdo->query("SELECT country, country_code, COUNT(*) as count FROM site_visits WHERE $whereClause GROUP BY country, country_code ORDER BY count DESC LIMIT 8");
+        $totV = max(1, (int)$kpis['total_views']);
+        while ($row = $stmt->fetch()) {
+            $topCountries[] = [
+                'country' => $row['country'] ?: 'Bénin',
+                'code' => strtoupper($row['country_code'] ?: 'BJ'),
+                'count' => (int)$row['count'],
+                'pct' => round(((int)$row['count'] / $totV) * 100, 1)
+            ];
+        }
+
+        // 4. Répartition des appareils & OS
+        $devices = [];
+        $stmt = $pdo->query("SELECT os, device_type, COUNT(*) as count FROM site_visits WHERE $whereClause GROUP BY os, device_type ORDER BY count DESC LIMIT 6");
+        while ($row = $stmt->fetch()) {
+            $devices[] = [
+                'os' => $row['os'] ?: 'Android',
+                'type' => $row['device_type'] ?: 'Mobile',
+                'count' => (int)$row['count'],
+                'pct' => round(((int)$row['count'] / $totV) * 100, 1)
+            ];
+        }
+
+        // 5. Intérêt par formation
+        $formations = [];
+        $stmt = $pdo->query("SELECT 
+            formation_viewed,
+            COUNT(*) as views,
+            COUNT(CASE WHEN event_type LIKE '%unlock%' OR event_type LIKE '%click%' THEN 1 END) as clicks
+        FROM site_visits WHERE $whereClause AND formation_viewed != '' GROUP BY formation_viewed ORDER BY views DESC");
+        while ($row = $stmt->fetch()) {
+            $fId = $row['formation_viewed'];
+            $title = $fId === 'livre-bd-storytelling' ? 'Bande Dessinée & Storytelling IA' :
+                    ($fId === 'livre-videos-ia' ? 'Vidéos Virales IA' :
+                    ($fId === 'pack-duo-mr-ben' ? 'Pack Duo (Deux Formations)' : $fId));
+            $formations[] = [
+                'id' => $fId,
+                'title' => $title,
+                'views' => (int)$row['views'],
+                'clicks' => (int)$row['clicks']
+            ];
+        }
+
+        // 6. Flux d'activité récent (dernières visites en temps réel)
+        $recentVisits = [];
+        $stmt = $pdo->query("SELECT visitor_id, country, country_code, device_type, os, formation_viewed, event_type, visited_at FROM site_visits ORDER BY id DESC LIMIT 10");
+        while ($row = $stmt->fetch()) {
+            $recentVisits[] = [
+                'visitorId' => substr($row['visitor_id'], 0, 8),
+                'country' => $row['country'],
+                'code' => $row['country_code'],
+                'device' => $row['device_type'] . ' (' . $row['os'] . ')',
+                'event' => $row['event_type'],
+                'formation' => $row['formation_viewed'],
+                'time' => $row['visited_at']
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'period' => $period,
+            'kpis' => [
+                'totalViews' => (int)$kpis['total_views'],
+                'uniqueVisitors' => (int)$kpis['unique_visitors'],
+                'totalInteractions' => (int)$kpis['total_interactions'],
+                'unlockClicks' => (int)$kpis['unlock_clicks'],
+                'whatsappClicks' => (int)$kpis['whatsapp_clicks'],
+                'demoReads' => (int)$kpis['demo_reads']
+            ],
+            'chartData' => array_values($dailyData),
+            'topCountries' => $topCountries,
+            'devices' => $devices,
+            'formations' => $formations,
+            'recentVisits' => $recentVisits
+        ]);
         break;
 
     default:

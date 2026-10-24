@@ -12,6 +12,7 @@ import { BookReader } from './components/BookReader';
 import { AdminDashboard } from './components/AdminDashboard';
 import { PromoterPortal } from './components/PromoterPortal';
 import { storageService } from './services/storageService';
+import { analyticsService } from './services/analyticsService';
 import { BOOKS_DATA, DUO_PACK } from './data/booksData';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import './App.css';
@@ -153,6 +154,12 @@ export function App() {
     };
   }, []);
 
+  // Suivi analytics automatique de la vue active
+  React.useEffect(() => {
+    const formationId = activeTab === 'FORMATIONS' ? selectedBookForAction?.id : '';
+    analyticsService.trackPageView(window.location.pathname + (window.location.hash || ''), formationId);
+  }, [activeTab]);
+
   const getTabHash = (tab, book = null) => {
     if (tab === 'FORMATIONS') return '#formations';
     if (tab === 'SERVICES') return '#services';
@@ -176,7 +183,12 @@ export function App() {
       window.history.pushState({ tab, bookId: book?.id }, '', targetUrl);
     }
 
-    if (book) setSelectedBookForAction(book);
+    if (book) {
+      setSelectedBookForAction(book);
+      if (tab === 'FORMATIONS') {
+        analyticsService.trackFormationView(book.id);
+      }
+    }
     setActiveTab(tab);
   };
 
@@ -195,6 +207,8 @@ export function App() {
   const handleOpenBookUnlock = (book) => {
     const target = book || BOOKS_DATA[0];
     setSelectedBookForAction(target);
+    analyticsService.trackUnlockClick(target.id);
+
     if (storageService.isBookUnlocked(target.id)) {
       handleSelectTab('READER', target);
     } else {

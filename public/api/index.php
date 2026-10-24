@@ -41,31 +41,33 @@ if (!empty($rawInput)) {
     }
 }
 
-function getCountryNameByCode($code) {
-    $map = [
-        'BJ' => 'Bénin',
-        'CI' => "Côte d'Ivoire",
-        'SN' => 'Sénégal',
-        'TG' => 'Togo',
-        'CM' => 'Cameroun',
-        'FR' => 'France',
-        'BF' => 'Burkina Faso',
-        'ML' => 'Mali',
-        'NE' => 'Niger',
-        'GA' => 'Gabon',
-        'CG' => 'Congo',
-        'CD' => 'RD Congo',
-        'GN' => 'Guinée',
-        'TD' => 'Tchad',
-        'BE' => 'Belgique',
-        'CA' => 'Canada',
-        'US' => 'États-Unis',
-        'CH' => 'Suisse',
-        'MA' => 'Maroc',
-        'TN' => 'Tunisie',
-        'DZ' => 'Algérie'
-    ];
-    return $map[strtoupper($code)] ?? $code;
+if (!function_exists('getCountryNameByCode')) {
+    function getCountryNameByCode($code) {
+        $map = [
+            'BJ' => 'Bénin',
+            'CI' => "Côte d'Ivoire",
+            'SN' => 'Sénégal',
+            'TG' => 'Togo',
+            'CM' => 'Cameroun',
+            'FR' => 'France',
+            'BF' => 'Burkina Faso',
+            'ML' => 'Mali',
+            'NE' => 'Niger',
+            'GA' => 'Gabon',
+            'CG' => 'Congo',
+            'CD' => 'RD Congo',
+            'GN' => 'Guinée',
+            'TD' => 'Tchad',
+            'BE' => 'Belgique',
+            'CA' => 'Canada',
+            'US' => 'États-Unis',
+            'CH' => 'Suisse',
+            'MA' => 'Maroc',
+            'TN' => 'Tunisie',
+            'DZ' => 'Algérie'
+        ];
+        return $map[strtoupper($code)] ?? $code;
+    }
 }
 
 switch ($action) {
@@ -737,8 +739,9 @@ switch ($action) {
 
         // Déduplication anti-spam (5 secondes)
         try {
-            $stmt = $pdo->prepare("SELECT id FROM site_visits WHERE visitor_id = ? AND event_type = ? AND formation_viewed = ? AND visited_at >= (NOW() - INTERVAL 5 SECOND) LIMIT 1");
-            $stmt->execute([$visitorId, $eventType, $formationViewed]);
+            $fiveSecAgo = date('Y-m-d H:i:s', time() - 5);
+            $stmt = $pdo->prepare("SELECT id FROM site_visits WHERE visitor_id = ? AND event_type = ? AND formation_viewed = ? AND visited_at >= ? LIMIT 1");
+            $stmt->execute([$visitorId, $eventType, $formationViewed, $fiveSecAgo]);
             if ($stmt->fetch()) {
                 echo json_encode(['success' => true, 'dedup' => true]);
                 exit;
@@ -789,40 +792,80 @@ switch ($action) {
             'unlock_clicks' => 0, 'whatsapp_clicks' => 0, 'demo_reads' => 0
         ];
 
-        // 2. Évolution par jour pour les graphes
+        // 2. Évolution pour les graphes
         $dailyData = [];
-        for ($i = $daysCount - 1; $i >= 0; $i--) {
-            $d = date('Y-m-d', strtotime("-$i days"));
-            $dailyData[$d] = [
-                'date' => $d,
-                'label' => date('d/m', strtotime($d)),
-                'views' => 0,
-                'visitors' => 0,
-                'clicks' => 0
-            ];
-        }
 
-        $stmt = $pdo->query("SELECT 
-            date_day,
-            COUNT(*) as views,
-            COUNT(DISTINCT visitor_id) as visitors,
-            COUNT(CASE WHEN event_type != 'page_view' THEN 1 END) as clicks
-        FROM site_visits WHERE $whereClause GROUP BY date_day ORDER BY date_day ASC");
-        while ($row = $stmt->fetch()) {
-            $d = $row['date_day'];
-            if (isset($dailyData[$d])) {
-                $dailyData[$d]['views'] = (int)$row['views'];
-                $dailyData[$d]['visitors'] = (int)$row['visitors'];
-                $dailyData[$d]['clicks'] = (int)$row['clicks'];
-            } else if ($period === 'all') {
+        if ($period === 'today') {
+            // Découpage horaire (créneaux de 3h) pour aujourd'hui
+            $slots = ['00h', '03h', '06h', '09h', '12h', '15h', '18h', '21h'];
+            foreach ($slots as $slot) {
+                $dailyData[$slot] = [
+                    'date' => $slot,
+                    'label' => $slot,
+                    'views' => 0,
+                    'visitors' => 0,
+                    'clicks' => 0
+                ];
+            }
+
+            $stmt = $pdo->query("SELECT 
+                visited_at,
+                visitor_id,
+                event_type
+            FROM site_visits WHERE date_day = '" . date('Y-m-d') . "'");
+            
+            $visBySlot = [];
+            while ($row = $stmt->fetch()) {
+                $hour = (int)date('H', strtotime($row['visited_at'] ?? 'now'));
+                $slotIndex = min(7, (int)floor($hour / 3));
+                $slotKey = $slots[$slotIndex];
+
+                $dailyData[$slotKey]['views']++;
+                if ($row['event_type'] !== 'page_view') {
+                    $dailyData[$slotKey]['clicks']++;
+                }
+                $visBySlot[$slotKey][$row['visitor_id']] = true;
+            }
+
+            foreach ($slots as $slot) {
+                $dailyData[$slot]['visitors'] = isset($visBySlot[$slot]) ? count($visBySlot[$slot]) : 0;
+            }
+        } else {
+            for ($i = $daysCount - 1; $i >= 0; $i--) {
+                $d = date('Y-m-d', strtotime("-$i days"));
                 $dailyData[$d] = [
                     'date' => $d,
                     'label' => date('d/m', strtotime($d)),
-                    'views' => (int)$row['views'],
-                    'visitors' => (int)$row['visitors'],
-                    'clicks' => (int)$row['clicks']
+                    'views' => 0,
+                    'visitors' => 0,
+                    'clicks' => 0
                 ];
             }
+
+            $stmt = $pdo->query("SELECT 
+                date_day,
+                COUNT(*) as views,
+                COUNT(DISTINCT visitor_id) as visitors,
+                COUNT(CASE WHEN event_type != 'page_view' THEN 1 END) as clicks
+            FROM site_visits WHERE $whereClause GROUP BY date_day ORDER BY date_day ASC");
+            while ($row = $stmt->fetch()) {
+                $d = $row['date_day'];
+                if (isset($dailyData[$d])) {
+                    $dailyData[$d]['views'] = (int)$row['views'];
+                    $dailyData[$d]['visitors'] = (int)$row['visitors'];
+                    $dailyData[$d]['clicks'] = (int)$row['clicks'];
+                } else if ($period === 'all') {
+                    $dailyData[$d] = [
+                        'date' => $d,
+                        'label' => date('d/m', strtotime($d)),
+                        'views' => (int)$row['views'],
+                        'visitors' => (int)$row['visitors'],
+                        'clicks' => (int)$row['clicks']
+                    ];
+                }
+            }
+
+            ksort($dailyData);
         }
 
         // 3. Top Pays avec pourcentages

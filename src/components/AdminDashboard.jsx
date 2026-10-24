@@ -920,7 +920,9 @@ export function AdminDashboard({ onClose }) {
                         <Radio size={12} className="pulse-icon" />
                         <span>Tracking en Direct</span>
                       </span>
-                      <span className="analytics-updated-hint">Mise à jour en temps réel</span>
+                      <span className="analytics-updated-hint">
+                        {isLoadingAnalytics ? 'Mise à jour en cours...' : 'Mise à jour en temps réel'}
+                      </span>
                     </div>
 
                     <div className="period-pills-cluster">

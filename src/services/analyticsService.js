@@ -189,8 +189,8 @@ class AnalyticsService {
   }
 
   // Raccourcis pour les événements clés
-  trackPageView(page = '/') {
-    this.record({ page, eventType: 'page_view' });
+  trackPageView(page = '/', formationViewed = '') {
+    this.record({ page, eventType: 'page_view', formationViewed });
   }
 
   trackFormationView(formationId) {

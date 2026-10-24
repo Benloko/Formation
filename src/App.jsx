@@ -154,10 +154,14 @@ export function App() {
     };
   }, []);
 
-  // Suivi analytics automatique de la vue active
+  // Suivi analytics automatique de la vue active & lecture d'extraits
   React.useEffect(() => {
-    const formationId = activeTab === 'FORMATIONS' ? selectedBookForAction?.id : '';
-    analyticsService.trackPageView(window.location.pathname + (window.location.hash || ''), formationId);
+    const formationId = selectedBookForAction?.id || '';
+    if (activeTab === 'READER') {
+      analyticsService.trackDemoRead(formationId || 'lecture-demo');
+    } else {
+      analyticsService.trackPageView(window.location.pathname + (window.location.hash || ''), formationId);
+    }
   }, [activeTab]);
 
   const getTabHash = (tab, book = null) => {

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { storageService } from '../services/storageService';
+import { analyticsService } from '../services/analyticsService';
 import { CREATOR_PROFILE } from '../data/servicesData';
 import './CheckoutModal.css';
 
@@ -150,6 +151,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   const [showPaymentNotice, setShowPaymentNotice] = useState(false);
 
   const handleOpenWhatsAppPayment = () => {
+    analyticsService.trackWhatsAppClick(activeBook?.id || 'achat-whatsapp');
     const whatsappNumber = CREATOR_PROFILE.whatsappNumber || "2290199728385";
     const formattedPrice = payablePrice.toLocaleString();
     const text = encodeURIComponent(

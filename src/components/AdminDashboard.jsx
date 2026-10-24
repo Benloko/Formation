@@ -31,7 +31,8 @@ import {
   Ban,
   Calculator,
   ExternalLink,
-  Link2
+  Link2,
+  Menu
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import './AdminDashboard.css';
@@ -49,8 +50,9 @@ export function AdminDashboard({ onClose }) {
   const [pinCode, setPinCode] = useState('');
   const [pinError, setPinError] = useState('');
 
-  // Menu latéral actif : 'overview' | 'students' | 'free_codes' | 'promo_codes'
+  // Menu latéral actif : 'overview' | 'students' | 'pricing' | 'free_codes' | 'promo_codes'
   const [activeTab, setActiveTab] = useState('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Données dynamiques
   const [orders, setOrders] = useState([]);
@@ -364,10 +366,18 @@ export function AdminDashboard({ onClose }) {
         /* Layout principal SaaS : Sidebar à gauche + Vue principale à droite */
         <div className="admin-saas-layout">
           
+          {/* Backdrop obscurcissant sur smartphone quand le menu est ouvert */}
+          {isMobileMenuOpen && (
+            <div 
+              className="admin-mobile-backdrop" 
+              onClick={() => setIsMobileMenuOpen(false)} 
+            />
+          )}
+
           {/* ================================================================
-              SIDEBAR GAUCHE (MENU PERMANENT)
+              SIDEBAR GAUCHE (PERMANENTE SUR DESKTOP / TIROIR SUR MOBILE)
              ================================================================ */}
-          <aside className="admin-left-sidebar">
+          <aside className={`admin-left-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             
             {/* Header Sidebar */}
             <div className="sidebar-brand-box">
@@ -376,6 +386,14 @@ export function AdminDashboard({ onClose }) {
                 <span className="brand-app-name">Mr Ben</span>
                 <span className="brand-role-pill">Fondateur</span>
               </div>
+              <button 
+                type="button"
+                className="btn-close-mobile-drawer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                title="Fermer le menu"
+              >
+                <X size={16} />
+              </button>
             </div>
 
             {/* Menu de navigation vertical */}
@@ -384,7 +402,7 @@ export function AdminDashboard({ onClose }) {
 
               <button 
                 className={`sidebar-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-                onClick={() => setActiveTab('overview')}
+                onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }}
                 title="Vue d'ensemble et statistiques"
               >
                 <BarChart3 size={16} className="nav-icon" />
@@ -393,7 +411,7 @@ export function AdminDashboard({ onClose }) {
 
               <button 
                 className={`sidebar-nav-item ${activeTab === 'students' ? 'active' : ''}`}
-                onClick={() => setActiveTab('students')}
+                onClick={() => { setActiveTab('students'); setIsMobileMenuOpen(false); }}
                 title="Liste des élèves et commandes"
               >
                 <Users size={16} className="nav-icon" />
@@ -403,7 +421,7 @@ export function AdminDashboard({ onClose }) {
 
               <button 
                 className={`sidebar-nav-item ${activeTab === 'pricing' ? 'active' : ''}`}
-                onClick={() => setActiveTab('pricing')}
+                onClick={() => { setActiveTab('pricing'); setIsMobileMenuOpen(false); }}
                 title="Modifier les prix de vente des formations"
               >
                 <DollarSign size={16} className="nav-icon text-gold" />
@@ -412,7 +430,7 @@ export function AdminDashboard({ onClose }) {
 
               <button 
                 className={`sidebar-nav-item ${activeTab === 'free_codes' ? 'active' : ''}`}
-                onClick={() => setActiveTab('free_codes')}
+                onClick={() => { setActiveTab('free_codes'); setIsMobileMenuOpen(false); }}
                 title="Codes d'accès 100% gratuits"
               >
                 <Gift size={16} className="nav-icon" />
@@ -422,7 +440,7 @@ export function AdminDashboard({ onClose }) {
 
               <button 
                 className={`sidebar-nav-item ${activeTab === 'promo_codes' ? 'active' : ''}`}
-                onClick={() => setActiveTab('promo_codes')}
+                onClick={() => { setActiveTab('promo_codes'); setIsMobileMenuOpen(false); }}
                 title="Gestion des promoteurs et codes promo"
               >
                 <Percent size={16} className="nav-icon" />
@@ -462,25 +480,38 @@ export function AdminDashboard({ onClose }) {
           </aside>
 
           {/* ================================================================
-              ZONE DE CONTENU PRINCIPALE (À DROITE)
+              ZONE DE CONTENU PRINCIPALE (À DROITE / PLEIN ÉCRAN MOBILE)
              ================================================================ */}
           <main className="admin-main-viewport">
             
             {/* Top Bar avec titre et icônes d'actions rapides */}
             <header className="viewport-top-header">
-              <div className="header-titles">
-                <h2 className="current-section-title">
-                  {activeTab === 'overview' && 'Vue d\'ensemble & Statistiques'}
-                  {activeTab === 'students' && 'Gestion des Élèves & Ventes'}
-                  {activeTab === 'free_codes' && 'Codes d\'Accès Gratuits (Usage Unique)'}
-                  {activeTab === 'promo_codes' && 'Promoteurs & Codes Promo (Affiliation)'}
-                </h2>
-                <span className="current-section-sub">
-                  {activeTab === 'overview' && `${stats.totalStudents} élève(s) unique(s) • ${orders.length} formation(s) suivie(s)`}
-                  {activeTab === 'students' && `${stats.totalStudents} compte(s) élève(s) • ${filteredOrders.length} formation(s) débloquée(s)`}
-                  {activeTab === 'free_codes' && 'Déblocage direct à 100% sans paiement'}
-                  {activeTab === 'promo_codes' && 'Réduction pour l\'élève + Commission pour le promoteur'}
-                </span>
+              <div className="header-left-cluster">
+                <button 
+                  type="button"
+                  className="btn-mobile-menu-toggle"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  title="Ouvrir le menu complet"
+                >
+                  <Menu size={17} />
+                </button>
+
+                <div className="header-titles">
+                  <h2 className="current-section-title">
+                    {activeTab === 'overview' && 'Vue d\'ensemble'}
+                    {activeTab === 'students' && 'Gestion des Élèves'}
+                    {activeTab === 'pricing' && 'Tarifs & Prix'}
+                    {activeTab === 'free_codes' && 'Codes Gratuits VIP'}
+                    {activeTab === 'promo_codes' && 'Promoteurs & Affiliation'}
+                  </h2>
+                  <span className="current-section-sub">
+                    {activeTab === 'overview' && `${stats.totalStudents} élève(s) • ${orders.length} commande(s)`}
+                    {activeTab === 'students' && `${stats.totalStudents} élève(s) • ${filteredOrders.length} vente(s)`}
+                    {activeTab === 'pricing' && 'Prix appliqués sur le site'}
+                    {activeTab === 'free_codes' && 'Déblocage direct 100% gratuit'}
+                    {activeTab === 'promo_codes' && 'Affiliés • 50% commission'}
+                  </span>
+                </div>
               </div>
 
               {/* Boutons icônes uniquement pour un rendu propre et épuré */}
@@ -1489,6 +1520,54 @@ export function AdminDashboard({ onClose }) {
               )}
 
             </div>
+
+            {/* BARRE DE NAVIGATION BASSE SPÉCIALE SMARTPHONES */}
+            <nav className="admin-mobile-bottom-nav">
+              <button 
+                type="button"
+                className={`mobile-nav-tab ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                <BarChart3 size={17} />
+                <span>Stats</span>
+              </button>
+              <button 
+                type="button"
+                className={`mobile-nav-tab ${activeTab === 'students' ? 'active' : ''}`}
+                onClick={() => setActiveTab('students')}
+              >
+                <Users size={17} />
+                <span>Élèves</span>
+                {stats.totalStudents > 0 && <span className="mobile-badge">{stats.totalStudents}</span>}
+              </button>
+              <button 
+                type="button"
+                className={`mobile-nav-tab ${activeTab === 'pricing' ? 'active' : ''}`}
+                onClick={() => setActiveTab('pricing')}
+              >
+                <DollarSign size={17} className="text-gold" />
+                <span>Tarifs</span>
+              </button>
+              <button 
+                type="button"
+                className={`mobile-nav-tab ${activeTab === 'free_codes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('free_codes')}
+              >
+                <Gift size={17} />
+                <span>VIP</span>
+                {adminCodes.length > 0 && <span className="mobile-badge">{adminCodes.length}</span>}
+              </button>
+              <button 
+                type="button"
+                className={`mobile-nav-tab ${activeTab === 'promo_codes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('promo_codes')}
+              >
+                <Percent size={17} />
+                <span>Promo</span>
+                {promoters.length > 0 && <span className="mobile-badge">{promoters.length}</span>}
+              </button>
+            </nav>
+
           </main>
 
         </div>

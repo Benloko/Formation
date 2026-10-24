@@ -110,7 +110,21 @@ export const storageService = {
           });
           res.promoters.forEach(r => {
             const key = (r.codePromo || '').trim().toUpperCase();
-            if (key) map.set(key, { ...(map.get(key) || {}), ...r });
+            if (key) {
+              const existing = map.get(key) || {};
+              const mergedPassword = (r.password && r.password.trim()) ? r.password.trim() : (existing.password || '');
+              const mergedEmail = (r.email && r.email.trim()) ? r.email.trim().toLowerCase() : (existing.email || '');
+              const mergedPayoutPhone = (r.payoutPhone || r.payout_phone || '').trim() || (existing.payoutPhone || existing.whatsapp || '');
+              const mergedPasswordSetAt = r.passwordSetAt || r.password_set_at || existing.passwordSetAt || null;
+              map.set(key, { 
+                ...existing, 
+                ...r, 
+                password: mergedPassword, 
+                email: mergedEmail, 
+                payoutPhone: mergedPayoutPhone,
+                passwordSetAt: mergedPasswordSetAt
+              });
+            }
           });
           DEFAULT_PROMOTERS.forEach(d => {
             const key = d.codePromo.toUpperCase();
@@ -1055,20 +1069,66 @@ export const storageService = {
     }
   },
 
-  // Définir le mot de passe initial du promoteur lors de sa 1ère connexion
-  setPromoterPassword: (promoterId, password) => {
+  // Définir ou mettre à jour le mot de passe du promoteur (avec synchro cloud Hostinger)
+  setPromoterPassword: async (promoterId, password, email = '', payoutPhone = '') => {
     try {
       const list = storageService.getAllPromoters();
       const idx = list.findIndex(p => p.id === promoterId);
       if (idx === -1) return { success: false, message: "Promoteur introuvable." };
 
-      list[idx].password = String(password).trim();
+      const cleanPwd = String(password).trim();
+      list[idx].password = cleanPwd;
       list[idx].passwordSetAt = new Date().toISOString();
+      if (email) list[idx].email = String(email).trim().toLowerCase();
+      if (payoutPhone) list[idx].payoutPhone = String(payoutPhone).trim();
+
       localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
       window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud immédiate avec la base de données
+      try {
+        await apiRequest('set_promoter_password', {
+          promoterId,
+          password: cleanPwd,
+          email: list[idx].email || '',
+          payoutPhone: list[idx].payoutPhone || ''
+        });
+      } catch (err) {
+        console.warn("Synchro cloud mot de passe promoteur:", err);
+      }
+
       return { success: true, promoter: list[idx] };
     } catch {
       return { success: false, message: "Erreur lors de l'enregistrement du mot de passe." };
+    }
+  },
+
+  // Mettre à jour le profil de retrait du promoteur (Gmail + Mobile Money)
+  updatePromoterProfile: async (promoterId, email = '', payoutPhone = '') => {
+    try {
+      const list = storageService.getAllPromoters();
+      const idx = list.findIndex(p => p.id === promoterId);
+      if (idx === -1) return { success: false, message: "Promoteur introuvable." };
+
+      if (email) list[idx].email = String(email).trim().toLowerCase();
+      if (payoutPhone) list[idx].payoutPhone = String(payoutPhone).trim();
+
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+      window.dispatchEvent(new Event('storage'));
+
+      try {
+        await apiRequest('update_promoter_profile', {
+          promoterId,
+          email: list[idx].email || '',
+          payoutPhone: list[idx].payoutPhone || ''
+        });
+      } catch (err) {
+        console.warn("Synchro cloud profil promoteur:", err);
+      }
+
+      return { success: true, promoter: list[idx] };
+    } catch {
+      return { success: false, message: "Erreur lors de la mise à jour." };
     }
   },
 

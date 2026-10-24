@@ -106,6 +106,8 @@ function initMysqlTables($pdo) {
             prenom VARCHAR(128) DEFAULT '',
             code_promo VARCHAR(64) NOT NULL UNIQUE,
             whatsapp VARCHAR(64) DEFAULT '',
+            email VARCHAR(191) DEFAULT '',
+            payout_phone VARCHAR(64) DEFAULT '',
             target_book_id VARCHAR(64) DEFAULT 'all',
             reduction_pct INT DEFAULT 20,
             commission_pct INT DEFAULT 50,
@@ -141,6 +143,10 @@ function initMysqlTables($pdo) {
             error_log("Erreur init MySQL: " . $e->getMessage());
         }
     }
+
+    // Migrations idempotentes pour colonnes supplémentaires
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN email VARCHAR(191) DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN payout_phone VARCHAR(64) DEFAULT ''"); } catch (Exception $e) {}
 
     $initialized = true;
 }
@@ -197,6 +203,8 @@ function initSqliteTables($pdo) {
             prenom TEXT DEFAULT '',
             code_promo TEXT UNIQUE NOT NULL,
             whatsapp TEXT DEFAULT '',
+            email TEXT DEFAULT '',
+            payout_phone TEXT DEFAULT '',
             target_book_id TEXT DEFAULT 'all',
             reduction_pct INTEGER DEFAULT 20,
             commission_pct INTEGER DEFAULT 50,
@@ -229,4 +237,7 @@ function initSqliteTables($pdo) {
             error_log("Erreur init SQLite: " . $e->getMessage());
         }
     }
+
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN email TEXT DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN payout_phone TEXT DEFAULT ''"); } catch (Exception $e) {}
 }

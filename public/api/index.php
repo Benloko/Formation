@@ -68,6 +68,9 @@ switch ($action) {
             $p['targetBookId'] = $p['target_book_id'] ?? 'all';
             $p['salesCount'] = (int)($p['sales_count'] ?? 0);
             $p['totalEarned'] = (int)($p['total_earned'] ?? 0);
+            $p['email'] = $p['email'] ?? '';
+            $p['payoutPhone'] = $p['payout_phone'] ?? $p['whatsapp'] ?? '';
+            $p['passwordSetAt'] = $p['password_set_at'] ?? '';
             $p['salesHistory'] = json_decode($p['sales_history'] ?? '[]', true) ?: [];
         }
 
@@ -211,6 +214,63 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Promoteur introuvable.']);
         }
         break;
+
+    // -------------------------------------------------------------------------
+    // 4b. Définition ou mise à jour sécurisée du mot de passe du promoteur
+    // -------------------------------------------------------------------------
+    case 'set_promoter_password':
+        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $password = trim($inputData['password'] ?? '');
+        $email = strtolower(trim($inputData['email'] ?? ''));
+        $payoutPhone = trim($inputData['payoutPhone'] ?? $inputData['payout_phone'] ?? '');
+
+        if (empty($promoterId) || empty($password)) {
+            echo json_encode(['success' => false, 'error' => 'Identifiant et mot de passe requis.']);
+            exit;
+        }
+
+        $now = date('d/m/Y, H:i');
+        $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END WHERE id = ?");
+        $stmt->execute([$password, $now, $email, $email, $payoutPhone, $payoutPhone, $promoterId]);
+
+        // Retourner le promoteur mis à jour
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
+        $stmt->execute([$promoterId]);
+        $p = $stmt->fetch();
+        if ($p) {
+            $p['reductionPct'] = (int)($p['reduction_pct'] ?? 20);
+            $p['commissionPct'] = (int)($p['commission_pct'] ?? 50);
+            $p['codePromo'] = $p['code_promo'] ?? '';
+            $p['targetBookId'] = $p['target_book_id'] ?? 'all';
+            $p['salesCount'] = (int)($p['sales_count'] ?? 0);
+            $p['totalEarned'] = (int)($p['total_earned'] ?? 0);
+            $p['email'] = $p['email'] ?? '';
+            $p['payoutPhone'] = $p['payout_phone'] ?? $p['whatsapp'] ?? '';
+            $p['passwordSetAt'] = $p['password_set_at'] ?? '';
+            $p['salesHistory'] = json_decode($p['sales_history'] ?? '[]', true) ?: [];
+        }
+
+        echo json_encode(['success' => true, 'promoter' => $p]);
+        exit;
+
+    // -------------------------------------------------------------------------
+    // 4c. Mise à jour profil de retrait (Gmail de récupération + Numéro Mobile Money)
+    // -------------------------------------------------------------------------
+    case 'update_promoter_profile':
+        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $email = strtolower(trim($inputData['email'] ?? ''));
+        $payoutPhone = trim($inputData['payoutPhone'] ?? $inputData['payout_phone'] ?? '');
+
+        if (empty($promoterId)) {
+            echo json_encode(['success' => false, 'error' => 'Identifiant requis.']);
+            exit;
+        }
+
+        $stmt = $pdo->prepare("UPDATE promoters SET email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END WHERE id = ?");
+        $stmt->execute([$email, $email, $payoutPhone, $payoutPhone, $promoterId]);
+
+        echo json_encode(['success' => true]);
+        exit;
 
     // -------------------------------------------------------------------------
     // 5. Création d'un code d'accès gratuit VIP par Mr Ben

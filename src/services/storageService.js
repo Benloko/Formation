@@ -1132,6 +1132,53 @@ export const storageService = {
     }
   },
 
+  // Envoyer un code de confirmation par e-mail au Gmail du promoteur
+  sendPromoterResetCode: async (promoterId, email = '', codePromo = '') => {
+    try {
+      const res = await apiRequest('send_promoter_reset_code', {
+        promoterId,
+        email,
+        codePromo
+      });
+      return res;
+    } catch (err) {
+      return { 
+        success: false, 
+        error: err.message || "Erreur de connexion au serveur pour l'envoi du code." 
+      };
+    }
+  },
+
+  // Valider le code de confirmation reçu par e-mail et enregistrer le nouveau mot de passe
+  verifyPromoterResetCode: async (promoterId, code, newPassword) => {
+    try {
+      const res = await apiRequest('verify_promoter_reset_code', {
+        promoterId,
+        code: String(code).trim(),
+        newPassword: String(newPassword).trim()
+      });
+
+      if (res.success && res.promoter) {
+        // Mettre à jour aussi le localStorage local
+        const list = storageService.getAllPromoters();
+        const idx = list.findIndex(p => p.id === promoterId);
+        if (idx !== -1) {
+          list[idx].password = String(newPassword).trim();
+          list[idx].passwordSetAt = new Date().toISOString();
+          localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+          window.dispatchEvent(new Event('storage'));
+        }
+      }
+
+      return res;
+    } catch (err) {
+      return { 
+        success: false, 
+        error: err.message || "Erreur lors de la validation du code." 
+      };
+    }
+  },
+
   // Vérifier la connexion du promoteur
   verifyPromoterLogin: (promoterId, password) => {
     const promoter = storageService.getPromoterById(promoterId);

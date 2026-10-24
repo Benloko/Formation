@@ -273,6 +273,197 @@ switch ($action) {
         exit;
 
     // -------------------------------------------------------------------------
+    // 4d. Envoi d'un code de confirmation par e-mail à l'adresse Gmail du promoteur
+    // -------------------------------------------------------------------------
+    case 'send_promoter_reset_code':
+        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $promoCode = strtoupper(trim($inputData['codePromo'] ?? $inputData['promo'] ?? ''));
+        $email = strtolower(trim($inputData['email'] ?? ''));
+
+        // Trouver le promoteur
+        $promoter = null;
+        if (!empty($promoterId)) {
+            $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
+            $stmt->execute([$promoterId]);
+            $promoter = $stmt->fetch();
+        }
+        if (!$promoter && !empty($promoCode)) {
+            $stmt = $pdo->prepare("SELECT * FROM promoters WHERE UPPER(code_promo) = ?");
+            $stmt->execute([$promoCode]);
+            $promoter = $stmt->fetch();
+        }
+        if (!$promoter && !empty($email)) {
+            $stmt = $pdo->prepare("SELECT * FROM promoters WHERE LOWER(email) = ?");
+            $stmt->execute([$email]);
+            $promoter = $stmt->fetch();
+        }
+
+        if (!$promoter) {
+            echo json_encode(['success' => false, 'error' => 'Compte promoteur introuvable.']);
+            exit;
+        }
+
+        $targetEmail = strtolower(trim($promoter['email'] ?? ''));
+        if (empty($targetEmail) || !filter_var($targetEmail, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode([
+                'success' => false, 
+                'error' => "Aucune adresse Gmail n'est enregistrée pour ce promoteur. Veuillez contacter Mr Ben."
+            ]);
+            exit;
+        }
+
+        // Code à 6 chiffres sécurisé
+        $code = strval(random_int(100000, 999999));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+        // Sauvegarde immédiate dans la base de données
+        $stmt = $pdo->prepare("UPDATE promoters SET reset_code = ?, reset_code_expires_at = ? WHERE id = ?");
+        $stmt->execute([$code, $expiresAt, $promoter['id']]);
+
+        // Préparation du courriel professionnel
+        $prenom = htmlspecialchars($promoter['prenom'] ?: 'Partenaire');
+        $subject = "Mr Ben — Code de confirmation : {$code}";
+
+        $htmlMessage = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Code de confirmation</title>
+        </head>
+        <body style="margin:0;padding:24px;background-color:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;color:#f8fafc;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:500px;margin:0 auto;background:#131c31;border-radius:12px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+            <tr>
+              <td style="padding:28px 24px 20px;text-align:center;background:linear-gradient(180deg, rgba(99,102,241,0.15) 0%, transparent 100%);">
+                <div style="display:inline-block;width:44px;height:44px;line-height:44px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#ffffff;font-weight:bold;font-size:18px;margin-bottom:12px;">MB</div>
+                <h1 style="margin:0;font-size:20px;color:#ffffff;font-weight:700;">Code de Récupération</h1>
+                <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">Espace Partenaire Promoteur Mr Ben</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:10px 28px 24px;">
+                <p style="font-size:14px;color:#cbd5e1;line-height:1.5;margin:0 0 16px;">
+                  Bonjour <strong>' . $prenom . '</strong>,
+                </p>
+                <p style="font-size:14px;color:#cbd5e1;line-height:1.5;margin:0 0 20px;">
+                  Vous avez demandé la réinitialisation de votre mot de passe secret. Voici votre code de confirmation personnel :
+                </p>
+                <div style="background:#0a0f1d;border:2px dashed #6366f1;border-radius:10px;padding:18px;text-align:center;margin:20px 0;">
+                  <span style="font-size:34px;font-weight:800;letter-spacing:8px;color:#ffffff;font-family:monospace;">' . $code . '</span>
+                  <div style="font-size:12px;color:#818cf8;margin-top:6px;font-weight:500;">Valable 15 minutes</div>
+                </div>
+                <p style="font-size:13px;color:#94a3b8;line-height:1.5;margin:20px 0 0;">
+                  Copiez ou saisissez ce code directement sur l\'application pour définir votre nouveau mot de passe.
+                </p>
+                <p style="font-size:12px;color:#64748b;line-height:1.4;margin:16px 0 0;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+                  Si vous n\'êtes pas à l\'origine de cette demande, vous pouvez ignorer cet e-mail. Votre compte reste parfaitement protégé.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 24px;background:#0d1424;text-align:center;font-size:11px;color:#64748b;">
+                © ' . date('Y') . ' Formations Mr Ben • Tous droits réservés
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>';
+
+        $headers = [];
+        $headers[] = 'MIME-Version: 1.0';
+        $headers[] = 'Content-type: text/html; charset=UTF-8';
+        $headers[] = 'From: Mr Ben Formations <no-reply@gpower-store.com>';
+        $headers[] = 'Reply-To: contact@gpower-store.com';
+        $headers[] = 'X-Mailer: PHP/' . phpversion();
+
+        // Envoi réel
+        $mailSuccess = @mail($targetEmail, $subject, $htmlMessage, implode("\r\n", $headers));
+
+        // Masquer l'adresse pour l'affichage (ex: be***@gmail.com)
+        $emailParts = explode('@', $targetEmail);
+        $userPart = $emailParts[0];
+        $maskedUser = strlen($userPart) <= 2 ? $userPart : substr($userPart, 0, 2) . str_repeat('*', max(2, strlen($userPart) - 2));
+        $maskedEmail = $maskedUser . '@' . ($emailParts[1] ?? 'gmail.com');
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Un code de confirmation a été envoyé sur votre Gmail.",
+            'maskedEmail' => $maskedEmail,
+            'mailSent' => $mailSuccess
+        ]);
+        exit;
+
+    // -------------------------------------------------------------------------
+    // 4e. Vérification du code reçu et enregistrement du nouveau mot de passe
+    // -------------------------------------------------------------------------
+    case 'verify_promoter_reset_code':
+        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $code = trim($inputData['code'] ?? '');
+        $newPassword = trim($inputData['newPassword'] ?? $inputData['password'] ?? '');
+
+        if (empty($promoterId) || empty($code) || empty($newPassword)) {
+            echo json_encode(['success' => false, 'error' => 'Veuillez saisir le code et votre nouveau mot de passe.']);
+            exit;
+        }
+
+        if (strlen($newPassword) < 4) {
+            echo json_encode(['success' => false, 'error' => 'Le mot de passe doit comporter au moins 4 caractères.']);
+            exit;
+        }
+
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
+        $stmt->execute([$promoterId]);
+        $promoter = $stmt->fetch();
+
+        if (!$promoter) {
+            echo json_encode(['success' => false, 'error' => 'Compte promoteur introuvable.']);
+            exit;
+        }
+
+        $savedCode = trim($promoter['reset_code'] ?? '');
+        $expiresAt = $promoter['reset_code_expires_at'] ?? '';
+
+        if (empty($savedCode) || $savedCode !== $code) {
+            echo json_encode(['success' => false, 'error' => 'Code de confirmation incorrect. Vérifiez vos e-mails.']);
+            exit;
+        }
+
+        if (!empty($expiresAt) && strtotime($expiresAt) < time()) {
+            echo json_encode(['success' => false, 'error' => 'Ce code a expiré (plus de 15 min). Veuillez en demander un nouveau.']);
+            exit;
+        }
+
+        // Succès : mise à jour du mot de passe dans la DB et effacement du code
+        $now = date('d/m/Y, H:i');
+        $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ?");
+        $stmt->execute([$newPassword, $now, $promoterId]);
+
+        // Recharger le profil complet
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
+        $stmt->execute([$promoterId]);
+        $p = $stmt->fetch();
+        if ($p) {
+            $p['reductionPct'] = (int)($p['reduction_pct'] ?? 20);
+            $p['commissionPct'] = (int)($p['commission_pct'] ?? 50);
+            $p['codePromo'] = $p['code_promo'] ?? '';
+            $p['targetBookId'] = $p['target_book_id'] ?? 'all';
+            $p['salesCount'] = (int)($p['sales_count'] ?? 0);
+            $p['totalEarned'] = (int)($p['total_earned'] ?? 0);
+            $p['email'] = $p['email'] ?? '';
+            $p['payoutPhone'] = $p['payout_phone'] ?? $p['whatsapp'] ?? '';
+            $p['passwordSetAt'] = $p['password_set_at'] ?? '';
+            $p['salesHistory'] = json_decode($p['sales_history'] ?? '[]', true) ?: [];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Mot de passe mis à jour avec succès !',
+            'promoter' => $p
+        ]);
+        exit;
+
+    // -------------------------------------------------------------------------
     // 5. Création d'un code d'accès gratuit VIP par Mr Ben
     // -------------------------------------------------------------------------
     case 'create_admin_code':

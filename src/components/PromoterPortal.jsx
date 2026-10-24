@@ -99,12 +99,17 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Mot de passe oublié
+  // Mot de passe oublié (par code de confirmation envoyé sur Gmail)
   const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryStep, setRecoveryStep] = useState('request'); // 'request' | 'verify'
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [maskedGmail, setMaskedGmail] = useState('');
   const [recoveryError, setRecoveryError] = useState('');
   const [recoverySuccess, setRecoverySuccess] = useState('');
   const [recoveredGmail, setRecoveredGmail] = useState('');
-  const [resetPassword, setResetPassword] = useState('');
 
   // États d'action
   const [copiedItem, setCopiedItem] = useState(null);
@@ -257,7 +262,69 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     setLoginPassword('');
   };
 
-  // Handler mot de passe oublié avec Google
+  // 1. Demande d'envoi du code de confirmation à 6 chiffres sur Gmail
+  const handleSendRecoveryCode = async () => {
+    setRecoveryError('');
+    setRecoverySuccess('');
+    setIsSendingCode(true);
+
+    const targetEmail = promoter?.email || selectedGmail;
+    const res = await storageService.sendPromoterResetCode(
+      promoter?.id, 
+      targetEmail, 
+      promoter?.codePromo
+    );
+    setIsSendingCode(false);
+
+    if (res.success) {
+      setMaskedGmail(res.maskedEmail || targetEmail || '');
+      setRecoveryStep('verify');
+      setRecoverySuccess(res.message || "Un code de confirmation à 6 chiffres a été envoyé sur votre adresse Gmail.");
+    } else {
+      setRecoveryError(res.error || "Impossible d'envoyer le code sur votre adresse Gmail.");
+    }
+  };
+
+  // 2. Validation du code reçu par e-mail et mise à jour du mot de passe
+  const handleConfirmResetCode = async (e) => {
+    e.preventDefault();
+    setRecoveryError('');
+    setRecoverySuccess('');
+
+    const cleanCode = String(recoveryCode).trim();
+    if (!cleanCode || cleanCode.length !== 6) {
+      setRecoveryError("Veuillez saisir le code complet à 6 chiffres reçu par e-mail.");
+      return;
+    }
+
+    if (!resetPassword || resetPassword.length < 4) {
+      setRecoveryError("Le nouveau mot de passe doit comporter au moins 4 caractères.");
+      return;
+    }
+
+    setIsVerifyingCode(true);
+    const res = await storageService.verifyPromoterResetCode(promoter?.id, cleanCode, resetPassword);
+    setIsVerifyingCode(false);
+
+    if (res.success) {
+      if (res.promoter) {
+        setPromoter(res.promoter);
+      }
+      setLoginPassword(resetPassword);
+      setIsRecovering(false);
+      setRecoveryStep('request');
+      setRecoveryCode('');
+      setResetPassword('');
+      try {
+        localStorage.setItem(`mrben_promoter_session_${promoter?.id}`, 'active');
+      } catch {}
+      setIsAuthenticated(true);
+    } else {
+      setRecoveryError(res.error || "Code de confirmation incorrect ou expiré.");
+    }
+  };
+
+  // Fallback 1-clic : vérification instantanée avec Google OAuth
   const handleRecoverWithGoogle = () => {
     setRecoveryError('');
     const googleClientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
@@ -281,6 +348,7 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                     return;
                   }
                   setRecoveredGmail(verifiedEmail);
+                  setRecoveryStep('verify');
                 }
               } catch (e) {
                 setRecoveryError("Erreur lors de la vérification Google.");
@@ -306,10 +374,15 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
 
     const res = await storageService.setPromoterPassword(promoter.id, resetPassword, recoveredGmail || promoter.email);
     if (res.success) {
-      setRecoverySuccess("Mot de passe mis à jour ! Vous pouvez vous connecter.");
+      setRecoverySuccess("Mot de passe mis à jour ! Vous êtes connecté.");
       setLoginPassword(resetPassword);
       setIsRecovering(false);
+      setRecoveryStep('request');
       setPromoter(res.promoter);
+      try {
+        localStorage.setItem(`mrben_promoter_session_${promoter?.id}`, 'active');
+      } catch {}
+      setIsAuthenticated(true);
     } else {
       setRecoveryError("Erreur lors de la réinitialisation.");
     }
@@ -382,37 +455,95 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
           </div>
 
           {isRecovering ? (
-            /* RÉCUPÉRATION DU MOT DE PASSE AVEC GOOGLE */
+            /* RÉCUPÉRATION DU MOT DE PASSE PAR CODE GMAIL */
             <div className="auth-form-card">
               <div className="welcome-promoter-badge">
                 <KeyRound size={14} className="text-gold" />
                 <span>Récupération de compte</span>
               </div>
 
-              <div className="auth-notice-alert">
-                <AlertCircle size={15} />
-                <span>
-                  Connectez-vous avec votre compte Google associé (<strong>{promoter.email || promoter.prenom}</strong>) pour réinitialiser votre mot de passe en toute sécurité.
-                </span>
-              </div>
-
               {recoveryError && <div className="auth-error-pill">{recoveryError}</div>}
               {recoverySuccess && <div className="auth-success-pill">{recoverySuccess}</div>}
 
-              {recoveredGmail ? (
-                /* Étape de saisie du nouveau mot de passe une fois Google validé */
-                <form onSubmit={handleSaveResetPassword} className="auth-inner-form">
-                  <div className="verified-gmail-box">
-                    <div className="verified-gmail-left">
-                      <svg viewBox="0 0 24 24" width="18" height="18">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                      </svg>
-                      <span className="verified-email-text">{recoveredGmail}</span>
+              {recoveryStep === 'request' ? (
+                /* ÉTAPE A : ENVOI DU CODE SUR LE GMAIL */
+                <div className="recovery-inner-col">
+                  <div className="auth-notice-alert">
+                    <Mail size={16} />
+                    <span>
+                      Cliquez ci-dessous pour recevoir un <strong>code de confirmation à 6 chiffres</strong> sur votre compte Gmail (<strong>{promoter.email || promoter.prenom}</strong>).
+                    </span>
+                  </div>
+
+                  <p className="auth-step-instruction">
+                    Ce code sécurisé vous permettra de valider votre identité et de définir immédiatement votre nouveau mot de passe.
+                  </p>
+
+                  <button 
+                    type="button" 
+                    className="btn-promoter-primary purple"
+                    onClick={handleSendRecoveryCode}
+                    disabled={isSendingCode}
+                  >
+                    <Mail size={15} />
+                    <span>{isSendingCode ? "Envoi du code en cours..." : "Envoyer le code sur mon Gmail"}</span>
+                    <ArrowRight size={15} />
+                  </button>
+
+                  <div className="recovery-divider-row">
+                    <span>ou</span>
+                  </div>
+
+                  {/* Fallback Google direct 1-clic */}
+                  <button 
+                    type="button" 
+                    className="btn-google-native-select"
+                    onClick={handleRecoverWithGoogle}
+                    title="Vérifier instantanément avec Google"
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>Valider directement avec Google</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    className="btn-promoter-link"
+                    onClick={() => { setIsRecovering(false); setRecoveryError(''); setRecoverySuccess(''); }}
+                  >
+                    Retour à la connexion
+                  </button>
+                </div>
+              ) : (
+                /* ÉTAPE B : SAISIE DU CODE REÇU & NOUVEAU MOT DE PASSE */
+                <form onSubmit={handleConfirmResetCode} className="auth-inner-form">
+                  <div className="auth-notice-alert green">
+                    <CheckCircle2 size={16} />
+                    <span>
+                      Code envoyé sur <strong>{maskedGmail || promoter.email}</strong>. Consultez vos e-mails Gmail (et dossier spams).
+                    </span>
+                  </div>
+
+                  <div className="auth-input-group">
+                    <label>Code de confirmation à 6 chiffres :</label>
+                    <div className="input-code-wrapper">
+                      <input 
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        placeholder="Ex: 749201"
+                        value={recoveryCode}
+                        onChange={(e) => setRecoveryCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className="input-otp-field"
+                        required
+                        autoFocus
+                      />
                     </div>
-                    <CheckCircle2 size={15} className="text-emerald" />
                   </div>
 
                   <div className="auth-input-group">
@@ -424,7 +555,6 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                         value={resetPassword}
                         onChange={(e) => setResetPassword(e.target.value)}
                         required
-                        autoFocus
                       />
                       <button 
                         type="button" 
@@ -436,36 +566,34 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                     </div>
                   </div>
 
-                  <button type="submit" className="btn-promoter-primary purple">
-                    <span>Enregistrer mon nouveau mot de passe</span>
+                  <button 
+                    type="submit" 
+                    className="btn-promoter-primary purple"
+                    disabled={isVerifyingCode}
+                  >
+                    <span>{isVerifyingCode ? "Validation du code..." : "Confirmer le code & Enregistrer"}</span>
                     <ArrowRight size={15} />
                   </button>
-                </form>
-              ) : (
-                /* Bouton Google 1-Clic pour prouver l'identité */
-                <div className="recovery-actions-col">
-                  <button 
-                    type="button" 
-                    className="btn-google-native-select"
-                    onClick={handleRecoverWithGoogle}
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                    </svg>
-                    <span>Vérifier avec Google</span>
-                  </button>
+
+                  <div className="resend-code-row">
+                    <button 
+                      type="button" 
+                      className="btn-resend-link"
+                      onClick={handleSendRecoveryCode}
+                      disabled={isSendingCode}
+                    >
+                      {isSendingCode ? "Envoi en cours..." : "Renvoyer un nouveau code"}
+                    </button>
+                  </div>
 
                   <button 
                     type="button" 
                     className="btn-promoter-link"
-                    onClick={() => { setIsRecovering(false); setRecoveryError(''); }}
+                    onClick={() => { setIsRecovering(false); setRecoveryStep('request'); setRecoveryError(''); setRecoverySuccess(''); }}
                   >
-                    Retour à la connexion
+                    Annuler et retourner
                   </button>
-                </div>
+                </form>
               )}
             </div>
           ) : !promoter.password ? (

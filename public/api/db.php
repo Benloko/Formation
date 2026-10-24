@@ -147,6 +147,8 @@ function initMysqlTables($pdo) {
     // Migrations idempotentes pour colonnes supplémentaires
     try { $pdo->exec("ALTER TABLE promoters ADD COLUMN email VARCHAR(191) DEFAULT ''"); } catch (Exception $e) {}
     try { $pdo->exec("ALTER TABLE promoters ADD COLUMN payout_phone VARCHAR(64) DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN reset_code VARCHAR(16) DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN reset_code_expires_at VARCHAR(64) DEFAULT NULL"); } catch (Exception $e) {}
 
     $initialized = true;
 }
@@ -240,4 +242,6 @@ function initSqliteTables($pdo) {
 
     try { $pdo->exec("ALTER TABLE promoters ADD COLUMN email TEXT DEFAULT ''"); } catch (Exception $e) {}
     try { $pdo->exec("ALTER TABLE promoters ADD COLUMN payout_phone TEXT DEFAULT ''"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN reset_code TEXT DEFAULT NULL"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE promoters ADD COLUMN reset_code_expires_at TEXT DEFAULT NULL"); } catch (Exception $e) {}
 }

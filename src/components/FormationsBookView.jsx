@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BOOKS_DATA } from '../data/booksData';
 import { storageService } from '../services/storageService';
+import { analyticsService } from '../services/analyticsService';
 import { Sparkles, ArrowRight, CheckCircle2, Award, Info, X } from 'lucide-react';
 import './FormationsBookView.css';
 
@@ -220,7 +221,10 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     <button 
                       type="button" 
                       className="services-link-inline-btn"
-                      onClick={onGoToServices}
+                      onClick={() => {
+                        analyticsService.trackButtonClick('btn_services', 'services', '#formations');
+                        onGoToServices();
+                      }}
                     >
                       « Nos Services »
                     </button>.
@@ -261,6 +265,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   type="button" 
                   className="btn-switch-other-formation"
                   onClick={() => {
+                    analyticsService.trackButtonClick('btn_switch_video', 'livre-bd-storytelling', '#formations');
                     setMobileActiveTab('video');
                     const rightPage = document.querySelector('.right-page');
                     if (rightPage) rightPage.scrollTop = 0;
@@ -364,7 +369,10 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     <button 
                       type="button" 
                       className="services-link-inline-btn"
-                      onClick={onGoToServices}
+                      onClick={() => {
+                        analyticsService.trackButtonClick('btn_services', 'services', '#formations');
+                        onGoToServices();
+                      }}
                     >
                       « Nos Services »
                     </button>.
@@ -405,6 +413,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   type="button" 
                   className="btn-switch-other-formation"
                   onClick={() => {
+                    analyticsService.trackButtonClick('btn_switch_bd', 'livre-videos-ia', '#formations');
                     setMobileActiveTab('bd');
                     const leftPage = document.querySelector('.left-page');
                     if (leftPage) leftPage.scrollTop = 0;

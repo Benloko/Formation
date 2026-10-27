@@ -193,20 +193,32 @@ class AnalyticsService {
     this.record({ page, eventType: 'page_view', formationViewed });
   }
 
+  // Suivi spécifique par bouton
+  trackButtonClick(buttonId, formationId = '', page = '') {
+    this.record({
+      eventType: buttonId,
+      formationViewed: formationId,
+      page: page || (typeof window !== 'undefined' ? window.location.pathname + (window.location.hash || '') : '/')
+    });
+  }
+
   trackFormationView(formationId) {
     this.record({ eventType: 'formation_view', formationViewed: formationId });
   }
 
   trackUnlockClick(formationId) {
-    this.record({ eventType: 'unlock_click', formationViewed: formationId });
+    const btnId = formationId === 'livre-bd-storytelling' ? 'btn_unlock_bd' : (formationId === 'livre-videos-ia' ? 'btn_unlock_videos' : 'btn_unlock');
+    this.record({ eventType: btnId, formationViewed: formationId });
   }
 
   trackWhatsAppClick(context = 'contact') {
-    this.record({ eventType: 'whatsapp_click', formationViewed: context });
+    const btnId = context === 'livre-bd-storytelling' ? 'btn_whatsapp_bd' : (context === 'livre-videos-ia' ? 'btn_whatsapp_videos' : 'btn_whatsapp_contact');
+    this.record({ eventType: btnId, formationViewed: context });
   }
 
   trackDemoRead(formationId) {
-    this.record({ eventType: 'demo_read', formationViewed: formationId });
+    const btnId = formationId === 'livre-bd-storytelling' ? 'btn_demo_bd' : (formationId === 'livre-videos-ia' ? 'btn_demo_videos' : 'btn_demo');
+    this.record({ eventType: btnId, formationViewed: formationId });
   }
 
   // Récupérer les données pour l'espace Admin

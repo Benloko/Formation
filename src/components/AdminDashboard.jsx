@@ -38,7 +38,10 @@ import {
   Smartphone,
   Laptop,
   MousePointerClick,
-  Radio
+  Radio,
+  Briefcase,
+  FileText,
+  MessageCircle
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
@@ -113,7 +116,8 @@ export function AdminDashboard({ onClose }) {
     chartData: [],
     topCountries: [],
     devices: [],
-    formations: [],
+    pagesDetail: [],
+    formationButtonsDetail: [],
     recentVisits: []
   });
   const [hoveredChartPoint, setHoveredChartPoint] = useState(null);
@@ -1190,41 +1194,51 @@ export function AdminDashboard({ onClose }) {
 
                   </div>
 
-                  {/* Grille 2 : Intérêt Formations & Flux d'activité Récent */}
+                  {/* Grille : Détail de Chaque Page Vue & Activité Récente */}
                   <div className="analytics-dual-row">
                     
-                    {/* Intérêt par formation */}
+                    {/* Détail précis de chaque page vue */}
                     <div className="analytics-panel-card">
                       <div className="panel-card-head">
                         <div className="head-title-col">
-                          <h3>Intérêt par Formation</h3>
-                          <p>Vues détaillées et clics d'intérêt par module</p>
+                          <h3>Détail de chaque Page Vue</h3>
+                          <p>Fréquentation réelle et visiteurs uniques par page</p>
                         </div>
-                        <BookOpen size={15} className="panel-icon-subtle" />
+                        <FileText size={15} className="panel-icon-subtle" />
                       </div>
 
-                      <div className="formations-analytics-list">
-                        {analyticsData.formations && analyticsData.formations.length > 0 ? (
-                          analyticsData.formations.map((f) => (
-                            <div key={f.id} className="formation-analytics-row">
-                              <div className="f-info-cell">
-                                <span className="f-title">{f.title}</span>
+                      <div className="pages-detail-list">
+                        {analyticsData.pagesDetail && analyticsData.pagesDetail.length > 0 ? (
+                          analyticsData.pagesDetail.map((pageItem, idx) => (
+                            <div key={pageItem.path + idx} className="page-stat-row">
+                              <div className="page-info-col">
+                                <div className="page-title-row">
+                                  <span className="page-name-title">{pageItem.name}</span>
+                                  <span className="page-path-chip">{pageItem.path}</span>
+                                </div>
+                                <div className="page-gauge-track">
+                                  <div 
+                                    className="page-gauge-fill" 
+                                    style={{ width: `${Math.min(100, Math.max(5, pageItem.pct))}%` }}
+                                  />
+                                </div>
                               </div>
-                              <div className="f-badges-cell">
-                                <span className="f-pill views">
+                              <div className="page-metrics-badges">
+                                <span className="page-views-badge" title="Pages vues">
                                   <Eye size={11} />
-                                  <span>{f.views} vue(s)</span>
+                                  <strong>{pageItem.views}</strong> vue(s)
                                 </span>
-                                <span className="f-pill clicks">
-                                  <Lock size={11} />
-                                  <span>{f.clicks} clic(s)</span>
+                                <span className="page-visitors-badge" title="Visiteurs uniques">
+                                  <Users size={11} />
+                                  <strong>{pageItem.visitors}</strong> unique(s)
                                 </span>
+                                <span className="page-pct-badge">{pageItem.pct}%</span>
                               </div>
                             </div>
                           ))
                         ) : (
                           <div className="panel-empty-row">
-                            <span>Aucune vue spécifique par formation pour le moment.</span>
+                            <span>Aucune consultation de page enregistrée pour cette période.</span>
                           </div>
                         )}
                       </div>
@@ -1252,9 +1266,10 @@ export function AdminDashboard({ onClose }) {
                                 </div>
                                 <span className="feed-event">
                                   {item.event === 'page_view' ? 'Consultation de la page' : 
-                                   item.event === 'unlock_click' ? '🎯 Clic Débloquer formation' :
-                                   item.event === 'demo_read' ? '📖 Lecture d\'un extrait' :
-                                   item.event === 'whatsapp_click' ? '💬 Clic WhatsApp' : item.event}
+                                   item.event.includes('unlock') ? '🎯 Clic Débloquer formation' :
+                                   item.event.includes('demo') ? '📖 Lecture d\'un extrait' :
+                                   item.event.includes('whatsapp') ? '💬 Clic WhatsApp' : 
+                                   item.event.includes('switch') ? '🔄 Bascule de formation' : item.event}
                                 </span>
                               </div>
                               <span className="feed-time">
@@ -1270,6 +1285,75 @@ export function AdminDashboard({ onClose }) {
                       </div>
                     </div>
 
+                  </div>
+
+                  {/* Grand Panneau : Clics Détaillés sur Chaque Bouton de Formation */}
+                  <div className="analytics-panel-card">
+                    <div className="panel-card-head">
+                      <div className="head-title-col">
+                        <h3>Détail des Clics sur Chaque Bouton de Formation</h3>
+                        <p>Nombre de clics précis sur chaque bouton d'action, d'achat et d'extrait</p>
+                      </div>
+                      <MousePointerClick size={15} className="panel-icon-subtle text-amber" />
+                    </div>
+
+                    <div className="formation-buttons-grid">
+                      {analyticsData.formationButtonsDetail && analyticsData.formationButtonsDetail.length > 0 ? (
+                        analyticsData.formationButtonsDetail.map((formationGroup) => (
+                          <div key={formationGroup.formationId} className={`formation-button-card ${formationGroup.color}`}>
+                            <div className="f-btn-card-head">
+                              <div className="f-btn-head-title">
+                                <span className="f-btn-dot"></span>
+                                <h4>{formationGroup.formationTitle}</h4>
+                              </div>
+                              <span className="f-btn-total-pill">
+                                {formationGroup.totalClicks} clic(s) au total
+                              </span>
+                            </div>
+
+                            <div className="f-buttons-rows-list">
+                              {formationGroup.buttons.map((btn) => (
+                                <div key={btn.id} className="f-single-button-row">
+                                  <div className="f-single-btn-left">
+                                    <div className="f-btn-icon-bubble">
+                                      {btn.id === 'unlock' && <Lock size={12} />}
+                                      {btn.id === 'demo' && <BookOpen size={12} />}
+                                      {btn.id === 'whatsapp' && <MessageCircle size={12} />}
+                                      {btn.id === 'switch' && <ArrowRight size={12} />}
+                                      {btn.id === 'cta_home' && <Sparkles size={12} />}
+                                      {btn.id === 'vip_code' && <Tag size={12} />}
+                                      {btn.id === 'services' && <Briefcase size={12} />}
+                                    </div>
+                                    <div className="f-btn-name-col">
+                                      <span className="f-btn-name">{btn.name}</span>
+                                      <span className="f-btn-tag-desc">{btn.tag}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="f-single-btn-right">
+                                    <div className="f-btn-gauge-track">
+                                      <div 
+                                        className="f-btn-gauge-fill"
+                                        style={{ 
+                                          width: `${formationGroup.totalClicks > 0 ? Math.min(100, Math.max(8, Math.round((btn.count / formationGroup.totalClicks) * 100))) : 0}%` 
+                                        }}
+                                      />
+                                    </div>
+                                    <span className={`f-btn-click-count ${btn.count > 0 ? 'highlight' : ''}`}>
+                                      <strong>{btn.count}</strong> clic(s)
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="panel-empty-row">
+                          <span>Aucun clic enregistré sur les boutons pour cette période.</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                 </div>

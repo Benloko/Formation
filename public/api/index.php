@@ -893,27 +893,164 @@ switch ($action) {
             ];
         }
 
-        // 5. Intérêt par formation
-        $formations = [];
+        // 5. Détail précis de CHAQUE PAGE VUE
+        $pagesBreakdown = [];
         $stmt = $pdo->query("SELECT 
-            formation_viewed,
-            COUNT(*) as views,
-            COUNT(CASE WHEN event_type LIKE '%unlock%' OR event_type LIKE '%click%' THEN 1 END) as clicks
-        FROM site_visits WHERE $whereClause AND formation_viewed != '' GROUP BY formation_viewed ORDER BY views DESC");
+            page, 
+            COUNT(*) as views, 
+            COUNT(DISTINCT visitor_id) as visitors 
+        FROM site_visits 
+        WHERE $whereClause AND event_type = 'page_view'
+        GROUP BY page 
+        ORDER BY views DESC");
+
         while ($row = $stmt->fetch()) {
-            $fId = $row['formation_viewed'];
-            $title = $fId === 'livre-bd-storytelling' ? 'Bande Dessinée & Storytelling IA' :
-                    ($fId === 'livre-videos-ia' ? 'Vidéos Virales IA' :
-                    ($fId === 'pack-duo-mr-ben' ? 'Pack Duo (Deux Formations)' : $fId));
-            $formations[] = [
-                'id' => $fId,
-                'title' => $title,
-                'views' => (int)$row['views'],
-                'clicks' => (int)$row['clicks']
-            ];
+            $rawPage = trim($row['page'] ?: '/');
+            $cleanKey = '/';
+            $pageTitle = "Page d'Accueil (Mr Ben)";
+
+            if (strpos($rawPage, '#formations') !== false || strpos($rawPage, 'formation') !== false) {
+                $cleanKey = '#formations';
+                $pageTitle = "Catalogue des Formations";
+            } else if (strpos($rawPage, '#lecture') !== false || strpos($rawPage, 'lecture') !== false) {
+                $cleanKey = '#lecture';
+                $pageTitle = "Espace Lecteur & Extraits Démo";
+            } else if (strpos($rawPage, '#services') !== false || strpos($rawPage, 'services') !== false) {
+                $cleanKey = '#services';
+                $pageTitle = "Services & Prestations";
+            } else if (strpos($rawPage, '#contact') !== false || strpos($rawPage, 'contact') !== false) {
+                $cleanKey = '#contact';
+                $pageTitle = "Page Contact Mr Ben";
+            } else if (strpos($rawPage, '#a-propos') !== false || strpos($rawPage, 'a-propos') !== false) {
+                $cleanKey = '#a-propos';
+                $pageTitle = "À Propos de Mr Ben";
+            }
+
+            if (!isset($pagesBreakdown[$cleanKey])) {
+                $pagesBreakdown[$cleanKey] = [
+                    'path' => $cleanKey,
+                    'name' => $pageTitle,
+                    'views' => 0,
+                    'visitors' => 0
+                ];
+            }
+            $pagesBreakdown[$cleanKey]['views'] += (int)$row['views'];
+            $pagesBreakdown[$cleanKey]['visitors'] = max($pagesBreakdown[$cleanKey]['visitors'], (int)$row['visitors']);
         }
 
-        // 6. Flux d'activité récent (dernières visites en temps réel)
+        $totalPViews = max(1, array_sum(array_column($pagesBreakdown, 'views')));
+        $pagesDetail = [];
+        foreach ($pagesBreakdown as $p) {
+            $p['pct'] = round(($p['views'] / $totalPViews) * 100, 1);
+            $pagesDetail[] = $p;
+        }
+        usort($pagesDetail, fn($a, $b) => $b['views'] <=> $a['views']);
+
+        // 6. Détail précis de CHAQUE BOUTON de formation cliqué
+        $buttonsMap = [
+            'livre-bd-storytelling' => [
+                'formationId' => 'livre-bd-storytelling',
+                'formationTitle' => "Bandes Dessinées & Storytelling IA",
+                'color' => 'purple',
+                'totalClicks' => 0,
+                'buttons' => [
+                    'unlock' => ['id' => 'unlock', 'name' => "Bouton « Débloquer cette formation »", 'count' => 0, 'tag' => 'Déblocage'],
+                    'demo' => ['id' => 'demo', 'name' => "Bouton « Lire l'extrait gratuit »", 'count' => 0, 'tag' => 'Lecture Démo'],
+                    'whatsapp' => ['id' => 'whatsapp', 'name' => "Bouton « Payer sur WhatsApp »", 'count' => 0, 'tag' => 'WhatsApp'],
+                    'switch' => ['id' => 'switch', 'name' => "Bouton « Voir formation Vidéos IA »", 'count' => 0, 'tag' => 'Navigation']
+                ]
+            ],
+            'livre-videos-ia' => [
+                'formationId' => 'livre-videos-ia',
+                'formationTitle' => "Création de Vidéos Virales avec l'IA",
+                'color' => 'sky',
+                'totalClicks' => 0,
+                'buttons' => [
+                    'unlock' => ['id' => 'unlock', 'name' => "Bouton « Débloquer cette formation »", 'count' => 0, 'tag' => 'Déblocage'],
+                    'demo' => ['id' => 'demo', 'name' => "Bouton « Lire l'extrait gratuit »", 'count' => 0, 'tag' => 'Lecture Démo'],
+                    'whatsapp' => ['id' => 'whatsapp', 'name' => "Bouton « Payer sur WhatsApp »", 'count' => 0, 'tag' => 'WhatsApp'],
+                    'switch' => ['id' => 'switch', 'name' => "Bouton « Voir formation BD »", 'count' => 0, 'tag' => 'Navigation']
+                ]
+            ],
+            'general' => [
+                'formationId' => 'general',
+                'formationTitle' => "Boutons Globaux & Appels à l'Action",
+                'color' => 'amber',
+                'totalClicks' => 0,
+                'buttons' => [
+                    'cta_home' => ['id' => 'cta_home', 'name' => "Bouton Accueil « Débloquer ma formation »", 'count' => 0, 'tag' => 'CTA Accueil'],
+                    'vip_code' => ['id' => 'vip_code', 'name' => "Bouton « Débloquer par code d'accès VIP »", 'count' => 0, 'tag' => 'Code VIP'],
+                    'services' => ['id' => 'services', 'name' => "Bouton « Nos Services & Prestations »", 'count' => 0, 'tag' => 'Services']
+                ]
+            ]
+        ];
+
+        $stmt = $pdo->query("SELECT 
+            event_type, 
+            formation_viewed, 
+            COUNT(*) as clicks 
+        FROM site_visits 
+        WHERE $whereClause AND event_type != 'page_view'
+        GROUP BY event_type, formation_viewed");
+
+        while ($row = $stmt->fetch()) {
+            $evt = strtolower($row['event_type']);
+            $fId = $row['formation_viewed'];
+            $cnt = (int)$row['clicks'];
+
+            $targetF = 'general';
+            if ($fId === 'livre-bd-storytelling' || strpos($evt, '_bd') !== false) {
+                $targetF = 'livre-bd-storytelling';
+            } else if ($fId === 'livre-videos-ia' || strpos($evt, '_video') !== false || strpos($evt, '_videos') !== false) {
+                $targetF = 'livre-videos-ia';
+            }
+
+            if (strpos($evt, 'unlock') !== false) {
+                $btnKey = 'unlock';
+            } else if (strpos($evt, 'demo') !== false) {
+                $btnKey = 'demo';
+            } else if (strpos($evt, 'whatsapp') !== false) {
+                $btnKey = ($targetF !== 'general') ? 'whatsapp' : 'cta_home';
+            } else if (strpos($evt, 'switch_video') !== false) {
+                $targetF = 'livre-bd-storytelling';
+                $btnKey = 'switch';
+            } else if (strpos($evt, 'switch_bd') !== false) {
+                $targetF = 'livre-videos-ia';
+                $btnKey = 'switch';
+            } else if (strpos($evt, 'cta_home') !== false) {
+                $targetF = 'general';
+                $btnKey = 'cta_home';
+            } else if (strpos($evt, 'vip') !== false) {
+                $targetF = 'general';
+                $btnKey = 'vip_code';
+            } else if (strpos($evt, 'service') !== false) {
+                $targetF = 'general';
+                $btnKey = 'services';
+            } else {
+                $btnKey = 'unlock';
+            }
+
+            if (isset($buttonsMap[$targetF]['buttons'][$btnKey])) {
+                $buttonsMap[$targetF]['buttons'][$btnKey]['count'] += $cnt;
+                $buttonsMap[$targetF]['totalClicks'] += $cnt;
+            } else {
+                $buttonsMap[$targetF]['buttons'][$btnKey] = [
+                    'id' => $btnKey,
+                    'name' => "Bouton « " . ucfirst(str_replace(['btn_', '_'], ['', ' '], $evt)) . " »",
+                    'count' => $cnt,
+                    'tag' => 'Action'
+                ];
+                $buttonsMap[$targetF]['totalClicks'] += $cnt;
+            }
+        }
+
+        $formationButtonsDetail = [];
+        foreach ($buttonsMap as $f) {
+            $f['buttons'] = array_values($f['buttons']);
+            $formationButtonsDetail[] = $f;
+        }
+
+        // 7. Flux d'activité récent (dernières visites en temps réel)
         $recentVisits = [];
         $stmt = $pdo->query("SELECT visitor_id, country, country_code, device_type, os, formation_viewed, event_type, visited_at FROM site_visits ORDER BY id DESC LIMIT 10");
         while ($row = $stmt->fetch()) {
@@ -942,10 +1079,92 @@ switch ($action) {
             'chartData' => array_values($dailyData),
             'topCountries' => $topCountries,
             'devices' => $devices,
-            'formations' => $formations,
+            'pagesDetail' => $pagesDetail,
+            'formationButtonsDetail' => $formationButtonsDetail,
             'recentVisits' => $recentVisits
         ]);
         break;
+
+    // -------------------------------------------------------------------------
+    // 13. Webhook officiel FedaPay Live (Traitement asynchrone sécurisé)
+    // -------------------------------------------------------------------------
+    case 'fedapay_webhook':
+        $rawPayload = file_get_contents('php://input');
+        $event = json_decode($rawPayload, true);
+        
+        if (!empty($event)) {
+            $eventName = $event['name'] ?? '';
+            $tx = $event['data'] ?? [];
+            $txStatus = $tx['status'] ?? '';
+
+            if ($eventName === 'transaction.approved' || $txStatus === 'approved') {
+                $txId = (string)($tx['id'] ?? '');
+                $amount = (int)($tx['amount'] ?? 0);
+                $customer = $tx['customer'] ?? [];
+                $clientEmail = strtolower(trim($customer['email'] ?? ''));
+                $clientName = trim(($customer['firstname'] ?? '') . ' ' . ($customer['lastname'] ?? 'Client'));
+                $clientPhone = trim($customer['phone_number']['number'] ?? $customer['phone_number'] ?? '');
+                
+                $metadata = $tx['custom_metadata'] ?? [];
+                $itemId = $metadata['bookId'] ?? '';
+                if (empty($itemId)) {
+                    $desc = strtolower($tx['description'] ?? '');
+                    $itemId = strpos($desc, 'video') !== false ? 'livre-videos-ia' : 'livre-bd-storytelling';
+                }
+                $itemTitle = ($itemId === 'livre-videos-ia') ? "L'Art de Créer des Vidéos Époustouflantes avec l'IA" : "L'Art du Storytelling & BD avec l'IA";
+                $promoCode = $metadata['promoCode'] ?? null;
+                $orderId = 'ord_feda_' . $txId;
+                $code = ($itemId === 'livre-videos-ia' ? 'MB-VID-' : 'MB-BD-') . rand(1000, 9999);
+                $date = date('d/m/Y, H:i');
+
+                if (!empty($clientEmail)) {
+                    // Vérifier si la commande n'a pas déjà été insérée
+                    $checkStmt = $pdo->prepare("SELECT id FROM orders WHERE id = ? OR (client_email = ? AND item_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 1 HOUR))");
+                    $checkStmt->execute([$orderId, $clientEmail, $itemId]);
+                    $exists = $checkStmt->fetch();
+
+                    if (!$exists) {
+                        $insStmt = $pdo->prepare("INSERT INTO orders (
+                            id, client_name, client_email, client_phone, item_id, item_title, amount, code, promo_code, discount_amount, payment_method, status, date
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'FedaPay Live', 'Actif', ?)");
+                        $insStmt->execute([$orderId, $clientName, $clientEmail, $clientPhone, $itemId, $itemTitle, $amount, $code, $promoCode, $date]);
+
+                        $unlockStmt = $pdo->prepare("INSERT IGNORE INTO unlocked_books (email, book_id, book_title, code) VALUES (?, ?, ?, ?)");
+                        $unlockStmt->execute([$clientEmail, $itemId, $itemTitle, $code]);
+
+                        // Enregistrer commission promoteur si code promo
+                        if (!empty($promoCode)) {
+                            $promStmt = $pdo->prepare("SELECT * FROM promoters WHERE UPPER(code_promo) = ?");
+                            $promStmt->execute([strtoupper($promoCode)]);
+                            $promoter = $promStmt->fetch();
+                            if ($promoter) {
+                                $commPct = (int)($promoter['commission_pct'] ?? 50);
+                                $commAmount = (int)round(($amount * $commPct) / 100);
+                                $salesHistory = json_decode($promoter['sales_history'] ?? '[]', true) ?: [];
+                                $salesHistory[] = [
+                                    'id' => 'sale_' . time(),
+                                    'date' => $date,
+                                    'orderId' => $orderId,
+                                    'bookId' => $itemId,
+                                    'bookTitle' => $itemTitle,
+                                    'buyerEmail' => $clientEmail,
+                                    'paidAmount' => $amount,
+                                    'commissionEarned' => $commAmount
+                                ];
+                                $newSalesCount = (int)($promoter['sales_count'] ?? 0) + 1;
+                                $newTotalEarned = (int)($promoter['total_earned'] ?? 0) + $commAmount;
+
+                                $upStmt = $pdo->prepare("UPDATE promoters SET sales_count = ?, total_earned = ?, sales_history = ? WHERE id = ?");
+                                $upStmt->execute([$newSalesCount, $newTotalEarned, json_encode($salesHistory), $promoter['id']]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        http_response_code(200);
+        echo json_encode(['received' => true]);
+        exit();
 
     default:
         echo json_encode(['success' => true, 'message' => 'API Mr Ben opérationnelle.']);

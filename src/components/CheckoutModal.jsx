@@ -147,32 +147,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
 
   const payablePrice = appliedPromo ? appliedPromo.finalPrice : bookPrice;
 
-  // Affichage du message d'option en cours d'implémentation & contact direct
-  const [showPaymentNotice, setShowPaymentNotice] = useState(false);
 
-  const handleOpenWhatsAppPayment = () => {
-    analyticsService.trackWhatsAppClick(activeBook?.id || 'achat-whatsapp');
-    const whatsappNumber = CREATOR_PROFILE.whatsappNumber || "2290199728385";
-    const formattedPrice = payablePrice.toLocaleString();
-    const text = encodeURIComponent(
-      `Bonjour Mr Ben, je souhaite débloquer la formation « ${activeBook.title} » (${formattedPrice} FCFA).\nMon compte Gmail vérifié : ${selectedGmail}\nComment puis-je effectuer le paiement pour recevoir mon code d'accès ?`
-    );
-    window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
-  };
-
-  const handleOpenGmailPayment = () => {
-    const email = CREATOR_PROFILE.email || "mrbenofficiel6@gmail.com";
-    const formattedPrice = payablePrice.toLocaleString();
-    const subject = encodeURIComponent(`Achat Formation ${activeBook.title} - ${selectedGmail}`);
-    const body = encodeURIComponent(
-      `Bonjour Mr Ben,\n\nJe souhaite débloquer la formation « ${activeBook.title} » (${formattedPrice} FCFA).\nMon compte Gmail vérifié : ${selectedGmail}\n\nMerci de m'indiquer la démarche pour effectuer le paiement et recevoir mon code d'accès personnel.`
-    );
-    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
-  };
-
-  const handleInitiatePayment = () => {
-    setShowPaymentNotice(true);
-  };
 
   // Étape de confirmation du code à 6 chiffres
   const [pendingEmail, setPendingEmail] = useState('');
@@ -531,10 +506,32 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   const handleConfirmPayment = async () => {
     setPaymentError('');
     setIsProcessingPayment(true);
+    analyticsService.trackButtonClick('btn_pay_fedapay', activeBook?.id || '', '#checkout');
 
     const fedapayKey = import.meta.env?.VITE_FEDAPAY_PUBLIC_KEY || 'pk_live_2qqHt1RLs2WwN4Wf9sXvwU6u';
 
     try {
+      // Déblocage gratuit immédiat si le montant est de 0 FCFA (code promo 100%)
+      if (payablePrice <= 0) {
+        setIsProcessingPayment(false);
+        const order = storageService.createOrder({
+          clientName: (selectedGmail || 'client').split('@')[0],
+          clientEmail: selectedGmail,
+          clientPhone: '',
+          itemId: activeBook.id,
+          itemTitle: activeBook.title,
+          amount: 0,
+          paymentMethod: 'Code Promo VIP (100%)',
+          promoCode: appliedPromo ? appliedPromo.promoter.codePromo : null,
+          discountAmount: bookPrice
+        });
+        storageService.setLoggedInGmail(selectedGmail);
+        setCompletedOrder(order);
+        setStep('unlocked_showcase');
+        if (onSuccess) onSuccess(order);
+        return;
+      }
+
       // S'assurer que le SDK FedaPay est bien chargé
       let fedapay = window.FedaPay;
       if (!fedapay) {
@@ -567,7 +564,12 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
         environment: isLiveKey ? 'live' : 'sandbox',
         transaction: {
           amount: Math.round(Number(payablePrice) || 2500),
-          description: `Formation Mr Ben : ${activeBook.title}`
+          description: `Formation Mr Ben : ${activeBook.title}`,
+          custom_metadata: {
+            bookId: activeBook.id,
+            buyerEmail: selectedGmail,
+            promoCode: appliedPromo?.promoter?.codePromo || ''
+          }
         },
         currency: {
           iso: 'XOF'
@@ -580,7 +582,8 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
             resp.reason === 'CHECKOUT_COMPLETED' || 
             resp.reason === FP?.CHECKOUT_COMPLETED || 
             resp.status === 'approved' ||
-            resp.reason === 'approved'
+            resp.reason === 'approved' ||
+            resp.transaction?.status === 'approved'
           );
 
           if (isSuccess) {
@@ -593,13 +596,16 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
               setTimeout(() => {
                 setVerificationProgress(100);
 
+                const txId = resp.transaction?.id ? String(resp.transaction.id) : '';
                 const order = storageService.createOrder({
                   clientName: selectedGmail.split('@')[0],
                   clientEmail: selectedGmail,
-                  clientPhone: resp.transaction?.customer?.phone_number || '',
+                  clientPhone: resp.transaction?.customer?.phone_number?.number || resp.transaction?.customer?.phone_number || '',
                   itemId: activeBook.id,
                   itemTitle: activeBook.title,
                   amount: payablePrice,
+                  paymentMethod: 'FedaPay Live',
+                  transactionId: txId,
                   promoCode: appliedPromo ? appliedPromo.promoter.codePromo : null,
                   discountAmount: appliedPromo ? appliedPromo.discountAmount : 0
                 });
@@ -633,7 +639,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
               }, 600);
             }, 500);
 
-          } else if (resp && resp.reason === FP.DIALOG_DISMISSED) {
+          } else if (resp && (resp.reason === FP?.DIALOG_DISMISSED || resp.reason === 'DIALOG_DISMISSED')) {
             console.log("Fenêtre de paiement fermée par le client.");
           }
         }
@@ -1066,96 +1072,46 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
 
             {/* Bouton de confirmation épuré */}
             {!isEnteringCode ? (
-              showPaymentNotice ? (
-                <div className="payment-pending-card flow-fade-in">
-                  <div className="payment-pending-badge">
-                    <Clock size={13} className="pending-badge-icon" />
-                    <span>Paiement en ligne direct en cours d'implémentation</span>
-                  </div>
+              <>
+                <button 
+                  type="button" 
+                  className="btn-confirm-payment-clean"
+                  onClick={handleConfirmPayment}
+                  disabled={isProcessingPayment}
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 size={16} className="btn-spinner-icon" />
+                      <span>Ouverture du guichet sécurisé...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Payer {payablePrice.toLocaleString()} FCFA</span>
+                      <ArrowRight size={15} />
+                    </>
+                  )}
+                </button>
 
-                  <p className="payment-pending-desc">
-                    Cette option est en cours d'implémentation. Pour débloquer votre formation immédiatement, écrivez-nous directement sur <strong>WhatsApp</strong> ou <strong>Gmail</strong> pour effectuer votre paiement et recevoir votre code d'accès personnel :
-                  </p>
-
-                  {/* Juste les deux icônes cliquables des moyens de paiement / contact */}
-                  <div className="payment-direct-icons-group">
-                    <button
-                      type="button"
-                      className="btn-channel-icon-circle channel-whatsapp"
-                      onClick={handleOpenWhatsAppPayment}
-                      title="Écrire sur WhatsApp pour régler et recevoir le code"
-                      aria-label="Contacter sur WhatsApp"
-                    >
-                      <WhatsAppIcon size={28} />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn-channel-icon-circle channel-gmail"
-                      onClick={handleOpenGmailPayment}
-                      title="Écrire par Gmail pour régler et recevoir le code"
-                      aria-label="Contacter par Gmail"
-                    >
-                      <GmailIcon size={28} />
-                    </button>
-                  </div>
-
-                  <div className="payment-pending-footer-actions">
-                    <button
-                      type="button"
-                      className="btn-enter-received-code"
-                      onClick={() => {
-                        setIsEnteringCode(true);
-                        setShowPaymentNotice(false);
-                        setCodeError('');
-                        setInputAccessCode('');
-                      }}
-                    >
-                      <Key size={13} />
-                      <span>J'ai déjà reçu mon code d'accès</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn-pending-back"
-                      onClick={() => setShowPaymentNotice(false)}
-                    >
-                      ← Retour
-                    </button>
-                  </div>
+                <div className="fedapay-security-pill">
+                  <ShieldCheck size={14} />
+                  <span>Paiement 100% sécurisé FedaPay • MTN, Moov, Wave, Carte • Accès immédiat</span>
                 </div>
-              ) : (
-                <>
-                  <button 
-                    type="button" 
-                    className="btn-confirm-payment-clean"
-                    onClick={handleInitiatePayment}
+
+                <div className="checkout-aux-actions">
+                  <button
+                    type="button"
+                    className="btn-has-code-link"
+                    onClick={() => {
+                      setIsEnteringCode(true);
+                      setCodeError('');
+                      setInputAccessCode('');
+                    }}
                   >
-                    <span>Payer {payablePrice.toLocaleString()} FCFA</span>
-                    <ArrowRight size={15} />
+                    <Key size={13} />
+                    <span>J'ai déjà un code d'accès</span>
                   </button>
-
-                  <div className="fedapay-security-pill">
-                    <ShieldCheck size={13} />
-                    <span>Règlement sécurisé • Accès immédiat par code unique</span>
-                  </div>
-
-                  <div className="checkout-aux-actions">
-                    <button
-                      type="button"
-                      className="btn-has-code-link"
-                      onClick={() => {
-                        setIsEnteringCode(true);
-                        setCodeError('');
-                        setInputAccessCode('');
-                      }}
-                    >
-                      <Key size={13} />
-                      <span>J'ai déjà un code d'accès</span>
-                    </button>
-                  </div>
-                </>
-              )
+                </div>
+              </>
             ) : (
               <div className="redeem-code-card flow-fade-in">
                 <div className="redeem-code-header">

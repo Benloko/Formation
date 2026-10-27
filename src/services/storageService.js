@@ -595,7 +595,7 @@ export const storageService = {
   },
 
   // Créer une commande suite à un paiement
-  createOrder: ({ clientName, clientEmail, clientPhone, itemId, itemTitle, amount, promoCode, discountAmount }) => {
+  createOrder: ({ clientName, clientEmail, clientPhone, itemId, itemTitle, amount, promoCode, discountAmount, paymentMethod = 'FedaPay Live', transactionId = '' }) => {
     const orders = storageService.getAllOrders();
     
     // Génération d'un code unique lisible
@@ -615,6 +615,8 @@ export const storageService = {
       code: generatedCode,
       promoCode: promoCode ? String(promoCode).trim().toUpperCase() : null,
       discountAmount: Number(discountAmount) || 0,
+      paymentMethod: paymentMethod || "FedaPay Live",
+      transactionId: transactionId || "",
       date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()),
       status: "Actif"
     };

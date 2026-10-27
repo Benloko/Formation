@@ -410,7 +410,10 @@ export function App() {
               return (
                 <button 
                   className={`btn-unlock-formation ${activePromoBanner ? 'has-promo' : ''}`}
-                  onClick={() => handleSelectTab('FORMATIONS')}
+                  onClick={() => {
+                    analyticsService.trackButtonClick('btn_cta_home', 'all', '/');
+                    handleSelectTab('FORMATIONS');
+                  }}
                 >
                   <span className="shimmer-sweep-ray"></span>
                   <Sparkles size={activePromoBanner ? 16 : 14} className="cta-sparkle-icon" />

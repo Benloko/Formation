@@ -3150,65 +3150,282 @@
   color: #94a3b8;
 }
 
-/* Formations Intérêt */
-.formations-analytics-list {
+/* Détail des Pages Vues */
+.pages-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.page-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.page-stat-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.page-info-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-name-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.page-path-chip {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.page-gauge-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.page-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #38bdf8);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.page-metrics-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.page-views-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.page-visitors-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.page-pct-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f8fafc;
+  min-width: 45px;
+  text-align: right;
+  font-feature-settings: "tnum";
+}
+
+/* Grille de Cartes : Clics par Bouton de Formation */
+.formation-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+
+.formation-button-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.formation-button-card.purple { border-top: 3px solid #8b5cf6; }
+.formation-button-card.sky { border-top: 3px solid #38bdf8; }
+.formation-button-card.amber { border-top: 3px solid #f59e0b; }
+
+.f-btn-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 0.55rem;
+}
+
+.f-btn-head-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.f-btn-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.formation-button-card.purple .f-btn-dot { background: #8b5cf6; box-shadow: 0 0 8px rgba(139, 92, 246, 0.6); }
+.formation-button-card.sky .f-btn-dot { background: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }
+.formation-button-card.amber .f-btn-dot { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+
+.f-btn-head-title h4 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.f-btn-total-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.45rem;
+  border-radius: 12px;
+}
+
+.f-buttons-rows-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.formation-analytics-row {
+.f-single-button-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.65rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 6px;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-.f-info-cell {
+.f-single-button-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.f-single-btn-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   flex: 1;
   min-width: 0;
 }
 
-.f-title {
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: #e2e8f0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
-}
-
-.f-badges-cell {
+.f-btn-icon-bubble {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  color: #94a3b8;
+  flex-shrink: 0;
 }
 
-.f-pill {
-  display: inline-flex;
+.f-btn-name-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.f-btn-name {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.f-btn-tag-desc {
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
+.f-single-btn-right {
+  display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
-  font-weight: 600;
+  gap: 0.45rem;
+  flex-shrink: 0;
 }
 
-.f-pill.views {
-  background: rgba(99, 102, 241, 0.12);
-  color: #818cf8;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+.f-btn-gauge-track {
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.f-pill.clicks {
-  background: rgba(245, 158, 11, 0.12);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.25);
+.f-btn-gauge-fill {
+  height: 100%;
+  background: #38bdf8;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.formation-button-card.purple .f-btn-gauge-fill { background: #a78bfa; }
+.formation-button-card.sky .f-btn-gauge-fill { background: #38bdf8; }
+.formation-button-card.amber .f-btn-gauge-fill { background: #fbbf24; }
+
+.f-btn-click-count {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  min-width: 55px;
+  text-align: right;
+  font-feature-settings: "tnum";
+}
+
+.f-btn-click-count.highlight {
+  color: #4ade80;
+}
+
+@media (max-width: 900px) {
+  .formation-buttons-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem;
+  }
 }
 
 /* Flux d'activité Récent en Direct */

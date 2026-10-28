@@ -247,10 +247,11 @@ export function App() {
   };
 
   const handleCloseCheckout = () => {
+    setIsCheckoutOpen(false);
     if (window.history.state?.modal === 'checkout') {
-      window.history.back();
-    } else {
-      setIsCheckoutOpen(false);
+      try {
+        window.history.back();
+      } catch {}
     }
   };
 

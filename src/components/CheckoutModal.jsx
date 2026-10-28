@@ -186,12 +186,17 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
     const handleGlobalKey = (e) => {
       if (e.key === 'Escape') {
         const fedapayElements = document.querySelectorAll(
-          '#fedapay-checkout-container, .fedapay-dialog, iframe[src*="fedapay"], div[id*="fedapay"]'
+          '#fedapay-checkout-container, .fedapay-dialog, iframe[src*="fedapay"], div[id*="fedapay"], .modal__overlay, .modal.micromodal-slide'
         );
         if (fedapayElements.length > 0) {
           fedapayElements.forEach(el => {
             try { el.remove(); } catch {}
           });
+          try {
+            document.body.style.overflow = '';
+            document.body.style.height = '';
+          } catch {}
+          setIsFedaPayActive(false);
           setIsProcessingPayment(false);
         }
       }
@@ -500,7 +505,41 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   };
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isFedaPayActive, setIsFedaPayActive] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+
+  // Fermeture d'urgence et nettoyage immédiat de FedaPay
+  const handleForceCloseFedaPay = () => {
+    const fedapayElements = document.querySelectorAll(
+      '#fedapay-checkout-container, .fedapay-dialog, iframe[src*="fedapay"], div[id*="fedapay"], .modal__overlay, .modal.micromodal-slide'
+    );
+    fedapayElements.forEach(el => {
+      try { el.remove(); } catch {}
+    });
+
+    try {
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    } catch {}
+
+    setIsFedaPayActive(false);
+    setIsProcessingPayment(false);
+  };
+
+  // Détecteur automatique en temps réel de disparition de FedaPay
+  useEffect(() => {
+    if (!isFedaPayActive) return;
+
+    const interval = setInterval(() => {
+      const activeModal = document.querySelector('div[id^="fedapay_modal_"].is-open, .modal__overlay, iframe[src*="fedapay"]');
+      if (!activeModal) {
+        setIsFedaPayActive(false);
+        setIsProcessingPayment(false);
+      }
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [isFedaPayActive]);
 
   // 4. Lancement du paiement RÉEL FedaPay (Mobile Money MTN, Moov, Wave, Cartes bancaires)
   const handleConfirmPayment = async () => {
@@ -639,16 +678,18 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
               }, 600);
             }, 500);
 
-          } else if (resp && (resp.reason === FP?.DIALOG_DISMISSED || resp.reason === 'DIALOG_DISMISSED')) {
-            console.log("Fenêtre de paiement fermée par le client.");
+          } else {
+            // Fermeture ou annulation côté FedaPay
+            handleForceCloseFedaPay();
           }
         }
       });
 
+      setIsFedaPayActive(true);
       widget.open();
     } catch (err) {
       console.error("Erreur lors de l'ouverture FedaPay:", err);
-      setIsProcessingPayment(false);
+      handleForceCloseFedaPay();
       setPaymentError("Erreur d'initialisation du paiement FedaPay. Veuillez réessayer.");
     }
   };
@@ -752,15 +793,50 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   };
 
   return (
-    <div className="flow-modal-overlay" onClick={onClose}>
-      <div 
-        className={`flow-modal-container ${step === 'unlocked_showcase' ? 'showcase-mode' : ''}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Petite croix rouge épurée pour fermer */}
-        <button className="flow-close-red-cross" onClick={onClose} aria-label="Fermer" title="Fermer">
-          ✕
-        </button>
+    <>
+      {/* Bouton d'annulation d'urgence FedaPay visible en haut dès que FedaPay est ouvert */}
+      {isFedaPayActive && (
+        <div className="fedapay-cancel-floating-banner">
+          <button 
+            type="button" 
+            className="btn-fedapay-cancel-pill"
+            onClick={handleForceCloseFedaPay}
+            onTouchEnd={handleForceCloseFedaPay}
+            title="Quitter le paiement et revenir"
+          >
+            <X size={15} strokeWidth={2.6} />
+            <span>Annuler et fermer</span>
+          </button>
+        </div>
+      )}
+
+      <div className="flow-modal-overlay" onClick={(e) => {
+        handleForceCloseFedaPay();
+        onClose();
+      }}>
+        <div 
+          className={`flow-modal-container ${step === 'unlocked_showcase' ? 'showcase-mode' : ''}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Petite croix rouge épurée pour fermer avec grande zone tactile */}
+          <button 
+            type="button"
+            className="flow-close-red-cross" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleForceCloseFedaPay();
+              onClose();
+            }} 
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              handleForceCloseFedaPay();
+              onClose();
+            }}
+            aria-label="Fermer" 
+            title="Fermer"
+          >
+            <X size={18} strokeWidth={2.5} />
+          </button>
 
         {/* ====================================================================
             ÉTAPE 1 : CHOISIR UN COMPTE GMAIL DÉJÀ VÉRIFIÉ (SANS RETAPER LE CODE !)
@@ -1252,6 +1328,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
         )}
       </div>
     </div>
+    </>
   );
 }
 

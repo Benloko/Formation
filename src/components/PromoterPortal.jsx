@@ -23,7 +23,9 @@ import {
   Phone,
   Mail,
   KeyRound,
-  X
+  X,
+  MessageCircle,
+  RotateCcw
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import './PromoterPortal.css';
@@ -113,6 +115,11 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
 
   // États d'action
   const [copiedItem, setCopiedItem] = useState(null);
+
+  // États de personnalisation et de partage du message
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('storytelling');
+  const [customShareMessage, setCustomShareMessage] = useState('');
 
   // Synchronisation des données du promoteur avec le cloud
   const refreshPromoterData = async () => {
@@ -394,25 +401,82 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     setTimeout(() => setCopiedItem(null), 2500);
   };
 
-  const referralLink = `${window.location.origin}/#formations?promo=${promoter?.codePromo || ''}&pct=${promoter?.reductionPct || 20}&name=${encodeURIComponent(promoter?.prenom || 'Partenaire')}`;
+  const referralLink = `${window.location.origin}/?promo=${promoter?.codePromo || ''}&pct=${promoter?.reductionPct || 20}&tab=formations#formations`;
 
-  const shareText = `Bonjour ! Découvre les formations officielles de Mr Ben pour créer des Bandes Dessinées et des Vidéos Virales avec l'IA 🚀.\n\nProfite de -${promoter?.reductionPct || 20}% de réduction immédiate avec mon code promo exclusif : *${promoter?.codePromo}*\n\nAccès direct : ${referralLink}`;
+  const getShareTemplates = (p, link) => {
+    const code = p?.codePromo || 'PROMO';
+    const pct = p?.reductionPct || 20;
+    const prenom = p?.prenom ? `${p.prenom}` : '';
+    const signature = prenom ? `\n— Partagé par ${prenom}` : '';
 
-  // PARTAGE DIRECT : DÉCLENCHE DIRECTEMENT LE MENU SYSTÈME DU SMARTPHONE (WhatsApp, TikTok, Facebook, etc.)
-  const handleShareNative = async () => {
+    return [
+      {
+        id: 'storytelling',
+        title: '🌟 BD & Storytelling IA',
+        badge: 'Recommandé',
+        shortDesc: 'Création de BD captivantes et belles images avec l\'IA sur smartphone',
+        message: `Salut ! Tu veux apprendre à concevoir des Bandes Dessinées captivantes et des Belles Images avec l'Intelligence Artificielle ? 🎨📖\n\nMr Ben (Ben Histoire) a préparé une méthode pas à pas, 100% accessible sur smartphone même sans savoir dessiner.\n\n🎁 Grâce à mon partenariat exclusif, profite de -${pct}% de réduction immédiate avec mon code promo : *${code}*\n\n👉 Accède directement aux formations officielles ici :\n${link}${signature}`
+      },
+      {
+        id: 'video',
+        title: '🎬 Vidéos TikTok & Reels',
+        badge: 'Viral & Vues',
+        shortDesc: 'Vidéos virales, animations et personnages cohérents sans abonnement payant',
+        message: `Tu veux faire exploser tes vues et monétiser tes vidéos sur TikTok, Facebook Reels et YouTube Shorts avec l'IA ? 🎬🔥\n\nDécouvre la formation complète de Mr Ben pour créer des personnages cohérents et des animations immersives avec un simple téléphone.\n\n🎁 Profite de -${pct}% de réduction avec mon code partenaire : *${code}*\n\n👉 Découvre le programme et inscris-toi ici :\n${link}${signature}`
+      },
+      {
+        id: 'discount',
+        title: '🎁 Bon Plan Réduction -' + pct + '%',
+        badge: 'Offre VIP',
+        shortDesc: 'Focus direct sur le code promo et l\'économie immédiate',
+        message: `Bonne nouvelle ! 🎉 En tant que partenaire officiel de Mr Ben, je t'offre un accès privilégié avec -${pct}% de réduction immédiate sur toutes les formations officielles (BD, Vidéos IA, Storytelling) !\n\nUtilise mon code promo exclusif lors de ta commande : *${code}*\n\n👉 Clique ici pour voir les formations à prix réduit :\n${link}${signature}`
+      },
+      {
+        id: 'short',
+        title: '⚡ Court & Statut WhatsApp',
+        badge: 'Statut / SMS',
+        shortDesc: 'Court et concis, parfait pour Statut WhatsApp ou Story Instagram',
+        message: `Apprends à créer des BD et Vidéos virales avec l'IA grâce à Mr Ben 🚀\n🎁 Bénéficie de -${pct}% avec mon code : *${code}*\n👉 Accès direct : ${link}`
+      }
+    ];
+  };
+
+  const shareTemplates = getShareTemplates(promoter, referralLink);
+  const activeTemplate = shareTemplates.find(t => t.id === selectedTemplateId) || shareTemplates[0];
+  const activeMessage = customShareMessage || activeTemplate.message;
+
+  const handleSelectTemplate = (templateId) => {
+    setSelectedTemplateId(templateId);
+    const tmpl = shareTemplates.find(t => t.id === templateId) || shareTemplates[0];
+    setCustomShareMessage(tmpl.message);
+  };
+
+  const handleResetTemplate = () => {
+    setCustomShareMessage(activeTemplate.message);
+  };
+
+  // PARTAGE WHATSAPP DIRECT (1 CLIC)
+  const handleShareWhatsApp = (customText) => {
+    const textToSend = customText || activeMessage;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textToSend)}`;
+    window.open(url, '_blank');
+  };
+
+  // PARTAGE NATIVE SMARTPHONE (AUTRES RÉSEAUX : TIKTOK, FACEBOOK, INSTAGRAM, TELEGRAM, ETC.)
+  const handleShareNative = async (customText) => {
+    const textToSend = customText || activeMessage;
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
+        // Envoi du message complet sans paramètre url séparé pour empêcher les réseaux de tronquer le message
         await navigator.share({
-          title: `Formation Mr Ben - Code ${promoter?.codePromo || ''}`,
-          text: shareText,
-          url: referralLink,
+          text: textToSend,
         });
       } catch (err) {
         // Annulé par l'utilisateur
       }
     } else {
       // Fallback automatique sur PC : copie dans le presse-papier avec confirmation
-      handleCopy(shareText, 'share_all');
+      handleCopy(textToSend, 'share_all');
     }
   };
 
@@ -924,12 +988,27 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
               <div className="promo-card-right">
                 <button 
                   type="button" 
-                  className={`btn-share-trigger ${copiedItem === 'share_all' ? 'active-copied' : ''}`}
-                  onClick={handleShareNative}
-                  title="Partager directement via votre smartphone (WhatsApp, TikTok, Facebook, etc.)"
+                  className="btn-open-share-modal"
+                  onClick={() => {
+                    if (!customShareMessage) {
+                      setCustomShareMessage(activeTemplate.message);
+                    }
+                    setIsShareModalOpen(true);
+                  }}
+                  title="Personnaliser votre message et partager sur vos réseaux"
                 >
-                  {copiedItem === 'share_all' ? <Check size={14} className="text-emerald" /> : <Share2 size={14} />}
-                  <span>{copiedItem === 'share_all' ? 'Message & lien copiés !' : 'Partager'}</span>
+                  <Sparkles size={14} />
+                  <span>Personnaliser & Partager</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="btn-fast-whatsapp-share"
+                  onClick={() => handleShareWhatsApp(activeMessage)}
+                  title="Partager immédiatement sur WhatsApp"
+                >
+                  <MessageCircle size={14} />
+                  <span>WhatsApp Direct</span>
                 </button>
               </div>
             </div>
@@ -1085,6 +1164,127 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
             </div>
 
           </main>
+        </div>
+      )}
+
+      {/* MODAL DE PERSONNALISATION ET DE PARTAGE DU MESSAGE PROMOTEUR */}
+      {isShareModalOpen && (
+        <div className="promoter-share-modal-backdrop" onClick={() => setIsShareModalOpen(false)}>
+          <div className="promoter-share-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="share-modal-header">
+              <div className="share-modal-title-box">
+                <div className="share-modal-badge-icon">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="share-modal-title">Personnaliser & Partager mon lien</h3>
+                  <p className="share-modal-subtitle">
+                    Choisissez un modèle vendeur ou modifiez le texte à votre guise avant de l'envoyer.
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-share-modal-close"
+                onClick={() => setIsShareModalOpen(false)}
+                aria-label="Fermer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* SÉLECTEUR DE MODÈLES DE MESSAGES */}
+            <div className="share-templates-section">
+              <label className="share-section-label">Modèles de messages prêts à l'emploi :</label>
+              <div className="share-templates-pills">
+                {shareTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`share-template-pill ${selectedTemplateId === t.id ? 'active' : ''}`}
+                    onClick={() => handleSelectTemplate(t.id)}
+                  >
+                    <span className="pill-title">{t.title}</span>
+                    <span className="pill-badge">{t.badge}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ZONE D'ÉDITION DU MESSAGE PERSONNALISÉ */}
+            <div className="share-editor-section">
+              <div className="share-editor-header">
+                <label htmlFor="customShareTextarea" className="share-section-label">
+                  Votre message (100% modifiable par vous) :
+                </label>
+                <button
+                  type="button"
+                  className="btn-reset-template"
+                  onClick={handleResetTemplate}
+                  title="Revenir au texte initial du modèle"
+                >
+                  <RotateCcw size={12} />
+                  <span>Rétablir le modèle</span>
+                </button>
+              </div>
+
+              <textarea
+                id="customShareTextarea"
+                className="share-editor-textarea"
+                rows={7}
+                value={activeMessage}
+                onChange={(e) => setCustomShareMessage(e.target.value)}
+                placeholder="Écrivez ou adaptez votre message de promotion ici..."
+              />
+
+              <div className="share-editor-footer">
+                <div className="share-hint-note">
+                  <CheckCircle2 size={13} className="text-emerald" />
+                  <span>Code <strong>{promoter?.codePromo}</strong> et lien de réduction inclus.</span>
+                </div>
+                <span className="char-count">{activeMessage.length} caractères</span>
+              </div>
+            </div>
+
+            {/* BOUTONS D'ACTION DE PARTAGE */}
+            <div className="share-modal-actions-grid">
+              <button
+                type="button"
+                className="btn-share-action whatsapp"
+                onClick={() => handleShareWhatsApp(activeMessage)}
+              >
+                <MessageCircle size={16} />
+                <span>Partager sur WhatsApp</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-share-action native"
+                onClick={() => handleShareNative(activeMessage)}
+              >
+                <Share2 size={16} />
+                <span>Partager (Autres Réseaux)</span>
+              </button>
+
+              <button
+                type="button"
+                className={`btn-share-action secondary ${copiedItem === 'share_full_text' ? 'copied' : ''}`}
+                onClick={() => handleCopy(activeMessage, 'share_full_text')}
+              >
+                {copiedItem === 'share_full_text' ? <Check size={15} className="text-emerald" /> : <Copy size={15} />}
+                <span>{copiedItem === 'share_full_text' ? 'Texte copié !' : 'Copier tout le texte'}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`btn-share-action secondary ${copiedItem === 'share_link_only' ? 'copied' : ''}`}
+                onClick={() => handleCopy(referralLink, 'share_link_only')}
+              >
+                {copiedItem === 'share_link_only' ? <Check size={15} className="text-emerald" /> : <Tag size={15} />}
+                <span>{copiedItem === 'share_link_only' ? 'Lien copié !' : 'Copier le lien seul'}</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

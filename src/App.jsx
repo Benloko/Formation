@@ -11,37 +11,44 @@ import { BonusModal } from './components/BonusModal';
 import { BookReader } from './components/BookReader';
 import { AdminDashboard } from './components/AdminDashboard';
 import { PromoterPortal } from './components/PromoterPortal';
+import { InAppBrowserBanner } from './components/InAppBrowserBanner';
 import { storageService } from './services/storageService';
 import { analyticsService } from './services/analyticsService';
 import { BOOKS_DATA, DUO_PACK } from './data/booksData';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import './App.css';
 
-// Helper pour synchroniser et analyser l'ancre URL (#formations, #services, #contact, #lecture, etc.)
+// Helper pour synchroniser et analyser l'ancre URL (#formations, #services, #contact, #lecture, etc.) ou paramètres de requête
 const parseHash = () => {
   const hash = window.location.hash || '';
-  if (!hash) return null;
-  
-  const cleanHash = hash.toLowerCase();
-  if (hash === '#admin') {
+  let tabParam = '';
+  try {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const sp = new URLSearchParams(window.location.search);
+      tabParam = (sp.get('tab') || sp.get('view') || '').toLowerCase();
+    }
+  } catch {}
+
+  const cleanHash = (hash || '').toLowerCase();
+  if (hash === '#admin' || tabParam === 'admin') {
     return { isAdmin: true };
   }
-  if (cleanHash.startsWith('#promoteur') || cleanHash.startsWith('#espace-promoteur')) {
+  if (cleanHash.startsWith('#promoteur') || cleanHash.startsWith('#espace-promoteur') || tabParam === 'promoteur') {
     return { isPromoter: true };
   }
-  if (cleanHash.startsWith('#formation')) {
+  if (cleanHash.startsWith('#formation') || tabParam === 'formation' || tabParam === 'formations') {
     return { tab: 'FORMATIONS' };
   }
-  if (cleanHash.startsWith('#service')) {
+  if (cleanHash.startsWith('#service') || tabParam === 'service' || tabParam === 'services') {
     return { tab: 'SERVICES' };
   }
-  if (cleanHash.startsWith('#contact')) {
+  if (cleanHash.startsWith('#contact') || tabParam === 'contact') {
     return { tab: 'CONTACT' };
   }
-  if (cleanHash.startsWith('#about') || cleanHash.startsWith('#a-propos')) {
+  if (cleanHash.startsWith('#about') || cleanHash.startsWith('#a-propos') || tabParam === 'about') {
     return { tab: 'ABOUT' };
   }
-  if (cleanHash.startsWith('#lecture') || cleanHash.startsWith('#reader')) {
+  if (cleanHash.startsWith('#lecture') || cleanHash.startsWith('#reader') || tabParam === 'reader' || tabParam === 'lecture') {
     let bookId = null;
     if (hash.includes('?')) {
       const queryStr = hash.split('?')[1];
@@ -50,7 +57,7 @@ const parseHash = () => {
     }
     return { tab: 'READER', bookId };
   }
-  if (cleanHash === '#accueil' || cleanHash === '#home') {
+  if (cleanHash === '#accueil' || cleanHash === '#home' || tabParam === 'home') {
     return { tab: 'HOME' };
   }
   return null;
@@ -382,6 +389,9 @@ export function App() {
 
   return (
     <div className="home-screen-container">
+      {/* 0. Alerte et Déblocage pour Navigateurs Réseaux Sociaux (Facebook, Instagram, TikTok) */}
+      <InAppBrowserBanner />
+
       {/* 1. Header avec logo rond MR et navigation */}
       <Header 
         activeTab={activeTab}

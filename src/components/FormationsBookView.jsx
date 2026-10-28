@@ -17,17 +17,77 @@ import {
   MessageSquare, 
   Film, 
   Palette, 
-  Lightbulb 
+  Lightbulb,
+  Layers,
+  Flame
 } from 'lucide-react';
 import { currencyService } from '../services/currencyService';
 import './FormationsBookView.css';
 
+// Les 3 épisodes réels pour la formation BD (Même personnage : Amina & Koffi)
+const BD_STORY_SCENES = [
+  {
+    id: 1,
+    tag: 'Épisode 1',
+    emoji: '🌧️',
+    title: 'L\'Arrivée Nocturne sous la Pluie',
+    desc: 'Amina arrive trempée dans la nuit, tenant fermement une mystérieuse enveloppe jaune. Observez la netteté et la gestion de la lumière générée sur téléphone portable.',
+    img: '/images/formation/scene-1-la-porte.jpg',
+  },
+  {
+    id: 2,
+    tag: 'Épisode 2',
+    emoji: '✉️',
+    title: 'La Remise de la Lettre Mystérieuse',
+    desc: 'Même visage, mêmes tresses, mêmes traits pour Amina et Koffi. Vous apprenez la formule secrète pour maintenir 100% de ressemblance d\'une image à l\'autre.',
+    img: '/images/formation/scene-2-la-remise.jpg',
+  },
+  {
+    id: 3,
+    tag: 'Épisode 3',
+    emoji: '😱',
+    title: 'La Révélation Choc & le Suspense',
+    desc: 'Le choc et les larmes lors de la lecture de la lettre. Le genre d\'émotion dramatique qui rend votre communauté passionnée et impatiente de voir la suite.',
+    img: '/images/formation/scene-3-la-revelation.jpg',
+  },
+];
+
+// Les 3 scènes animées réelles pour la formation Vidéo avec IA (Ariel & sa voisine)
+const VIDEO_STORY_SCENES = [
+  {
+    id: 1,
+    tag: 'Scène 1',
+    emoji: '🚪',
+    title: 'La Rencontre à la Porte de Nuit',
+    desc: 'Création du premier plan dramatique sur mobile : regards intenses, coiffure tressée et atmosphère nocturne ultra-détaillée.',
+    img: '/images/formation/ariel-voisine-scene-1.jpg',
+  },
+  {
+    id: 2,
+    tag: 'Scène 2',
+    emoji: '💬',
+    title: 'Animation des Regards & Sourires par l\'IA',
+    desc: 'Mêmes visages conservés à 100% : l\'IA anime les mouvements de tête, les regards et les sourires de façon naturelle et fluide.',
+    img: '/images/formation/ariel-voisine-scene-2.jpg',
+  },
+  {
+    id: 3,
+    tag: 'Scène 3',
+    emoji: '⚡',
+    title: 'Tension Dramatique & Rendu Viral TikTok',
+    desc: 'Ajout de la voix off, des bruitages et du suspense pour créer un feuilleton vidéo prêt à faire exploser les vues sur TikTok et Reels.',
+    img: '/images/formation/ariel-voisine-scene-3.jpg',
+  },
+];
+
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
+  const [activeBdScene, setActiveBdScene] = useState(0);
+  const [activeVideoScene, setActiveVideoScene] = useState(0);
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
   const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
   const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
-  const [previewModal, setPreviewModal] = useState(null); // 'bd' | 'video' | null
+  const [previewModal, setPreviewModal] = useState(null);
 
   const getUrlReductionPct = () => {
     try {
@@ -132,7 +192,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
   const isBDUnlocked = storageService.isBookUnlocked(bookBD.id);
   const isVideoUnlocked = storageService.isBookUnlocked(bookVideo.id);
 
-  // Calcul des réductions avec code promo
+  // Calcul des prix avec code promo
   const baseBdPrice = prices['livre-bd-storytelling'] || 2500;
   const origBdPrice = originalPrices['livre-bd-storytelling'] || 5000;
   const isBdEligible = activePromo && (!activePromo.targetBookId || activePromo.targetBookId === 'all' || activePromo.targetBookId === bookBD.id);
@@ -151,9 +211,12 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
     : baseVideoPrice;
   const videoPair = currencyService.formatPricePair(finalVideoPrice, origVideoPrice);
 
+  const currentBdScene = BD_STORY_SCENES[activeBdScene];
+  const currentVideoScene = VIDEO_STORY_SCENES[activeVideoScene];
+
   return (
     <div className="formations-book-viewport">
-      {/* Modal d'aperçu d'un résultat réel (BD ou Vidéo) */}
+      {/* MODAL LIGHTBOX HD POUR INSPECTER UNE IMAGE EN GRAND */}
       {previewModal && (
         <div className="formation-result-modal-backdrop" onClick={() => setPreviewModal(null)}>
           <div className="formation-result-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -167,42 +230,27 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             
             <div className="formation-result-modal-header">
               <span className="result-modal-pill">
-                {previewModal === 'bd' ? '🎨 Exemple de Bande Dessinée Réalisée' : '🎬 Exemple de Vidéo Virale Réalisée'}
+                {previewModal.tag}
               </span>
               <h3 className="result-modal-title">
-                {previewModal === 'bd' 
-                  ? 'Ce que vous allez créer dès aujourd\'hui' 
-                  : 'Le style de vidéos virales prêtes pour TikTok & Reels'}
+                {previewModal.title}
               </h3>
               <p className="result-modal-subtitle">
-                100% réalisé sur un simple smartphone avec des outils d'Intelligence Artificielle 100% gratuits.
+                {previewModal.desc}
               </p>
             </div>
 
             <div className="formation-result-modal-body">
-              {previewModal === 'bd' ? (
-                <div className="result-modal-image-wrapper">
-                  <img 
-                    src="/images/formation/comic-strip-preview.jpg" 
-                    alt="Aperçu Bande Dessinée Réalisée par IA" 
-                    className="result-modal-preview-img"
-                  />
-                  <div className="result-modal-caption">
-                    <span>✨ Épisode complet Musa & Amina avec dialogues et lettrage professionnel</span>
-                  </div>
+              <div className="result-modal-image-wrapper">
+                <img 
+                  src={previewModal.img} 
+                  alt={previewModal.title} 
+                  className="result-modal-preview-img"
+                />
+                <div className="result-modal-caption">
+                  <span>✨ 100% créé sur smartphone avec des outils d'IA 100% gratuits</span>
                 </div>
-              ) : (
-                <div className="result-modal-image-wrapper video-mockup-wrapper">
-                  <img 
-                    src="/images/formation/video-story-preview.jpg" 
-                    alt="Aperçu Vidéo Animée IA Mobile" 
-                    className="result-modal-preview-img video-preview-img"
-                  />
-                  <div className="result-modal-caption">
-                    <span>🔥 Animation cinématographique 9:16 prête pour des centaines de milliers de vues</span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             <div className="formation-result-modal-footer">
@@ -210,15 +258,16 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 type="button" 
                 className="btn-modal-action-unlock"
                 onClick={() => {
-                  const targetBook = previewModal === 'bd' ? bookBD : bookVideo;
-                  const targetPrice = previewModal === 'bd' ? finalBdPrice : finalVideoPrice;
-                  const targetOrig = previewModal === 'bd' ? origBdPrice : origVideoPrice;
                   setPreviewModal(null);
-                  onUnlockBook({ ...targetBook, price: targetPrice, originalPrice: targetOrig });
+                  onUnlockBook({ 
+                    ...previewModal.book, 
+                    price: previewModal.price, 
+                    originalPrice: previewModal.origPrice 
+                  });
                 }}
               >
                 <Sparkles size={16} />
-                <span>Je veux apprendre à faire exactement ça !</span>
+                <span>Je veux apprendre à créer ces histoires !</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -248,7 +297,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
         <div className="book-pages-stack-edge right-edge" aria-hidden="true"></div>
 
         <div className="open-book-spread ivory-book-theme">
-          {/* Croix rouge en haut à droite */}
+          {/* Croix de fermeture en haut à droite */}
           <button 
             className="book-close-red-cross"
             onClick={onClose}
@@ -273,7 +322,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             <div className="page-inner-content page-fade-in">
               {/* En-tête de la page */}
               <div className="page-header-row">
-                <span className="page-category-tag">Bandes dessinées</span>
+                <span className="page-category-tag">🎨 Bandes dessinées & IA</span>
                 {bdReductionPct > 0 && !isBDUnlocked && (
                   <span className="promo-applied-chip">
                     ✨ Code <strong>{activePromo.code}</strong> actif (-{bdReductionPct}%)
@@ -281,153 +330,242 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 )}
               </div>
 
-              {/* SECTION HERO VISUELLE : COUVERTURE 3D + MINIATURE D'EXEMPLE RÉEL */}
-              <div className="formation-visual-hero-row">
-                {/* Livre 3D */}
-                <div className="hero-book-cover-col">
-                  <img 
-                    src="/books/book_bd_cover.png" 
-                    alt="Livre BD & Storytelling Mr Ben" 
-                    className="book-hero-3d-img"
-                  />
-                  {/* Badge de prix barré discret sous la couverture */}
-                  <div className={`book-price-badge ${isBDUnlocked ? 'is-unlocked' : ''} ${bdReductionPct > 0 && !isBDUnlocked ? 'has-discount' : ''}`}>
-                    {isBDUnlocked ? (
-                      <span className="price-tag">✓ Débloqué</span>
-                    ) : bdReductionPct > 0 ? (
-                      <div className="promo-badge-prices">
-                        <span className="promo-old-price">{baseBdPrice.toLocaleString()} F</span>
-                        <span className="price-tag promo-new-price">{finalBdPrice.toLocaleString()} FCFA</span>
-                      </div>
-                    ) : (
-                      <div className="book-price-strikethrough-wrap">
-                        <span className="price-tag-struck">{bdPair.originalFormatted}</span>
-                        <span className="price-tag">{bdPair.currentFormatted}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Carte résultat concret (Ce que vous allez créer) */}
-                <div 
-                  className="hero-concrete-sample-card" 
-                  onClick={() => {
-                    analyticsService.trackButtonClick('preview_sample_bd', 'livre-bd-storytelling', '#formations');
-                    setPreviewModal('bd');
-                  }}
-                  title="Cliquer pour agrandir le résultat réel"
-                >
-                  <div className="concrete-sample-img-box">
-                    <img 
-                      src="/images/formation/comic-strip-preview.jpg" 
-                      alt="Exemple réel de BD créée" 
-                      className="concrete-sample-thumbnail"
-                    />
-                    <div className="sample-hover-overlay">
-                      <Eye size={18} />
-                      <span>Agrandir</span>
+              {/* LIVRE 3D EN HAUT SEUL : TOURNANT DOUCEMENT EN ROND AVEC HALO LUMINEUX */}
+              <div className="book-floating-hero">
+                <div className="book-halo-glow" aria-hidden="true"></div>
+                <img 
+                  src="/books/book_bd_cover.png" 
+                  alt="Livre BD & Storytelling Mr Ben" 
+                  className="book-rotating-3d"
+                />
+                
+                {/* Badge de prix barré animé sous le livre */}
+                <div className={`book-price-badge-animated ${isBDUnlocked ? 'is-unlocked' : ''}`}>
+                  {isBDUnlocked ? (
+                    <span className="price-tag-gold">✓ Formation Débloquée</span>
+                  ) : bdReductionPct > 0 ? (
+                    <div className="promo-badge-prices">
+                      <span className="promo-old-price">{baseBdPrice.toLocaleString()} F</span>
+                      <span className="price-tag-gold">{finalBdPrice.toLocaleString()} FCFA</span>
+                      <span className="badge-highlight-pill">-{bdReductionPct}%</span>
                     </div>
-                  </div>
-                  <div className="concrete-sample-tag">
-                    <Sparkles size={11} className="sample-sparkle" />
-                    <span>Exemple réel créé</span>
-                  </div>
+                  ) : (
+                    <div className="book-price-strikethrough-wrap">
+                      <span className="price-tag-struck">{bdPair.originalFormatted}</span>
+                      <span className="price-tag-gold">{bdPair.currentFormatted}</span>
+                      <span className="badge-highlight-pill">Best-Seller</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Titre & Sous-titre punchy */}
-              <div className="book-page-body">
+              {/* Titre & Accroche vibrante */}
+              <div className="formation-intro-block">
                 <h2 className="formation-book-title">
                   L'Art du Storytelling & Bandes Dessinées
                 </h2>
                 <p className="formation-catchy-lead">
-                  Créez des feuilletons illustrés qui rendent accro et attirez une foule d'abonnés sur vos réseaux.
+                  Créez des feuilletons captivants et bâtissez une armée d'abonnés fidèles sans dépenser 1 centime.
                 </p>
 
-                {/* 3 Badges Clés (Smartphone, 100% Gratuit, Mentorat Mr Ben) */}
+                {/* 3 Badges Clés avec Émojis Rebondissants */}
                 <div className="formation-key-pills-row">
                   <div className="key-pill pill-phone">
-                    <Smartphone size={13} />
+                    <span className="floating-emoji">📱</span>
                     <span>100% sur Smartphone</span>
                   </div>
                   <div className="key-pill pill-free">
-                    <Gift size={13} />
+                    <span className="floating-emoji">🆓</span>
                     <span>Outils IA 100% Gratuits</span>
                   </div>
                   <div className="key-pill pill-mentorship">
-                    <Crown size={13} />
-                    <span>Assistance Privée Mr Ben</span>
-                  </div>
-                </div>
-
-                {/* 4 PILIERS SOUS FORME DE CARTES VISUELLES COMPACTES (2x2) */}
-                <div className="formation-pillars-grid">
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-bulb">
-                      <Lightbulb size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>1. Scénarios & Suspense</strong>
-                      <p>Imaginer des histoires qui donnent envie de voir la suite.</p>
-                    </div>
-                  </div>
-
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-palette">
-                      <Palette size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>2. Génération d'Images IA</strong>
-                      <p>Créer chaque scène action par action avec un style percutant.</p>
-                    </div>
-                  </div>
-
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-chat">
-                      <MessageSquare size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>3. Bulles & Lettrage Pro</strong>
-                      <p>Placer dialogues et émotions facilement sur mobile.</p>
-                    </div>
-                  </div>
-
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-growth">
-                      <TrendingUp size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>4. Abonnés & Croissance</strong>
-                      <p>Fidéliser une communauté engagée prête à vous suivre.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Barre de confiance : Choix de niche & Service de monétisation */}
-                <div className="mentorship-trust-bar">
-                  <div className="trust-mentorship-line">
-                    <CheckCircle2 size={13} className="trust-check-icon" />
-                    <span><strong>Accompagnement privé :</strong> Mr Ben vous guide pas-à-pas pour choisir votre niche.</span>
-                  </div>
-                  <div className="trust-services-line">
-                    <span>
-                      Besoin d'un compte monétisable clé en main ?{' '}
-                      <button 
-                        type="button" 
-                        className="services-link-inline-btn"
-                        onClick={() => {
-                          analyticsService.trackButtonClick('btn_services', 'services', '#formations');
-                          onGoToServices();
-                        }}
-                      >
-                        « Nos Services »
-                      </button>
-                    </span>
+                    <span className="floating-emoji">👑</span>
+                    <span>Mentorat Privé Mr Ben</span>
                   </div>
                 </div>
               </div>
 
-              {/* Bouton Débloquer rigoureusement aligné au bas */}
+              {/* 4 CARTES DÉTAILLÉES : UNE CARTE PAR LIGNE AVEC ANIMATION FLEXIBLE */}
+              <div className="formation-vertical-cards-stack">
+                {/* Carte 1 */}
+                <div className="animated-pillar-row-card card-delay-1">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-amber">
+                      <span className="floating-emoji">💡</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge">Module 1</span>
+                      <h4 className="pillar-main-title">Trouver des Scénarios qui Rendent Accro</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    La méthode simple pour imaginer en 5 minutes une intrigue africaine à rebondissements avec du suspense, des secrets de famille et des retournements que votre audience ne voudra plus lâcher.
+                  </p>
+                </div>
+
+                {/* Carte 2 */}
+                <div className="animated-pillar-row-card card-delay-2">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-purple">
+                      <span className="floating-emoji">🎭</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-purple">Module 2 • Le Secret Clé</span>
+                      <h4 className="pillar-main-title">Garder le Même Visage sur Toutes les Images</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    La formule secrète pour que vos personnages conservent <strong>exactement les mêmes traits, la même coiffure et les mêmes vêtements</strong> de la première à la dernière case de votre histoire.
+                  </p>
+                </div>
+
+                {/* Carte 3 */}
+                <div className="animated-pillar-row-card card-delay-3">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-emerald">
+                      <span className="floating-emoji">💬</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-emerald">Module 3</span>
+                      <h4 className="pillar-main-title">Bulles de BD & Dialogues Émotionnels sur Mobile</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Insérez des bulles de BD professionnelles, des textes lisibles et des onomatopées percutantes directement depuis votre smartphone, sans aucun ordinateur ni logiciel payant.
+                  </p>
+                </div>
+
+                {/* Carte 4 */}
+                <div className="animated-pillar-row-card card-delay-4">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-orange">
+                      <span className="floating-emoji">📈</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-orange">Module 4</span>
+                      <h4 className="pillar-main-title">Publication, Explosion d'Abonnés & Monétisation</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Les meilleures heures pour poster sur Facebook, TikTok et WhatsApp, les astuces d'accroche pour rendre vos épisodes viraux et comment transformer vos fans en opportunités concrètes.
+                  </p>
+                </div>
+              </div>
+
+              {/* DÉMONSTRATION RÉELLE : 3 IMAGES COHÉRENTES DU MÊME FEUILLETON */}
+              <div className="episodes-showcase-container">
+                <div className="showcase-top-header">
+                  <div className="showcase-title-group">
+                    <span className="showcase-mini-pill">
+                      <span className="floating-emoji">📖</span> Démonstration Réelle
+                    </span>
+                    <h3 className="showcase-heading">Le Feuilleton en 3 Épisodes (Même Visage)</h3>
+                    <p className="showcase-sub">
+                      Voici un aperçu d'une histoire créée avec cette méthode. Observez la cohérence parfaite d'Amina et Koffi d'une scène à l'autre !
+                    </p>
+                  </div>
+                </div>
+
+                {/* Onglets des 3 épisodes */}
+                <div className="episode-tabs-selector">
+                  {BD_STORY_SCENES.map((scene, idx) => (
+                    <button
+                      key={scene.id}
+                      type="button"
+                      className={`episode-tab-btn ${activeBdScene === idx ? 'active-tab' : ''}`}
+                      onClick={() => {
+                        analyticsService.trackButtonClick(`tab_bd_scene_${idx + 1}`, 'livre-bd-storytelling', '#formations');
+                        setActiveBdScene(idx);
+                      }}
+                    >
+                      <span className="tab-emoji">{scene.emoji}</span>
+                      <span className="tab-label">{scene.tag}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Carte d'affichage de la scène active avec zoom */}
+                <div 
+                  className="active-scene-card"
+                  onClick={() => {
+                    analyticsService.trackButtonClick(`zoom_bd_scene_${activeBdScene + 1}`, 'livre-bd-storytelling', '#formations');
+                    setPreviewModal({
+                      tag: `🎨 ${currentBdScene.tag} • Feuilleton Amina & Koffi`,
+                      title: currentBdScene.title,
+                      desc: currentBdScene.desc,
+                      img: currentBdScene.img,
+                      book: bookBD,
+                      price: finalBdPrice,
+                      origPrice: origBdPrice
+                    });
+                  }}
+                  title="Cliquer pour admirer en plein écran"
+                >
+                  <div className="scene-image-frame">
+                    <img 
+                      src={currentBdScene.img} 
+                      alt={currentBdScene.title} 
+                      className="scene-main-img"
+                    />
+                    <div className="scene-zoom-overlay">
+                      <Eye size={20} />
+                      <span>Cliquer pour agrandir en HD</span>
+                    </div>
+                    <span className="scene-overlay-badge">
+                      {currentBdScene.emoji} {currentBdScene.tag}
+                    </span>
+                  </div>
+
+                  <div className="scene-card-caption">
+                    <h5 className="scene-caption-title">{currentBdScene.title}</h5>
+                    <p className="scene-caption-desc">{currentBdScene.desc}</p>
+                  </div>
+                </div>
+
+                {/* Ruban des 3 miniatures pour voir la cohérence d'un coup d'œil */}
+                <div className="storyboard-ribbon-thumbs">
+                  {BD_STORY_SCENES.map((sc, idx) => (
+                    <div 
+                      key={sc.id} 
+                      className={`ribbon-thumb-item ${activeBdScene === idx ? 'thumb-active' : ''}`}
+                      onClick={() => setActiveBdScene(idx)}
+                    >
+                      <img src={sc.img} alt={sc.title} className="ribbon-thumb-img" />
+                      <span className="ribbon-thumb-tag">{sc.tag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* BARRE DE CONFIANCE : MENTORAT PRIVÉ & COMPTES MONÉTISABLES */}
+              <div className="mentorship-trust-card">
+                <div className="trust-card-row">
+                  <div className="trust-card-icon">
+                    <Crown size={18} />
+                  </div>
+                  <div className="trust-card-body">
+                    <strong>Accompagnement Privé Mr Ben Inclus :</strong>
+                    <p>
+                      Vous n'avez plus à vous soucier de quelle thématique choisir. Mr Ben vous assiste directement sur WhatsApp pour définir votre niche et valider vos premiers épisodes.
+                    </p>
+                    <div className="trust-services-subrow">
+                      <span>Besoin d'un compte monétisable (TikTok/Facebook/YouTube) prêt à l'emploi ?</span>{' '}
+                      <button 
+                        type="button" 
+                        className="services-link-btn"
+                        onClick={() => {
+                          analyticsService.trackButtonClick('btn_services_bd', 'services', '#formations');
+                          onGoToServices();
+                        }}
+                      >
+                        « Découvrez Nos Services » →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* BOUTON D'ACTION DÉBLOQUER (AVEC EFFET DE BRILLANCE ET PRIX) */}
               <div className="page-bottom-actions">
                 {isBDUnlocked ? (
                   <button 
@@ -452,16 +590,16 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   >
                     <div className="btn-unlock-card-body">
                       <div className="btn-unlock-headline">
-                        <Sparkles size={15} className="btn-unlock-sparkle" />
+                        <Sparkles size={16} className="btn-unlock-sparkle" />
                         <span className="btn-unlock-title">Débloquer cette formation</span>
-                        <ArrowRight size={14} className="btn-unlock-arrow" />
+                        <ArrowRight size={15} className="btn-unlock-arrow" />
                       </div>
                       <div className="btn-unlock-subline">
                         {bdReductionPct > 0 ? (
                           <div className="btn-unlock-price-tags">
                             <span className="btn-price-discounted">{finalBdPrice.toLocaleString()} FCFA</span>
                             <span className="btn-price-struck">{baseBdPrice.toLocaleString()} FCFA</span>
-                            <span className="btn-promo-tag">-{bdReductionPct}%</span>
+                            <span className="btn-promo-tag">-{bdReductionPct}% PROMO</span>
                           </div>
                         ) : (
                           <div className="btn-unlock-price-tags">
@@ -500,7 +638,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             <div className="page-inner-content page-fade-in">
               {/* En-tête de la page */}
               <div className="page-header-row">
-                <span className="page-category-tag video-tag">Vidéo avec IA</span>
+                <span className="page-category-tag video-tag">🎬 Vidéos avec l'IA</span>
                 {videoReductionPct > 0 && !isVideoUnlocked && (
                   <span className="promo-applied-chip video-chip">
                     ✨ Code <strong>{activePromo.code}</strong> actif (-{videoReductionPct}%)
@@ -508,153 +646,242 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 )}
               </div>
 
-              {/* SECTION HERO VISUELLE : COUVERTURE 3D + MINIATURE D'EXEMPLE RÉEL VIDÉO */}
-              <div className="formation-visual-hero-row">
-                {/* Livre 3D */}
-                <div className="hero-book-cover-col">
-                  <img 
-                    src="/books/book_video_cover.png?v=2" 
-                    alt="Livre Vidéos Virales IA Mr Ben" 
-                    className="book-hero-3d-img"
-                  />
-                  {/* Badge de prix barré sous la couverture */}
-                  <div className={`book-price-badge video-price ${isVideoUnlocked ? 'is-unlocked' : ''} ${videoReductionPct > 0 && !isVideoUnlocked ? 'has-discount' : ''}`}>
-                    {isVideoUnlocked ? (
-                      <span className="price-tag">✓ Débloqué</span>
-                    ) : videoReductionPct > 0 ? (
-                      <div className="promo-badge-prices">
-                        <span className="promo-old-price video-old">{baseVideoPrice.toLocaleString()} F</span>
-                        <span className="price-tag promo-new-price video-new">{finalVideoPrice.toLocaleString()} FCFA</span>
-                      </div>
-                    ) : (
-                      <div className="book-price-strikethrough-wrap">
-                        <span className="price-tag-struck">{videoPair.originalFormatted}</span>
-                        <span className="price-tag">{videoPair.currentFormatted}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Carte résultat concret (Ce que vous allez animer) */}
-                <div 
-                  className="hero-concrete-sample-card video-sample-card" 
-                  onClick={() => {
-                    analyticsService.trackButtonClick('preview_sample_video', 'livre-videos-ia', '#formations');
-                    setPreviewModal('video');
-                  }}
-                  title="Cliquer pour voir l'aperçu vidéo viral"
-                >
-                  <div className="concrete-sample-img-box video-box-crop">
-                    <img 
-                      src="/images/formation/video-story-preview.jpg" 
-                      alt="Exemple réel de vidéo virale animée par IA" 
-                      className="concrete-sample-thumbnail video-thumbnail"
-                    />
-                    <div className="sample-hover-overlay">
-                      <Play size={20} fill="#ffffff" />
-                      <span>Aperçu</span>
+              {/* LIVRE 3D EN HAUT SEUL : TOURNANT DOUCEMENT AVEC HALO BLEU/CYAN */}
+              <div className="book-floating-hero">
+                <div className="book-halo-glow video-halo" aria-hidden="true"></div>
+                <img 
+                  src="/books/book_video_cover.png?v=2" 
+                  alt="Livre Vidéos Virales IA Mr Ben" 
+                  className="book-rotating-3d video-book-rotating"
+                />
+                
+                {/* Badge de prix barré animé sous le livre */}
+                <div className={`book-price-badge-animated video-badge-animated ${isVideoUnlocked ? 'is-unlocked' : ''}`}>
+                  {isVideoUnlocked ? (
+                    <span className="price-tag-gold">✓ Formation Débloquée</span>
+                  ) : videoReductionPct > 0 ? (
+                    <div className="promo-badge-prices">
+                      <span className="promo-old-price video-old">{baseVideoPrice.toLocaleString()} F</span>
+                      <span className="price-tag-cyan">{finalVideoPrice.toLocaleString()} FCFA</span>
+                      <span className="badge-highlight-pill video-pill">-{videoReductionPct}%</span>
                     </div>
-                  </div>
-                  <div className="concrete-sample-tag video-sample-tag">
-                    <Play size={10} fill="currentColor" />
-                    <span>245K Vues Réalisable</span>
-                  </div>
+                  ) : (
+                    <div className="book-price-strikethrough-wrap">
+                      <span className="price-tag-struck">{videoPair.originalFormatted}</span>
+                      <span className="price-tag-cyan">{videoPair.currentFormatted}</span>
+                      <span className="badge-highlight-pill video-pill">Tendance 2026</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Titre & Sous-titre punchy */}
-              <div className="book-page-body">
+              {/* Titre & Accroche vibrante */}
+              <div className="formation-intro-block">
                 <h2 className="formation-book-title">
                   Création de Vidéos Virales avec l'IA
                 </h2>
                 <p className="formation-catchy-lead">
-                  Transformez des images fixes en vidéos spectaculaires et faites exploser vos vues TikTok & Reels.
+                  Animez vos personnages, ajoutez voix et musique et faites exploser vos vues TikTok & Reels.
                 </p>
 
-                {/* 3 Badges Clés (Montage Mobile, IA Gratuite, Viralité) */}
+                {/* 3 Badges Clés avec Émojis Rebondissants */}
                 <div className="formation-key-pills-row">
                   <div className="key-pill pill-phone">
-                    <Smartphone size={13} />
-                    <span>Montage sur Mobile</span>
+                    <span className="floating-emoji">📱</span>
+                    <span>Montage sur Smartphone</span>
                   </div>
                   <div className="key-pill pill-free">
-                    <Gift size={13} />
+                    <span className="floating-emoji">🆓</span>
                     <span>Animation IA Gratuite</span>
                   </div>
-                  <div className="key-pill pill-mentorship pill-trending">
-                    <Zap size={13} />
+                  <div className="key-pill pill-trending">
+                    <span className="floating-emoji">🔥</span>
                     <span>Format Viral TikTok/Reels</span>
-                  </div>
-                </div>
-
-                {/* 4 PILIERS SOUS FORME DE CARTES VISUELLES COMPACTES (2x2) */}
-                <div className="formation-pillars-grid">
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-film">
-                      <Film size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>1. Découpage Rythmé</strong>
-                      <p>Scénariser des clips courts qui retiennent l'attention.</p>
-                    </div>
-                  </div>
-
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-zap">
-                      <Zap size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>2. Mouvements par IA</strong>
-                      <p>Animer personnages, regards et décors sans payer de logiciel.</p>
-                    </div>
-                  </div>
-
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-voice">
-                      <Sparkles size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>3. Montage & Voix Off</strong>
-                      <p>Assembler clips, musiques et signature directement sur smartphone.</p>
-                    </div>
-                  </div>
-
-                  <div className="pillar-mini-card">
-                    <div className="pillar-icon-wrap pillar-growth-blue">
-                      <TrendingUp size={14} />
-                    </div>
-                    <div className="pillar-text">
-                      <strong>4. Explosion de Vues</strong>
-                      <p>Optimiser vos vidéos pour l'algorithme TikTok et Shorts.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Barre de confiance : Choix de niche & Service de monétisation */}
-                <div className="mentorship-trust-bar">
-                  <div className="trust-mentorship-line">
-                    <CheckCircle2 size={13} className="trust-check-icon" />
-                    <span><strong>Accompagnement privé :</strong> Mr Ben vous guide pas-à-pas pour choisir votre niche.</span>
-                  </div>
-                  <div className="trust-services-line">
-                    <span>
-                      Besoin d'un compte monétisable clé en main ?{' '}
-                      <button 
-                        type="button" 
-                        className="services-link-inline-btn"
-                        onClick={() => {
-                          analyticsService.trackButtonClick('btn_services', 'services', '#formations');
-                          onGoToServices();
-                        }}
-                      >
-                        « Nos Services »
-                      </button>
-                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Bouton Débloquer rigoureusement aligné au bas */}
+              {/* 4 CARTES DÉTAILLÉES : UNE CARTE PAR LIGNE AVEC ANIMATION FLEXIBLE */}
+              <div className="formation-vertical-cards-stack">
+                {/* Carte 1 */}
+                <div className="animated-pillar-row-card card-delay-1 video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-sky">
+                      <span className="floating-emoji">🎬</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-sky">Module 1</span>
+                      <h4 className="pillar-main-title">Scénariser des Vidéos Courtes & Rythmées</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Comment découper une histoire en mini-clips dynamiques de 10 à 30 secondes calibrés pour scotcher le spectateur dès les 3 premières secondes et booster la rétention.
+                  </p>
+                </div>
+
+                {/* Carte 2 */}
+                <div className="animated-pillar-row-card card-delay-2 video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-cyan">
+                      <span className="floating-emoji">⚡</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-cyan">Module 2 • Magie de l'IA</span>
+                      <h4 className="pillar-main-title">Animer Images Fixes en Vidéos Vivantes</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Donnez vie aux personnages, faites cligner les yeux, tourner les têtes, pleurer et animer les décors sans aucun abonnement payant et directement depuis votre téléphone.
+                  </p>
+                </div>
+
+                {/* Carte 3 */}
+                <div className="animated-pillar-row-card card-delay-3 video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-violet">
+                      <span className="floating-emoji">🎧</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-violet">Module 3</span>
+                      <h4 className="pillar-main-title">Voix Off Réaliste, Sons & Signature de Chaîne</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Générez une voix off envoûtante avec l'IA, ajoutez des musiques d'ambiance à suspense et apposez votre logo/signature pour protéger vos vidéos contre le vol.
+                  </p>
+                </div>
+
+                {/* Carte 4 */}
+                <div className="animated-pillar-row-card card-delay-4 video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-blue">
+                      <span className="floating-emoji">🔥</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-blue">Module 4</span>
+                      <h4 className="pillar-main-title">Dompter l'Algorithme & Dépasser 100K Vues</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Les secrets d'accroches virales, les hashtags tendance et la stratégie de programmation pour percer sur TikTok, Instagram Reels et YouTube Shorts.
+                  </p>
+                </div>
+              </div>
+
+              {/* DÉMONSTRATION RÉELLE : 3 SCÈNES ANIMÉES DU FEUILLETON VIDÉO */}
+              <div className="episodes-showcase-container video-showcase-container">
+                <div className="showcase-top-header">
+                  <div className="showcase-title-group">
+                    <span className="showcase-mini-pill pill-video">
+                      <span className="floating-emoji">🎬</span> Démonstration Réelle Vidéo
+                    </span>
+                    <h3 className="showcase-heading">Le Feuilleton Animé en 3 Scènes</h3>
+                    <p className="showcase-sub">
+                      Mêmes visages conservés du début à la fin ! Observez comment l'animation et l'expression donnent vie à cette intrigue nocturne.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Onglets des 3 scènes */}
+                <div className="episode-tabs-selector video-tabs">
+                  {VIDEO_STORY_SCENES.map((scene, idx) => (
+                    <button
+                      key={scene.id}
+                      type="button"
+                      className={`episode-tab-btn video-tab-btn ${activeVideoScene === idx ? 'active-tab' : ''}`}
+                      onClick={() => {
+                        analyticsService.trackButtonClick(`tab_video_scene_${idx + 1}`, 'livre-videos-ia', '#formations');
+                        setActiveVideoScene(idx);
+                      }}
+                    >
+                      <span className="tab-emoji">{scene.emoji}</span>
+                      <span className="tab-label">{scene.tag}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Carte d'affichage de la scène active avec zoom */}
+                <div 
+                  className="active-scene-card video-active-card"
+                  onClick={() => {
+                    analyticsService.trackButtonClick(`zoom_video_scene_${activeVideoScene + 1}`, 'livre-videos-ia', '#formations');
+                    setPreviewModal({
+                      tag: `🎬 ${currentVideoScene.tag} • Feuilleton Vidéo Animé`,
+                      title: currentVideoScene.title,
+                      desc: currentVideoScene.desc,
+                      img: currentVideoScene.img,
+                      book: bookVideo,
+                      price: finalVideoPrice,
+                      origPrice: origVideoPrice
+                    });
+                  }}
+                  title="Cliquer pour admirer en plein écran"
+                >
+                  <div className="scene-image-frame">
+                    <img 
+                      src={currentVideoScene.img} 
+                      alt={currentVideoScene.title} 
+                      className="scene-main-img"
+                    />
+                    <div className="scene-zoom-overlay">
+                      <Play size={22} fill="#ffffff" />
+                      <span>Cliquer pour voir les détails HD</span>
+                    </div>
+                    <span className="scene-overlay-badge video-badge">
+                      {currentVideoScene.emoji} {currentVideoScene.tag}
+                    </span>
+                  </div>
+
+                  <div className="scene-card-caption">
+                    <h5 className="scene-caption-title">{currentVideoScene.title}</h5>
+                    <p className="scene-caption-desc">{currentVideoScene.desc}</p>
+                  </div>
+                </div>
+
+                {/* Ruban des 3 miniatures pour voir la cohérence d'un coup d'œil */}
+                <div className="storyboard-ribbon-thumbs">
+                  {VIDEO_STORY_SCENES.map((sc, idx) => (
+                    <div 
+                      key={sc.id} 
+                      className={`ribbon-thumb-item ${activeVideoScene === idx ? 'thumb-active video-thumb-active' : ''}`}
+                      onClick={() => setActiveVideoScene(idx)}
+                    >
+                      <img src={sc.img} alt={sc.title} className="ribbon-thumb-img" />
+                      <span className="ribbon-thumb-tag">{sc.tag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* BARRE DE CONFIANCE : MENTORAT PRIVÉ & COMPTES MONÉTISABLES */}
+              <div className="mentorship-trust-card video-trust-card">
+                <div className="trust-card-row">
+                  <div className="trust-card-icon video-trust-icon">
+                    <Crown size={18} />
+                  </div>
+                  <div className="trust-card-body">
+                    <strong>Accompagnement Privé Mr Ben Inclus :</strong>
+                    <p>
+                      Vous n'avez plus à vous soucier de quelle thématique choisir. Mr Ben vous assiste directement sur WhatsApp pour définir votre niche et valider vos premières vidéos animées.
+                    </p>
+                    <div className="trust-services-subrow">
+                      <span>Besoin d'un compte monétisable (TikTok/Facebook/YouTube) prêt à l'emploi ?</span>{' '}
+                      <button 
+                        type="button" 
+                        className="services-link-btn"
+                        onClick={() => {
+                          analyticsService.trackButtonClick('btn_services_video', 'services', '#formations');
+                          onGoToServices();
+                        }}
+                      >
+                        « Découvrez Nos Services » →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* BOUTON D'ACTION DÉBLOQUER (AVEC EFFET DE BRILLANCE ET PRIX) */}
               <div className="page-bottom-actions">
                 {isVideoUnlocked ? (
                   <button 
@@ -679,16 +906,16 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   >
                     <div className="btn-unlock-card-body">
                       <div className="btn-unlock-headline">
-                        <Sparkles size={15} className="btn-unlock-sparkle" />
+                        <Sparkles size={16} className="btn-unlock-sparkle" />
                         <span className="btn-unlock-title">Débloquer cette formation</span>
-                        <ArrowRight size={14} className="btn-unlock-arrow" />
+                        <ArrowRight size={15} className="btn-unlock-arrow" />
                       </div>
                       <div className="btn-unlock-subline">
                         {videoReductionPct > 0 ? (
                           <div className="btn-unlock-price-tags">
                             <span className="btn-price-discounted">{finalVideoPrice.toLocaleString()} FCFA</span>
                             <span className="btn-price-struck">{baseVideoPrice.toLocaleString()} FCFA</span>
-                            <span className="btn-promo-tag">-{videoReductionPct}%</span>
+                            <span className="btn-promo-tag">-{videoReductionPct}% PROMO</span>
                           </div>
                         ) : (
                           <div className="btn-unlock-price-tags">
@@ -726,4 +953,5 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
 }
 
 export default FormationsBookView;
+
 

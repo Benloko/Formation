@@ -4,6 +4,30 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Redirection instantanée hors des navigateurs internes (Facebook Lite, Instagram, TikTok) vers Chrome -->
+    <script>
+      (function() {
+        try {
+          var ua = navigator.userAgent || navigator.vendor || window.opera || '';
+          var isAndroid = /android/i.test(ua);
+          var isInApp = /FBAN|FBAV|FB_IAB|FB4A|FBLC|FBLite|Facebook|Instagram|TikTok|musical_ly|Bytedance|Snapchat|Twitter|LinkedInApp|Line\/|wv/i.test(ua) || (isAndroid && /Version\/[0-9.]+/i.test(ua) && /Chrome\/[0-9.]+/i.test(ua));
+          
+          if (isAndroid && isInApp && !sessionStorage.getItem('mrben_skip_inapp_guard')) {
+            var host = window.location.host;
+            var path = window.location.pathname;
+            var search = window.location.search || '';
+            var hash = window.location.hash ? window.location.hash.replace('#', '') : '';
+            if (hash) {
+              var sp = new URLSearchParams(search);
+              if (!sp.has('tab')) sp.set('tab', hash);
+              search = '?' + sp.toString();
+            }
+            var intentUrl = 'intent://' + host + path + search + '#Intent;scheme=https;action=android.intent.action.VIEW;end;';
+            window.location.replace(intentUrl);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>Mr Ben (Ben Histoire) — Formations Création Vidéos Virales, Bandes Dessinées & Belles Images avec l'IA</title>
     <meta name="description" content="Formations officielles de Mr Ben (Ben Histoire) : Apprenez pas à pas comment faire des belles images avec l'IA, comment créer des vidéos virales et concevoir des bandes dessinées magnifiques grâce à l'Intelligence Artificielle et au Storytelling." />
     <meta name="keywords" content="Mr Ben, Ben Histoire, Mr Ben formation, formation Mr Ben, Ben Histoire formation, comment création vidéo avec IA, comment faire des belles images avec IA, comment créer des vidéos avec IA, formation en création de bandes dessinées, formations en créations magnifiques avec IA, création vidéos virales IA, storytelling IA, comment faire des bandes dessinées avec IA, cohérence personnages IA, master prompt IA, générer des images réalistes IA, feuilletons IA Facebook, vidéos TikTok IA, Midjourney, ChatGPT, Kling AI, Luma AI, formation intelligence artificielle Bénin, formation IA Afrique, monétiser IA" />

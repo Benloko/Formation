@@ -24,7 +24,6 @@ import {
   Mail,
   KeyRound,
   X,
-  MessageCircle,
   RotateCcw
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
@@ -455,14 +454,7 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     setCustomShareMessage(activeTemplate.message);
   };
 
-  // PARTAGE WHATSAPP DIRECT (1 CLIC)
-  const handleShareWhatsApp = (customText) => {
-    const textToSend = customText || activeMessage;
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(textToSend)}`;
-    window.open(url, '_blank');
-  };
-
-  // PARTAGE NATIVE SMARTPHONE (AUTRES RÉSEAUX : TIKTOK, FACEBOOK, INSTAGRAM, TELEGRAM, ETC.)
+  // PARTAGE NATIVE SMARTPHONE (WHATSAPP, TIKTOK, FACEBOOK, INSTAGRAM, TELEGRAM, ETC.)
   const handleShareNative = async (customText) => {
     const textToSend = customText || activeMessage;
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -988,27 +980,17 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
               <div className="promo-card-right">
                 <button 
                   type="button" 
-                  className="btn-open-share-modal"
+                  className="btn-share-trigger"
                   onClick={() => {
                     if (!customShareMessage) {
                       setCustomShareMessage(activeTemplate.message);
                     }
                     setIsShareModalOpen(true);
                   }}
-                  title="Personnaliser votre message et partager sur vos réseaux"
+                  title="Partager sur tous vos réseaux (WhatsApp, Facebook, TikTok, etc.)"
                 >
-                  <Sparkles size={14} />
-                  <span>Personnaliser & Partager</span>
-                </button>
-
-                <button 
-                  type="button" 
-                  className="btn-fast-whatsapp-share"
-                  onClick={() => handleShareWhatsApp(activeMessage)}
-                  title="Partager immédiatement sur WhatsApp"
-                >
-                  <MessageCircle size={14} />
-                  <span>WhatsApp Direct</span>
+                  <Share2 size={15} />
+                  <span>Partager</span>
                 </button>
               </div>
             </div>
@@ -1250,20 +1232,12 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
             <div className="share-modal-actions-grid">
               <button
                 type="button"
-                className="btn-share-action whatsapp"
-                onClick={() => handleShareWhatsApp(activeMessage)}
-              >
-                <MessageCircle size={16} />
-                <span>Partager sur WhatsApp</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn-share-action native"
+                className="btn-share-action primary-share"
                 onClick={() => handleShareNative(activeMessage)}
+                title="Partager sur tous vos réseaux sociaux (WhatsApp, TikTok, Facebook, etc.)"
               >
                 <Share2 size={16} />
-                <span>Partager (Autres Réseaux)</span>
+                <span>Partager (WhatsApp, TikTok, Facebook...)</span>
               </button>
 
               <button

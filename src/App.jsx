@@ -12,6 +12,7 @@ import { BookReader } from './components/BookReader';
 import { AdminDashboard } from './components/AdminDashboard';
 import { PromoterPortal } from './components/PromoterPortal';
 import { InAppBrowserBanner } from './components/InAppBrowserBanner';
+import { detectInAppBrowser } from './utils/inAppBrowser';
 import { storageService } from './services/storageService';
 import { analyticsService } from './services/analyticsService';
 import { BOOKS_DATA, DUO_PACK } from './data/booksData';
@@ -111,6 +112,18 @@ export function App() {
   const [isBonusOpen, setIsBonusOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(() => window.location.hash === '#admin');
   const [isPromoterOpen, setIsPromoterOpen] = useState(() => (window.location.hash || '').toLowerCase().startsWith('#promoteur'));
+
+  // Détection des navigateurs intégrés (Facebook Lite, Instagram, TikTok) pour masquer l'interface
+  const [isInAppActive, setIsInAppActive] = useState(() => {
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('mrben_skip_inapp_guard') === 'true') {
+        return false;
+      }
+      return detectInAppBrowser().isInApp;
+    } catch {
+      return false;
+    }
+  });
 
   // Bannière de code promo détecté via lien d'un promoteur (UNIQUEMENT si l'URL courante comporte un lien promo)
   const [activePromoBanner, setActivePromoBanner] = useState(() => {
@@ -387,11 +400,12 @@ export function App() {
     };
   }, [isCheckoutOpen, isUnlockOpen, isBonusOpen, isPromoterOpen, isAdminOpen]);
 
+  if (isInAppActive) {
+    return <InAppBrowserBanner onBypass={() => setIsInAppActive(false)} />;
+  }
+
   return (
     <div className="home-screen-container">
-      {/* 0. Alerte et Déblocage pour Navigateurs Réseaux Sociaux (Facebook, Instagram, TikTok) */}
-      <InAppBrowserBanner />
-
       {/* 1. Header avec logo rond MR et navigation */}
       <Header 
         activeTab={activeTab}

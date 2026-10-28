@@ -18,8 +18,19 @@ export function detectInAppBrowser() {
   const isAndroid = /android/i.test(ua);
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-  // Signatures reconnues des navigateurs intégrés (WebViews)
-  const isFB = /FBAN|FBAV|FB_IAB|FB4A|Messenger/i.test(ua);
+  // Vérification si l'utilisateur a forcé la vue interne
+  if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('mrben_skip_inapp_guard') === 'true') {
+    return {
+      isInApp: false,
+      isAndroid,
+      isIOS,
+      appName: 'Navigateur',
+      originalUrl: window.location.href
+    };
+  }
+
+  // Signatures reconnues des navigateurs intégrés (WebViews & Facebook Lite)
+  const isFB = /FBAN|FBAV|FB_IAB|FB4A|Messenger|FBLC|FBLite|Facebook/i.test(ua);
   const isInstagram = /Instagram/i.test(ua);
   const isTikTok = /musical_ly|Bytedance|TikTok/i.test(ua);
   const isSnapchat = /Snapchat/i.test(ua);

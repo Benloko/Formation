@@ -22,59 +22,11 @@ import {
 import { currencyService } from '../services/currencyService';
 import './FormationsBookView.css';
 
-// 3 exemples visuels concrets pour la formation BD (Même personnage conservé)
-const BD_SAMPLES = [
-  {
-    id: 1,
-    title: '1. Création du personnage sur smartphone',
-    caption: 'Génération du personnage avec une identité visuelle soignée.',
-    img: '/images/formation/scene-1-la-porte.jpg',
-  },
-  {
-    id: 2,
-    title: '2. Maintien du même visage sur une nouvelle scène',
-    caption: 'Conservation stricte des traits et du style sur chaque décor.',
-    img: '/images/formation/scene-2-la-remise.jpg',
-  },
-  {
-    id: 3,
-    title: '3. Rendu final avec bulles et dialogues',
-    caption: 'Mise en scène complète et dialogues prêts pour publication.',
-    img: '/images/formation/scene-3-la-revelation.jpg',
-  },
-];
-
-// 3 exemples visuels sous forme de vidéos pour la formation Vidéo avec IA
-const VIDEO_SAMPLES = [
-  {
-    id: 1,
-    title: '1. Cadrage vertical 9:16 pour smartphone',
-    caption: 'Format optimisé pour TikTok, Instagram Reels et YouTube Shorts.',
-    img: '/images/formation/ariel-voisine-scene-1.jpg',
-    duration: '0:12',
-  },
-  {
-    id: 2,
-    title: '2. Animation des mouvements et expressions',
-    caption: 'Transformation d\'une image fixe en mouvements de regards et de scènes fluides.',
-    img: '/images/formation/ariel-voisine-scene-2.jpg',
-    duration: '0:18',
-  },
-  {
-    id: 3,
-    title: '3. Montage final avec conversations sur téléphone',
-    caption: 'Assemblage des scènes avec dialogues animés prêt à publier.',
-    img: '/images/formation/ariel-voisine-scene-3.jpg',
-    duration: '0:25',
-  },
-];
-
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
   const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
   const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
-  const [previewModal, setPreviewModal] = useState(null);
 
   const getUrlReductionPct = () => {
     try {
@@ -206,65 +158,6 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
 
   return (
     <div className="formations-book-viewport">
-      {/* MODAL ZOOM HD POUR ADMIRER LES DÉTAILS D'UNE IMAGE */}
-      {previewModal && (
-        <div className="formation-result-modal-backdrop" onClick={() => setPreviewModal(null)}>
-          <div className="formation-result-modal-card" onClick={(e) => e.stopPropagation()}>
-            <button 
-              className="formation-result-modal-close" 
-              onClick={() => setPreviewModal(null)}
-              aria-label="Fermer l'aperçu"
-            >
-              <X size={20} />
-            </button>
-            
-            <div className="formation-result-modal-header">
-              <span className="result-modal-pill">
-                {previewModal.tag}
-              </span>
-              <h3 className="result-modal-title">
-                {previewModal.title}
-              </h3>
-              <p className="result-modal-subtitle">
-                {previewModal.caption}
-              </p>
-            </div>
-
-            <div className="formation-result-modal-body">
-              <div className="result-modal-image-wrapper">
-                <img 
-                  src={previewModal.img} 
-                  alt={previewModal.title} 
-                  className="result-modal-preview-img"
-                />
-                <div className="result-modal-caption">
-                  <span>✨ 100% réalisé sur un simple smartphone avec des outils gratuits</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="formation-result-modal-footer">
-              <button 
-                type="button" 
-                className="btn-modal-action-unlock"
-                onClick={() => {
-                  setPreviewModal(null);
-                  onUnlockBook({ 
-                    ...previewModal.book, 
-                    price: previewModal.price, 
-                    originalPrice: previewModal.origPrice 
-                  });
-                }}
-              >
-                <Sparkles size={16} />
-                <span>Débloquer la formation complète</span>
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Sélecteur mobile (visible uniquement sur petit écran) */}
       <div className="book-mobile-tab-switch">
         <button 
@@ -371,117 +264,109 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 </div>
               </div>
 
-              {/* LES 4 MODULES : UNE CARTE PLEINE LARGEUR PAR LIGNE */}
-              <div className="formation-vertical-cards-stack">
-                <div className="animated-pillar-row-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-amber">
-                      <span className="floating-emoji">💡</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge">Module 1</span>
-                      <h4 className="pillar-main-title">Imaginer des Scénarios Captivants</h4>
-                    </div>
+              {/* PARCOURS DE LA FORMATION : VISUEL ENTIER & CARTE EXPLICATIVE ALTERNÉS */}
+              <div className="formation-flow-steps">
+                {/* ÉTAPE 1 : Image 1 entière (Création du personnage) -> Carte Module 1 */}
+                <div className="flow-step-block">
+                  <div className="flow-visual-frame clean-illustration-frame">
+                    <img 
+                      src="/images/formation/scene-1-la-porte.jpg" 
+                      alt="Création du personnage sur smartphone" 
+                      className="flow-full-clean-img"
+                    />
                   </div>
-                  <p className="pillar-detail-text">
-                    La méthode simple pour concevoir des intrigues palpitantes et les découper en scènes qui retiennent l'attention du public.
-                  </p>
-                </div>
-
-                <div className="animated-pillar-row-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-purple">
-                      <span className="floating-emoji">🎭</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-purple">Module 2 • Le Secret Clé</span>
-                      <h4 className="pillar-main-title">Garder le Même Visage sur Toutes Vos Images</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    La technique secrète pour que vos personnages conservent exactement les mêmes traits, la même coiffure et le même style d'une scène à l'autre sans jamais se déformer.
-                  </p>
-                </div>
-
-                <div className="animated-pillar-row-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-emerald">
-                      <span className="floating-emoji">💬</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-emerald">Module 3</span>
-                      <h4 className="pillar-main-title">Bulles de BD & Dialogues sur Mobile</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    Comment placer facilement des bulles professionnelles, des textes lisibles et des émotions directement depuis votre téléphone portable.
-                  </p>
-                </div>
-
-                <div className="animated-pillar-row-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-orange">
-                      <span className="floating-emoji">📈</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-orange">Module 4</span>
-                      <h4 className="pillar-main-title">Publication & Croissance d'Abonnés</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    Les stratégies de publication sur Facebook, TikTok et WhatsApp pour développer une communauté engagée et monétiser vos créations.
-                  </p>
-                </div>
-              </div>
-
-              {/* 3 IMAGES RÉELLES ALIGNÉES VERTICALEMENT (SANS BOUTON SUIVANT, SANS TEXTE D'HISTOIRE) */}
-              <div className="vertical-images-showcase-section">
-                <div className="showcase-section-header">
-                  <span className="showcase-mini-pill">
-                    <span className="floating-emoji">🖼️</span> Aperçu Concret
-                  </span>
-                  <h3 className="showcase-heading">3 Exemples Créés avec cette Méthode</h3>
-                  <p className="showcase-sub">
-                    Observez la cohérence du personnage conservé sur chaque image :
-                  </p>
-                </div>
-
-                <div className="vertical-images-stack">
-                  {BD_SAMPLES.map((sample) => (
-                    <div 
-                      key={sample.id}
-                      className="vertical-sample-card"
-                      onClick={() => {
-                        analyticsService.trackButtonClick(`zoom_bd_sample_${sample.id}`, 'livre-bd-storytelling', '#formations');
-                        setPreviewModal({
-                          tag: '🎨 Aperçu Bande Dessinée',
-                          title: sample.title,
-                          caption: sample.caption,
-                          img: sample.img,
-                          book: bookBD,
-                          price: finalBdPrice,
-                          origPrice: origBdPrice
-                        });
-                      }}
-                      title="Cliquer pour agrandir l'image"
-                    >
-                      <div className="sample-media-frame">
-                        <img 
-                          src={sample.img} 
-                          alt={sample.title} 
-                          className="sample-media-img"
-                        />
-                        <div className="sample-zoom-badge">
-                          <Eye size={16} />
-                          <span>Agrandir</span>
-                        </div>
+                  <div className="animated-pillar-row-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-amber">
+                        <span className="floating-emoji">💡</span>
                       </div>
-                      <div className="sample-card-info">
-                        <h5 className="sample-card-title">{sample.title}</h5>
-                        <p className="sample-card-caption">{sample.caption}</p>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge">Module 1</span>
+                        <h4 className="pillar-main-title">Imaginer des Scénarios & Créer Votre Personnage</h4>
                       </div>
                     </div>
-                  ))}
+                    <p className="pillar-detail-text">
+                      La méthode simple pour concevoir des intrigues palpitantes et générer un personnage principal au style soigné directement sur votre smartphone.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ÉTAPE 2 : Image 2 entière avec Bulle de discussion BD n°1 -> Carte Module 2 */}
+                <div className="flow-step-block">
+                  <div className="flow-visual-frame clean-illustration-frame with-speech-bubble">
+                    <img 
+                      src="/images/formation/scene-2-la-remise.jpg" 
+                      alt="Conservation du même visage" 
+                      className="flow-full-clean-img"
+                    />
+                    {/* Bulle de discussion BD élégante & nette */}
+                    <div className="comic-speech-bubble bubble-pos-top-right">
+                      <span className="bubble-text">« Regarde : mon visage reste 100% identique sur ce nouveau décor ! »</span>
+                      <div className="bubble-tail-pointer tail-down" aria-hidden="true"></div>
+                    </div>
+                  </div>
+                  <div className="animated-pillar-row-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-purple">
+                        <span className="floating-emoji">🎭</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-purple">Module 2 • Le Secret Clé</span>
+                        <h4 className="pillar-main-title">Garder le Même Visage sur Toutes Vos Images</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      La technique secrète pour que vos héros conservent exactement les mêmes traits, la même coiffure et le même style d'une scène à l'autre sans jamais se déformer.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ÉTAPE 3 : Image 3 entière avec Bulle de discussion BD n°2 -> Carte Module 3 */}
+                <div className="flow-step-block">
+                  <div className="flow-visual-frame clean-illustration-frame with-speech-bubble">
+                    <img 
+                      src="/images/formation/scene-3-la-revelation.jpg" 
+                      alt="Rendu final avec dialogues BD" 
+                      className="flow-full-clean-img"
+                    />
+                    {/* Bulle de discussion BD élégante & nette */}
+                    <div className="comic-speech-bubble bubble-pos-bottom-left">
+                      <span className="bubble-text">« Bulles et dialogues ajoutés facilement sur téléphone, prêts à publier ! »</span>
+                      <div className="bubble-tail-pointer tail-top" aria-hidden="true"></div>
+                    </div>
+                  </div>
+                  <div className="animated-pillar-row-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-emerald">
+                        <span className="floating-emoji">💬</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-emerald">Module 3</span>
+                        <h4 className="pillar-main-title">Bulles de BD & Dialogues sur Mobile</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      Comment placer des bulles professionnelles, des textes parfaitement lisibles et des répliques percutantes directement depuis votre téléphone portable.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ÉTAPE 4 : Carte Module 4 (Publication & Croissance) */}
+                <div className="flow-step-block">
+                  <div className="animated-pillar-row-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-orange">
+                        <span className="floating-emoji">📈</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-orange">Module 4</span>
+                        <h4 className="pillar-main-title">Publication & Croissance d'Abonnés</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      Les stratégies pour publier sur Facebook, TikTok et WhatsApp, fidéliser une audience engagée et monétiser vos créations.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -642,129 +527,141 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 </div>
               </div>
 
-              {/* LES 4 MODULES : UNE CARTE PLEINE LARGEUR PAR LIGNE (ZÉRO VOIX) */}
-              <div className="formation-vertical-cards-stack">
-                <div className="animated-pillar-row-card video-theme-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-sky">
-                      <span className="floating-emoji">🎬</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-sky">Module 1</span>
-                      <h4 className="pillar-main-title">Scénarisation & Découpage Visuel</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    Comment découper une histoire en séquences courtes et percutantes de 10 à 30 secondes pour maximiser le taux de visionnage.
-                  </p>
-                </div>
-
-                <div className="animated-pillar-row-card video-theme-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-cyan">
-                      <span className="floating-emoji">⚡</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-cyan">Module 2 • Magie de l'IA</span>
-                      <h4 className="pillar-main-title">Animer les Personnages & les Mouvements</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    La méthode pour transformer une image fixe en vidéo animée : faire bouger les regards, les expressions et les décors avec l'IA gratuitement.
-                  </p>
-                </div>
-
-                <div className="animated-pillar-row-card video-theme-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-violet">
-                      <span className="floating-emoji">📱</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-violet">Module 3</span>
-                      <h4 className="pillar-main-title">Assemblage & Montage sur Téléphone</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    Fusionnez vos clips animés en quelques clics sur votre smartphone, apposez votre signature et finalisez vos vidéos sans logiciel lourd.
-                  </p>
-                </div>
-
-                <div className="animated-pillar-row-card video-theme-card">
-                  <div className="pillar-card-header">
-                    <div className="pillar-icon-box box-blue">
-                      <span className="floating-emoji">🔥</span>
-                    </div>
-                    <div className="pillar-title-wrap">
-                      <span className="pillar-step-badge badge-blue">Module 4</span>
-                      <h4 className="pillar-main-title">Publication & Viralité des Formats Courts</h4>
-                    </div>
-                  </div>
-                  <p className="pillar-detail-text">
-                    Les techniques pour poster efficacement, attirer l'algorithme TikTok, Reels et Shorts et faire grimper rapidement votre nombre d'abonnés.
-                  </p>
-                </div>
-              </div>
-
-              {/* 3 IMAGES PRÉSENTÉES SOUS FORME DE VIDÉOS VERTICALES ALIGNÉES */}
-              <div className="vertical-images-showcase-section video-showcase-theme">
-                <div className="showcase-section-header">
-                  <span className="showcase-mini-pill pill-video">
-                    <span className="floating-emoji">🎬</span> Aperçu Vidéo 9:16
-                  </span>
-                  <h3 className="showcase-heading">3 Exemples de Rendus Vidéos Réalisés</h3>
-                  <p className="showcase-sub">
-                    Présentés sous le format vidéo vertical mobile 9:16 prêt pour les réseaux :
-                  </p>
-                </div>
-
-                <div className="vertical-images-stack video-stack">
-                  {VIDEO_SAMPLES.map((sample) => (
-                    <div 
-                      key={sample.id}
-                      className="vertical-sample-card video-sample-vertical-card"
-                      onClick={() => {
-                        analyticsService.trackButtonClick(`zoom_video_sample_${sample.id}`, 'livre-videos-ia', '#formations');
-                        setPreviewModal({
-                          tag: '🎬 Rendu Vidéo Mobile 9:16',
-                          title: sample.title,
-                          caption: sample.caption,
-                          img: sample.img,
-                          book: bookVideo,
-                          price: finalVideoPrice,
-                          origPrice: origVideoPrice
-                        });
-                      }}
-                      title="Cliquer pour voir l'aperçu vidéo"
-                    >
-                      <div className="sample-media-frame video-media-frame">
-                        <img 
-                          src={sample.img} 
-                          alt={sample.title} 
-                          className="sample-media-img video-media-img"
-                        />
-                        {/* Overlay vidéo avec bouton play central */}
-                        <div className="video-player-glow-overlay">
-                          <div className="center-play-circle">
-                            <Play size={22} fill="#ffffff" stroke="none" className="play-triangle-icon" />
-                          </div>
-                        </div>
-                        {/* Timeline de lecture vidéo animée */}
-                        <div className="video-timeline-bar" aria-hidden="true">
-                          <div className="video-timeline-progress"></div>
-                        </div>
-                        <div className="video-meta-top-badge">
-                          <span>Format 9:16 Mobile</span>
-                        </div>
-                        <div className="video-duration-pill">
-                          <span>{sample.duration}</span>
-                        </div>
-                      </div>
-                      <div className="sample-card-info">
-                        <h5 className="sample-card-title">{sample.title}</h5>
-                        <p className="sample-card-caption">{sample.caption}</p>
+              {/* PARCOURS DE LA FORMATION VIDÉO : VISUEL ENTIER & CARTE EXPLICATIVE ALTERNÉS */}
+              <div className="formation-flow-steps video-flow-theme">
+                {/* ÉTAPE 1 : Aperçu Vidéo 1 entier -> Carte Module 1 */}
+                <div className="flow-step-block">
+                  <div className="flow-visual-frame clean-video-player-frame">
+                    <img 
+                      src="/images/formation/ariel-voisine-scene-1.jpg" 
+                      alt="Cadrage vertical 9:16 pour smartphone" 
+                      className="flow-full-clean-img"
+                    />
+                    <div className="video-player-glow-overlay">
+                      <div className="center-play-circle">
+                        <Play size={24} fill="#ffffff" stroke="none" className="play-triangle-icon" />
                       </div>
                     </div>
-                  ))}
+                    <div className="video-timeline-bar" aria-hidden="true">
+                      <div className="video-timeline-progress"></div>
+                    </div>
+                    <div className="video-meta-top-badge">
+                      <span>Format 9:16 Mobile</span>
+                    </div>
+                    <div className="video-duration-pill">
+                      <span>0:12</span>
+                    </div>
+                  </div>
+                  <div className="animated-pillar-row-card video-theme-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-sky">
+                        <span className="floating-emoji">🎬</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-sky">Module 1</span>
+                        <h4 className="pillar-main-title">Scénarisation & Découpage Visuel</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      Comment découper une histoire en séquences courtes et percutantes de 10 à 30 secondes pour maximiser le taux de visionnage.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ÉTAPE 2 : Aperçu Vidéo 2 entier -> Carte Module 2 */}
+                <div className="flow-step-block">
+                  <div className="flow-visual-frame clean-video-player-frame">
+                    <img 
+                      src="/images/formation/ariel-voisine-scene-2.jpg" 
+                      alt="Animation des mouvements et expressions" 
+                      className="flow-full-clean-img"
+                    />
+                    <div className="video-player-glow-overlay">
+                      <div className="center-play-circle">
+                        <Play size={24} fill="#ffffff" stroke="none" className="play-triangle-icon" />
+                      </div>
+                    </div>
+                    <div className="video-timeline-bar" aria-hidden="true">
+                      <div className="video-timeline-progress"></div>
+                    </div>
+                    <div className="video-meta-top-badge">
+                      <span>Format 9:16 Mobile</span>
+                    </div>
+                    <div className="video-duration-pill">
+                      <span>0:18</span>
+                    </div>
+                  </div>
+                  <div className="animated-pillar-row-card video-theme-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-cyan">
+                        <span className="floating-emoji">⚡</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-cyan">Module 2 • Magie de l'IA</span>
+                        <h4 className="pillar-main-title">Animer les Personnages & les Mouvements</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      La méthode pour transformer une image fixe en vidéo animée : faire bouger les regards, les expressions et les décors avec l'IA gratuitement.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ÉTAPE 3 : Aperçu Vidéo 3 entier -> Carte Module 3 */}
+                <div className="flow-step-block">
+                  <div className="flow-visual-frame clean-video-player-frame">
+                    <img 
+                      src="/images/formation/ariel-voisine-scene-3.jpg" 
+                      alt="Montage final avec conversations sur téléphone" 
+                      className="flow-full-clean-img"
+                    />
+                    <div className="video-player-glow-overlay">
+                      <div className="center-play-circle">
+                        <Play size={24} fill="#ffffff" stroke="none" className="play-triangle-icon" />
+                      </div>
+                    </div>
+                    <div className="video-timeline-bar" aria-hidden="true">
+                      <div className="video-timeline-progress"></div>
+                    </div>
+                    <div className="video-meta-top-badge">
+                      <span>Format 9:16 Mobile</span>
+                    </div>
+                    <div className="video-duration-pill">
+                      <span>0:25</span>
+                    </div>
+                  </div>
+                  <div className="animated-pillar-row-card video-theme-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-violet">
+                        <span className="floating-emoji">📱</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-violet">Module 3</span>
+                        <h4 className="pillar-main-title">Assemblage & Conversations sur Mobile</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      Fusionnez vos clips animés en quelques clics sur votre smartphone, intégrez les dialogues et finalisez vos vidéos sans logiciel lourd.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ÉTAPE 4 : Carte Module 4 (Publication & Viralité) */}
+                <div className="flow-step-block">
+                  <div className="animated-pillar-row-card video-theme-card">
+                    <div className="pillar-card-header">
+                      <div className="pillar-icon-box box-blue">
+                        <span className="floating-emoji">🔥</span>
+                      </div>
+                      <div className="pillar-title-wrap">
+                        <span className="pillar-step-badge badge-blue">Module 4</span>
+                        <h4 className="pillar-main-title">Publication & Viralité des Formats Courts</h4>
+                      </div>
+                    </div>
+                    <p className="pillar-detail-text">
+                      Les techniques pour poster efficacement, attirer l'algorithme TikTok, Reels et Shorts et faire grimper rapidement votre nombre d'abonnés.
+                    </p>
+                  </div>
                 </div>
               </div>
 

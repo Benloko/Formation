@@ -783,165 +783,163 @@
 }
 
 /* ==========================================================================
-   APERÇUS VISUELS : 3 EXEMPLES ALIGNÉS VERTICALEMENT (SANS BOUTON SUIVANT)
-   LÉGÈREMENT ARRONDIS, ÉLÉGANTS & BIEN ANIMÉS
+   DÉROULÉ VISUEL ALTERNÉ : IMAGE ENTIÈRE PROPRE & CARTE EXPLICATIVE
+   AUCUN ROGNAGE • ZÉRO BOUTON PAR-DESSUS • BULLES DE DISCUSSION BD
    ========================================================================== */
 
-.vertical-images-showcase-section {
-  background: #ffffff;
-  border: 1.5px solid rgba(217, 119, 6, 0.28);
-  border-radius: 14px;
-  padding: 0.95rem;
-  margin-bottom: 1.15rem;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
-}
-
-.vertical-images-showcase-section.video-showcase-theme {
-  border-color: rgba(2, 132, 199, 0.32);
-  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.06);
-}
-
-.showcase-section-header {
-  margin-bottom: 0.75rem;
-}
-
-.showcase-mini-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #b45309;
-  background: #fef3c7;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  margin-bottom: 0.3rem;
-}
-
-.showcase-mini-pill.pill-video {
-  color: #0369a1;
-  background: #e0f2fe;
-}
-
-.showcase-heading {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #1c1917;
-  margin: 0 0 0.2rem 0;
-}
-
-.showcase-sub {
-  font-size: 0.74rem;
-  color: #78716c;
-  line-height: 1.35;
-  margin: 0;
-}
-
-/* PILE DE 3 IMAGES STRICTEMENT VERTICALE */
-.vertical-images-stack {
+.formation-flow-steps {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
   width: 100%;
 }
 
-.vertical-sample-card {
-  background: #ffffff;
-  border: 1.5px solid rgba(0, 0, 0, 0.08);
-  border-radius: 14px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+.flow-step-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
 }
 
-.vertical-sample-card:hover {
-  transform: translateY(-2px);
-  border-color: #f59e0b;
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18);
-}
-
-.vertical-sample-card.video-sample-vertical-card:hover {
-  border-color: #0284c7;
-  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.2);
-}
-
-/* CADRE DU MÉDIA */
-.sample-media-frame {
+/* CADRE DU VISUEL ENTIER (PUR, PROPRE, SANS ENCOMBREMENT) */
+.flow-visual-frame {
   position: relative;
   width: 100%;
-  height: 195px;
+  border-radius: 14px;
   overflow: hidden;
-  background: #0f172a;
-  border-radius: 12px 12px 0 0;
-}
-
-.sample-media-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  transition: transform 0.4s ease;
-}
-
-.vertical-sample-card:hover .sample-media-img {
-  transform: scale(1.035);
-}
-
-.sample-zoom-badge {
-  position: absolute;
-  bottom: 0.55rem;
-  right: 0.55rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.55rem;
-  background: rgba(15, 23, 42, 0.78);
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 700;
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.2s ease;
-}
-
-.vertical-sample-card:hover .sample-zoom-badge {
-  background: #d97706;
-  border-color: #f59e0b;
-}
-
-.sample-card-info {
-  padding: 0.65rem 0.85rem;
   background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease;
 }
 
-.sample-card-title {
-  font-family: var(--font-sans);
-  font-size: 0.84rem;
+.flow-visual-frame:hover {
+  transform: translateY(-2px);
+  border-color: #f59e0b;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.16);
+}
+
+.video-flow-theme .flow-visual-frame:hover {
+  border-color: #0284c7;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.18);
+}
+
+/* IMAGE ENTIÈRE : 100% VISIBLE SANS COUPURE */
+.flow-full-clean-img {
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  object-fit: contain;
+  display: block;
+  background: #fdfbf7;
+  border-radius: 12px;
+  transition: transform 0.35s ease;
+}
+
+.flow-visual-frame:hover .flow-full-clean-img {
+  transform: scale(1.015);
+}
+
+/* ==========================================================================
+   BULLES DE DISCUSSION DE BD SUR LES IMAGES (PROPRES, CLAIRES ET ÉLÉGANTES)
+   ========================================================================== */
+
+.comic-speech-bubble {
+  position: absolute;
+  background: #ffffff;
+  color: #0f172a;
+  border: 2px solid #0f172a;
+  border-radius: 16px;
+  padding: 0.48rem 0.8rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  max-width: 86%;
+  z-index: 10;
+  pointer-events: none;
+  animation: speechBubblePop 0.45s ease-out forwards;
+}
+
+@keyframes speechBubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.comic-speech-bubble.bubble-pos-top-right {
+  top: 0.85rem;
+  right: 0.85rem;
+}
+
+.comic-speech-bubble.bubble-pos-bottom-left {
+  bottom: 1rem;
+  left: 0.85rem;
+}
+
+.comic-speech-bubble .bubble-text {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.77rem;
   font-weight: 800;
-  color: #1c1917;
-  margin: 0 0 0.18rem 0;
+  line-height: 1.35;
+  color: #0f172a;
+  display: block;
+  letter-spacing: -0.01em;
 }
 
-.sample-card-caption {
-  font-size: 0.73rem;
-  line-height: 1.38;
-  color: #57534e;
-  margin: 0;
+/* Queue/pointeur de la bulle de BD */
+.bubble-tail-pointer {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
 }
 
-/* PRÉSENTATION SPÉCIFIQUE VIDÉOS VIRALES IA (FORMAT LECTEUR MOBILE 9:16) */
-.sample-media-frame.video-media-frame {
-  height: 220px;
+.bubble-tail-pointer.tail-down {
+  bottom: -11px;
+  right: 22px;
+  border-width: 11px 9px 0 0;
+  border-color: #0f172a transparent transparent transparent;
+}
+
+.bubble-tail-pointer.tail-down::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: 0;
+  border-width: 9px 7px 0 0;
+  border-color: #ffffff transparent transparent transparent;
+}
+
+.bubble-tail-pointer.tail-top {
+  top: -11px;
+  left: 22px;
+  border-width: 0 9px 11px 0;
+  border-color: transparent transparent #0f172a transparent;
+}
+
+.bubble-tail-pointer.tail-top::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 0;
+  border-width: 0 7px 9px 0;
+  border-color: transparent transparent #ffffff transparent;
+}
+
+/* ==========================================================================
+   CADRE DU LECTEUR VIDÉO VERTICAL MOBILE 9:16
+   ========================================================================== */
+
+.flow-visual-frame.clean-video-player-frame {
   background: #000000;
 }
 
-.video-media-img {
-  object-position: center 25%;
+.clean-video-player-frame .flow-full-clean-img {
+  background: #000000;
 }
 
 .video-player-glow-overlay {
@@ -950,7 +948,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.45) 100%);
   pointer-events: none;
   transition: all 0.25s ease;
 }
@@ -984,8 +982,8 @@
   }
 }
 
-.vertical-sample-card:hover .center-play-circle {
-  transform: scale(1.12);
+.flow-visual-frame:hover .center-play-circle {
+  transform: scale(1.1);
   background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
 }
 
@@ -1800,37 +1798,37 @@
     font-size: 0.71rem;
   }
 
-  .vertical-images-showcase-section {
-    padding: 0.75rem;
+  .formation-flow-steps {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .flow-visual-frame {
     border-radius: 12px;
   }
 
-  .showcase-heading {
-    font-size: 0.95rem;
+  .flow-full-clean-img {
+    max-height: 380px;
   }
 
-  .showcase-sub {
-    font-size: 0.7rem;
+  .comic-speech-bubble {
+    padding: 0.4rem 0.65rem;
+    border-radius: 14px;
+    max-width: 90%;
   }
 
-  .sample-media-frame {
-    height: 175px;
+  .comic-speech-bubble.bubble-pos-top-right {
+    top: 0.6rem;
+    right: 0.6rem;
   }
 
-  .sample-media-frame.video-media-frame {
-    height: 195px;
+  .comic-speech-bubble.bubble-pos-bottom-left {
+    bottom: 0.75rem;
+    left: 0.6rem;
   }
 
-  .sample-card-info {
-    padding: 0.55rem 0.75rem;
-  }
-
-  .sample-card-title {
-    font-size: 0.8rem;
-  }
-
-  .sample-card-caption {
-    font-size: 0.7rem;
+  .comic-speech-bubble .bubble-text {
+    font-size: 0.72rem;
   }
 
   .mentorship-trust-card {

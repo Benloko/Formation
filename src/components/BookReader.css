@@ -1065,10 +1065,32 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .btn-unlock-gold:hover {
   background: #b45309;
+}
+
+.reader-btn-prices {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.reader-btn-struck {
+  font-size: 0.8rem;
+  text-decoration: line-through;
+  opacity: 0.75;
+  font-weight: 500;
+}
+
+.reader-btn-current {
+  font-weight: 800;
 }
 
 .btn-unlock-code {

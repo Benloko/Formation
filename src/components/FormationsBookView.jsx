@@ -3,11 +3,14 @@ import { BOOKS_DATA } from '../data/booksData';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
 import { Sparkles, ArrowRight, CheckCircle2, Award, Info, X } from 'lucide-react';
+import { currencyService } from '../services/currencyService';
 import './FormationsBookView.css';
 
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
+  const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
+  const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
   const getUrlReductionPct = () => {
     try {
       if (typeof window === 'undefined') return 20;
@@ -53,7 +56,11 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
 
   useEffect(() => {
     const updatePrices = (e) => {
-      setPrices(e.detail || storageService.getFormationPrices());
+      setPrices(e.detail?.prices || storageService.getFormationPrices());
+      setOriginalPrices(e.detail?.originalPrices || storageService.getFormationOriginalPrices());
+    };
+    const updateCurrency = (e) => {
+      setCurrentCountry(e.detail || currencyService.getCurrentCountry());
     };
 
     const updatePromo = (e) => {
@@ -85,14 +92,17 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
     };
 
     window.addEventListener('mrben_price_changed', updatePrices);
+    window.addEventListener('mrben_currency_changed', updateCurrency);
     window.addEventListener('mrben_promo_detected', updatePromo);
     window.addEventListener('mrben_promo_cleared', onPromoCleared);
     window.addEventListener('storage', () => {
       setPrices(storageService.getFormationPrices());
+      setOriginalPrices(storageService.getFormationOriginalPrices());
       updatePromo();
     });
     return () => {
       window.removeEventListener('mrben_price_changed', updatePrices);
+      window.removeEventListener('mrben_currency_changed', updateCurrency);
       window.removeEventListener('mrben_promo_detected', updatePromo);
       window.removeEventListener('mrben_promo_cleared', onPromoCleared);
     };
@@ -106,18 +116,22 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
 
   // Calcul des réductions avec code promo
   const baseBdPrice = prices['livre-bd-storytelling'] || 2500;
+  const origBdPrice = originalPrices['livre-bd-storytelling'] || 5000;
   const isBdEligible = activePromo && (!activePromo.targetBookId || activePromo.targetBookId === 'all' || activePromo.targetBookId === bookBD.id);
   const bdReductionPct = isBdEligible ? (activePromo.reductionPct || 0) : 0;
   const finalBdPrice = bdReductionPct > 0 
     ? Math.max(0, Math.round(baseBdPrice * (1 - bdReductionPct / 100))) 
     : baseBdPrice;
+  const bdPair = currencyService.formatPricePair(finalBdPrice, origBdPrice);
 
   const baseVideoPrice = prices['livre-videos-ia'] || 3100;
+  const origVideoPrice = originalPrices['livre-videos-ia'] || 6000;
   const isVideoEligible = activePromo && (!activePromo.targetBookId || activePromo.targetBookId === 'all' || activePromo.targetBookId === bookVideo.id);
   const videoReductionPct = isVideoEligible ? (activePromo.reductionPct || 0) : 0;
   const finalVideoPrice = videoReductionPct > 0 
     ? Math.max(0, Math.round(baseVideoPrice * (1 - videoReductionPct / 100))) 
     : baseVideoPrice;
+  const videoPair = currencyService.formatPricePair(finalVideoPrice, origVideoPrice);
 
   return (
     <div className="formations-book-viewport">
@@ -197,7 +211,10 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     </>
                   ) : (
                     <>
-                      <span className="price-tag">{baseBdPrice.toLocaleString()} FCFA</span>
+                      <div className="book-price-strikethrough-wrap">
+                        <span className="price-tag-struck">{bdPair.originalFormatted}</span>
+                        <span className="price-tag">{bdPair.currentFormatted}</span>
+                      </div>
                       <span className="badge-highlight">Best-Seller</span>
                     </>
                   )}
@@ -285,7 +302,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 ) : (
                   <button 
                     className={`btn-unlock-formation-card ${bdReductionPct > 0 ? 'card-has-promo' : ''}`}
-                    onClick={() => onUnlockBook({ ...bookBD, price: finalBdPrice, originalPrice: baseBdPrice })}
+                    onClick={() => onUnlockBook({ ...bookBD, price: finalBdPrice, originalPrice: origBdPrice })}
                   >
                     <div className="btn-unlock-card-body">
                       <div className="btn-unlock-headline">
@@ -301,7 +318,10 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                             <span className="btn-promo-tag">-{bdReductionPct}%</span>
                           </div>
                         ) : (
-                          <span className="btn-price-single">{baseBdPrice.toLocaleString()} FCFA • Accès à vie</span>
+                          <div className="btn-unlock-price-tags">
+                            <span className="btn-price-struck">{bdPair.originalFormatted}</span>
+                            <span className="btn-price-single">{bdPair.currentFormatted} • Accès à vie</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -361,7 +381,10 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     </>
                   ) : (
                     <>
-                      <span className="price-tag">{baseVideoPrice.toLocaleString()} FCFA</span>
+                      <div className="book-price-strikethrough-wrap">
+                        <span className="price-tag-struck">{videoPair.originalFormatted}</span>
+                        <span className="price-tag">{videoPair.currentFormatted}</span>
+                      </div>
                       <span className="badge-highlight">Tendance 2026</span>
                     </>
                   )}
@@ -449,7 +472,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 ) : (
                   <button 
                     className={`btn-unlock-formation-card video-card-btn ${videoReductionPct > 0 ? 'card-has-promo' : ''}`}
-                    onClick={() => onUnlockBook({ ...bookVideo, price: finalVideoPrice, originalPrice: baseVideoPrice })}
+                    onClick={() => onUnlockBook({ ...bookVideo, price: finalVideoPrice, originalPrice: origVideoPrice })}
                   >
                     <div className="btn-unlock-card-body">
                       <div className="btn-unlock-headline">
@@ -465,7 +488,10 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                             <span className="btn-promo-tag">-{videoReductionPct}%</span>
                           </div>
                         ) : (
-                          <span className="btn-price-single">{baseVideoPrice.toLocaleString()} FCFA • Accès à vie</span>
+                          <div className="btn-unlock-price-tags">
+                            <span className="btn-price-struck">{videoPair.originalFormatted}</span>
+                            <span className="btn-price-single">{videoPair.currentFormatted} • Accès à vie</span>
+                          </div>
                         )}
                       </div>
                     </div>

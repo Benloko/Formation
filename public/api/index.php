@@ -132,18 +132,30 @@ switch ($action) {
             $o['paymentMethod'] = $o['payment_method'] ?? '';
         }
 
-        // Tarifs
-        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'formation_prices'");
+        // Tarifs & Prix d'origine barrés
+        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('formation_prices', 'formation_original_prices')");
         $stmt->execute();
-        $pricesRow = $stmt->fetch();
+        $settingsRows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
         $prices = [
             'livre-bd-storytelling' => 2500,
             'livre-videos-ia' => 3100
         ];
-        if ($pricesRow && !empty($pricesRow['setting_value'])) {
-            $decodedPrices = json_decode($pricesRow['setting_value'], true);
+        $originalPrices = [
+            'livre-bd-storytelling' => 5000,
+            'livre-videos-ia' => 6000
+        ];
+
+        if (!empty($settingsRows['formation_prices'])) {
+            $decodedPrices = json_decode($settingsRows['formation_prices'], true);
             if (is_array($decodedPrices)) {
                 $prices = array_merge($prices, $decodedPrices);
+            }
+        }
+        if (!empty($settingsRows['formation_original_prices'])) {
+            $decodedOriginalPrices = json_decode($settingsRows['formation_original_prices'], true);
+            if (is_array($decodedOriginalPrices)) {
+                $originalPrices = array_merge($originalPrices, $decodedOriginalPrices);
             }
         }
 
@@ -161,6 +173,7 @@ switch ($action) {
             'adminCodes' => $adminCodes,
             'orders' => $orders,
             'prices' => $prices,
+            'originalPrices' => $originalPrices,
             'unlocked' => $unlocked
         ]);
         break;
@@ -796,20 +809,40 @@ switch ($action) {
     // -------------------------------------------------------------------------
     case 'update_prices':
         $prices = $inputData['prices'] ?? [];
-        if (!empty($prices)) {
-            $json = json_encode($prices);
-            $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('formation_prices', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
-            try {
-                $stmt->execute([$json, $json]);
-            } catch (Exception $e) {
-                // SQLite syntax fallback
-                $stmt = $pdo->prepare("INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES ('formation_prices', ?)");
-                $stmt->execute([$json]);
+        $originalPrices = $inputData['originalPrices'] ?? [];
+
+        if (!empty($prices) || !empty($originalPrices)) {
+            if (!empty($prices)) {
+                $json = json_encode($prices);
+                $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('formation_prices', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+                try {
+                    $stmt->execute([$json, $json]);
+                } catch (Exception $e) {
+                    $stmt = $pdo->prepare("INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES ('formation_prices', ?)");
+                    $stmt->execute([$json]);
+                }
             }
-            echo json_encode(['success' => true, 'prices' => $prices]);
+
+            if (!empty($originalPrices)) {
+                $jsonOrig = json_encode($originalPrices);
+                $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('formation_original_prices', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+                try {
+                    $stmt->execute([$jsonOrig, $jsonOrig]);
+                } catch (Exception $e) {
+                    $stmt = $pdo->prepare("INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES ('formation_original_prices', ?)");
+                    $stmt->execute([$jsonOrig]);
+                }
+            }
+
+            echo json_encode([
+                'success' => true, 
+                'prices' => $prices, 
+                'originalPrices' => $originalPrices
+            ]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Données de prix manquantes.']);
         }
+        break;
     // -------------------------------------------------------------------------
     // 10. Enregistrement d'une visite ou interaction en direct
     // -------------------------------------------------------------------------

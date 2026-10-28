@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   ACTIVE_USER: "mrben_current_user",
   ADMIN_CODES: "mrben_admin_generated_codes",
   FORMATION_PRICES: "mrben_formation_prices",
+  FORMATION_ORIGINAL_PRICES: "mrben_formation_original_prices",
   PROMOTERS: "mrben_promoters_list",
   PENDING_PROMO: "mrben_pending_promo_code"
 };
@@ -13,6 +14,11 @@ const STORAGE_KEYS = {
 const DEFAULT_PRICES = {
   "livre-bd-storytelling": 2500,
   "livre-videos-ia": 3100
+};
+
+const DEFAULT_ORIGINAL_PRICES = {
+  "livre-bd-storytelling": 5000,
+  "livre-videos-ia": 6000
 };
 
 // Codes promo officiels reconnus universellement sur tous les appareils
@@ -161,6 +167,9 @@ export const storageService = {
         }
         if (res.prices) {
           localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(res.prices));
+        }
+        if (res.originalPrices) {
+          localStorage.setItem(STORAGE_KEYS.FORMATION_ORIGINAL_PRICES, JSON.stringify(res.originalPrices));
         }
         if (email && Array.isArray(res.unlocked) && res.unlocked.length > 0) {
           const currentUnlocked = storageService.getUnlockedCodes();
@@ -896,30 +905,71 @@ export const storageService = {
     }
   },
 
+  // Récupérer tous les prix barrés / de référence des formations
+  getFormationOriginalPrices: () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.FORMATION_ORIGINAL_PRICES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          "livre-bd-storytelling": Number(parsed["livre-bd-storytelling"]) || DEFAULT_ORIGINAL_PRICES["livre-bd-storytelling"],
+          "livre-videos-ia": Number(parsed["livre-videos-ia"]) || DEFAULT_ORIGINAL_PRICES["livre-videos-ia"]
+        };
+      }
+      return { ...DEFAULT_ORIGINAL_PRICES };
+    } catch {
+      return { ...DEFAULT_ORIGINAL_PRICES };
+    }
+  },
+
   // Récupérer le prix d'une formation spécifique
   getFormationPrice: (bookId) => {
     const prices = storageService.getFormationPrices();
     return Number(prices[bookId]) || DEFAULT_PRICES[bookId] || 2500;
   },
 
-  // Mettre à jour les prix des formations par l'administrateur Mr Ben
-  setFormationPrices: (newPrices) => {
+  // Récupérer le prix barré d'une formation spécifique
+  getFormationOriginalPrice: (bookId) => {
+    const orig = storageService.getFormationOriginalPrices();
+    return Number(orig[bookId]) || DEFAULT_ORIGINAL_PRICES[bookId] || (storageService.getFormationPrice(bookId) * 2);
+  },
+
+  // Mettre à jour les prix des formations et les prix barrés par l'administrateur Mr Ben
+  setFormationPrices: (newPrices, newOriginalPrices = null) => {
     try {
       const current = storageService.getFormationPrices();
+      const currentOrig = storageService.getFormationOriginalPrices();
+
+      let targetPrices = newPrices;
+      let targetOrig = newOriginalPrices;
+      if (newPrices && typeof newPrices === 'object' && ('prices' in newPrices || 'originalPrices' in newPrices)) {
+        targetPrices = newPrices.prices || current;
+        targetOrig = newPrices.originalPrices || currentOrig;
+      }
+
       const updated = {
-        "livre-bd-storytelling": Math.max(0, Math.round(Number(newPrices["livre-bd-storytelling"]) || current["livre-bd-storytelling"])),
-        "livre-videos-ia": Math.max(0, Math.round(Number(newPrices["livre-videos-ia"]) || current["livre-videos-ia"]))
+        "livre-bd-storytelling": Math.max(0, Math.round(Number(targetPrices?.["livre-bd-storytelling"]) || current["livre-bd-storytelling"])),
+        "livre-videos-ia": Math.max(0, Math.round(Number(targetPrices?.["livre-videos-ia"]) || current["livre-videos-ia"]))
       };
+
+      const updatedOrig = {
+        "livre-bd-storytelling": Math.max(0, Math.round(Number(targetOrig?.["livre-bd-storytelling"]) || currentOrig["livre-bd-storytelling"] || (updated["livre-bd-storytelling"] * 2))),
+        "livre-videos-ia": Math.max(0, Math.round(Number(targetOrig?.["livre-videos-ia"]) || currentOrig["livre-videos-ia"] || (updated["livre-videos-ia"] * 2)))
+      };
+
       localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(updated));
-      window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: updated }));
+      localStorage.setItem(STORAGE_KEYS.FORMATION_ORIGINAL_PRICES, JSON.stringify(updatedOrig));
+
+      const eventDetail = { prices: updated, originalPrices: updatedOrig };
+      window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: eventDetail }));
       window.dispatchEvent(new Event('storage'));
 
       // Synchronisation cloud en arrière-plan
-      apiRequest('update_prices', { prices: updated }).catch(() => {});
+      apiRequest('update_prices', { prices: updated, originalPrices: updatedOrig }).catch(() => {});
 
-      return updated;
+      return eventDetail;
     } catch {
-      return DEFAULT_PRICES;
+      return { prices: DEFAULT_PRICES, originalPrices: DEFAULT_ORIGINAL_PRICES };
     }
   },
 
@@ -927,11 +977,14 @@ export const storageService = {
   resetFormationPrices: () => {
     try {
       localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(DEFAULT_PRICES));
-      window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: DEFAULT_PRICES }));
+      localStorage.setItem(STORAGE_KEYS.FORMATION_ORIGINAL_PRICES, JSON.stringify(DEFAULT_ORIGINAL_PRICES));
+      const resetPayload = { prices: DEFAULT_PRICES, originalPrices: DEFAULT_ORIGINAL_PRICES };
+      window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail: resetPayload }));
       window.dispatchEvent(new Event('storage'));
-      return { ...DEFAULT_PRICES };
+      apiRequest('update_prices', { prices: DEFAULT_PRICES, originalPrices: DEFAULT_ORIGINAL_PRICES }).catch(() => {});
+      return resetPayload;
     } catch {
-      return { ...DEFAULT_PRICES };
+      return { prices: DEFAULT_PRICES, originalPrices: DEFAULT_ORIGINAL_PRICES };
     }
   },
 

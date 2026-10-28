@@ -150,7 +150,8 @@ function initMysqlTables($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 
         "INSERT IGNORE INTO settings (setting_key, setting_value) VALUES 
-        ('formation_prices', '{\"livre-bd-storytelling\":2500,\"livre-videos-ia\":3100}')",
+        ('formation_prices', '{\"livre-bd-storytelling\":2500,\"livre-videos-ia\":3100}'),
+        ('formation_original_prices', '{\"livre-bd-storytelling\":5000,\"livre-videos-ia\":6000}')",
 
         "INSERT IGNORE INTO promoters (
             id, nom, prenom, code_promo, whatsapp, target_book_id, reduction_pct, commission_pct, status, sales_count, total_earned, sales_history, created_at
@@ -265,7 +266,8 @@ function initSqliteTables($pdo) {
             visited_at TEXT DEFAULT CURRENT_TIMESTAMP
         )",
         "INSERT OR IGNORE INTO settings (setting_key, setting_value) VALUES 
-        ('formation_prices', '{\"livre-bd-storytelling\":2500,\"livre-videos-ia\":3100}')",
+        ('formation_prices', '{\"livre-bd-storytelling\":2500,\"livre-videos-ia\":3100}'),
+        ('formation_original_prices', '{\"livre-bd-storytelling\":5000,\"livre-videos-ia\":6000}')",
         "INSERT OR IGNORE INTO promoters (
             id, nom, prenom, code_promo, whatsapp, target_book_id, reduction_pct, commission_pct, status, sales_count, total_earned, sales_history, created_at
         ) VALUES (

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { BOOKS_DATA } from '../data/booksData';
 import { storageService } from '../services/storageService';
+import { currencyService } from '../services/currencyService';
 import './BookReader.css';
 
 function PromptCodeBlock({ rawCode }) {
@@ -104,20 +105,29 @@ export function BookReader({
     return false;
   });
   const [currentPrice, setCurrentPrice] = useState(() => storageService.getFormationPrice(book?.id) || book?.price || 2500);
+  const [originalPrice, setOriginalPrice] = useState(() => storageService.getFormationOriginalPrice(book?.id) || book?.originalPrice || 5000);
+  const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
   const mainStageRef = useRef(null);
 
   useEffect(() => {
     setCurrentPrice(storageService.getFormationPrice(book?.id) || book?.price || 2500);
-    const handlePriceChange = () => {
+    setOriginalPrice(storageService.getFormationOriginalPrice(book?.id) || book?.originalPrice || 5000);
+    const handlePriceChange = (e) => {
       setCurrentPrice(storageService.getFormationPrice(book?.id) || book?.price || 2500);
+      setOriginalPrice(storageService.getFormationOriginalPrice(book?.id) || book?.originalPrice || 5000);
+    };
+    const handleCurrencyChange = (e) => {
+      setCurrentCountry(e.detail || currencyService.getCurrentCountry());
     };
     window.addEventListener('mrben_price_changed', handlePriceChange);
+    window.addEventListener('mrben_currency_changed', handleCurrencyChange);
     window.addEventListener('storage', handlePriceChange);
     return () => {
       window.removeEventListener('mrben_price_changed', handlePriceChange);
+      window.removeEventListener('mrben_currency_changed', handleCurrencyChange);
       window.removeEventListener('storage', handlePriceChange);
     };
-  }, [book?.id, book?.price]);
+  }, [book?.id, book?.price, book?.originalPrice]);
 
   // Fermer le sommaire sur mobile avec la touche Echap
   useEffect(() => {
@@ -344,9 +354,13 @@ export function BookReader({
                   <button 
                     type="button" 
                     className="btn-unlock-gold" 
-                    onClick={() => onOpenCheckout({ ...book, price: currentPrice })}
+                    onClick={() => onOpenCheckout({ ...book, price: currentPrice, originalPrice })}
                   >
-                    Débloquer la formation ({currentPrice.toLocaleString()} {book.currency || 'FCFA'})
+                    <span>Débloquer la formation</span>
+                    <span className="reader-btn-prices">
+                      <span className="reader-btn-struck">{currencyService.formatPrice(originalPrice)}</span>
+                      <span className="reader-btn-current">{currencyService.formatPrice(currentPrice)}</span>
+                    </span>
                   </button>
                   <button 
                     type="button" 

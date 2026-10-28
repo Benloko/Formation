@@ -1,22 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, BookOpen, Video, ChevronRight } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { currencyService } from '../services/currencyService';
 import './Hero.css';
 import { LAUNCH_BONUS } from '../data/servicesData';
 
 export function Hero({ selectedBookId, onSelectBook, onOpenBonusModal }) {
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
+  const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
+  const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
 
   useEffect(() => {
     const updatePrices = (e) => {
-      setPrices(e.detail || storageService.getFormationPrices());
+      setPrices(e.detail?.prices || storageService.getFormationPrices());
+      setOriginalPrices(e.detail?.originalPrices || storageService.getFormationOriginalPrices());
     };
+    const updateCurrency = (e) => {
+      setCurrentCountry(e.detail || currencyService.getCurrentCountry());
+    };
+
     window.addEventListener('mrben_price_changed', updatePrices);
-    window.addEventListener('storage', () => setPrices(storageService.getFormationPrices()));
+    window.addEventListener('mrben_currency_changed', updateCurrency);
+    window.addEventListener('storage', () => {
+      setPrices(storageService.getFormationPrices());
+      setOriginalPrices(storageService.getFormationOriginalPrices());
+    });
     return () => {
       window.removeEventListener('mrben_price_changed', updatePrices);
+      window.removeEventListener('mrben_currency_changed', updateCurrency);
     };
   }, []);
+
+  const bdPair = currencyService.formatPricePair(
+    prices['livre-bd-storytelling'] || 2500,
+    originalPrices['livre-bd-storytelling'] || 5000,
+    { compact: true }
+  );
+
+  const videoPair = currencyService.formatPricePair(
+    prices['livre-videos-ia'] || 3100,
+    originalPrices['livre-videos-ia'] || 6000,
+    { compact: true }
+  );
 
   return (
     <section className="hero-section">
@@ -50,7 +75,10 @@ export function Hero({ selectedBookId, onSelectBook, onOpenBonusModal }) {
         >
           <BookOpen size={14} />
           <span>Livre 1 : BD & Storytelling</span>
-          <span className="segment-price">{(prices['livre-bd-storytelling'] || 2500).toLocaleString()} F</span>
+          <span className="segment-price-group">
+            <span className="segment-price-struck">{bdPair.originalFormatted}</span>
+            <span className="segment-price">{bdPair.currentFormatted}</span>
+          </span>
         </button>
 
         <button 
@@ -59,7 +87,10 @@ export function Hero({ selectedBookId, onSelectBook, onOpenBonusModal }) {
         >
           <Video size={14} />
           <span>Livre 2 : Vidéos IA</span>
-          <span className="segment-price">{(prices['livre-videos-ia'] || 3100).toLocaleString()} F</span>
+          <span className="segment-price-group">
+            <span className="segment-price-struck">{videoPair.originalFormatted}</span>
+            <span className="segment-price">{videoPair.currentFormatted}</span>
+          </span>
         </button>
       </div>
     </section>

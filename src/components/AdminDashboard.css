@@ -2501,6 +2501,78 @@
   box-shadow: 0 6px 20px rgba(229, 179, 88, 0.35);
 }
 
+.pricing-current-display-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+}
+
+.pricing-preview-box {
+  background: rgba(6, 10, 20, 0.6);
+  border: 1px dashed rgba(229, 179, 88, 0.35);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-label {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.preview-rendered-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.preview-struck {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.preview-current {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #f7d786;
+}
+
+.pricing-subnote {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin: 0;
+  font-style: italic;
+}
+
+.btn-reset-prices {
+  padding: 0.6rem 1rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.btn-reset-prices:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
 /* ==========================================================================
    RESPONSIVE MOBILE & TABLETTES (IPHONE, ANDROID, IPAD)
    ========================================================================== */

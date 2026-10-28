@@ -23,6 +23,7 @@ import {
 import confetti from 'canvas-confetti';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
+import { currencyService } from '../services/currencyService';
 import { CREATOR_PROFILE } from '../data/servicesData';
 import './CheckoutModal.css';
 
@@ -66,6 +67,8 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
   const isVideo = activeBook?.id === 'livre-videos-ia';
   const bookCover = isVideo ? '/books/book_video_cover.png?v=2' : '/books/book_bd_cover.png';
   const bookPrice = storageService.getFormationPrice(activeBook?.id) || activeBook?.price || (isVideo ? 3100 : 2500);
+  const bookOriginalPrice = storageService.getFormationOriginalPrice(activeBook?.id) || activeBook?.originalPrice || (isVideo ? 6000 : 5000);
+  const [userCountry, setUserCountry] = useState(() => currencyService.getCurrentCountry());
 
   // Liste des comptes vérifiés sur cet appareil
   const [accounts, setAccounts] = useState(() => storageService.getGoogleAccounts());
@@ -155,6 +158,16 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
   };
 
   const payablePrice = appliedPromo ? appliedPromo.finalPrice : bookPrice;
+  const pricePair = currencyService.formatPricePair(bookPrice, bookOriginalPrice);
+  const payablePair = currencyService.formatPricePair(payablePrice, bookOriginalPrice);
+
+  useEffect(() => {
+    const handleCurrencyChange = (e) => {
+      setUserCountry(e.detail || currencyService.getCurrentCountry());
+    };
+    window.addEventListener('mrben_currency_changed', handleCurrencyChange);
+    return () => window.removeEventListener('mrben_currency_changed', handleCurrencyChange);
+  }, []);
 
 
 
@@ -855,8 +868,12 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
             <div className="clean-top-meta">
               <h2 className="clean-modal-title">{activeBook.title}</h2>
               <div className="clean-price-pill">
-                <strong>{bookPrice.toLocaleString()} FCFA</strong>
+                <span className="clean-price-struck">{pricePair.originalFormatted}</span>
+                <strong>{pricePair.currentFormatted}</strong>
                 <span>• Accès à Vie</span>
+                {pricePair.equivalentNote && (
+                  <span className="clean-price-equiv">{pricePair.equivalentNote}</span>
+                )}
               </div>
             </div>
 
@@ -931,8 +948,12 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
             <div className="clean-top-meta">
               <h2 className="clean-modal-title">{activeBook.title}</h2>
               <div className="clean-price-pill">
-                <strong>{bookPrice.toLocaleString()} FCFA</strong>
+                <span className="clean-price-struck">{pricePair.originalFormatted}</span>
+                <strong>{pricePair.currentFormatted}</strong>
                 <span>• Accès à Vie</span>
+                {pricePair.equivalentNote && (
+                  <span className="clean-price-equiv">{pricePair.equivalentNote}</span>
+                )}
               </div>
             </div>
 
@@ -1104,8 +1125,12 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
                 </div>
               ) : (
                 <div className="clean-price-pill">
-                  <strong>{bookPrice.toLocaleString()} FCFA</strong>
+                  <span className="clean-price-struck">{pricePair.originalFormatted}</span>
+                  <strong>{pricePair.currentFormatted}</strong>
                   <span>• Accès à Vie</span>
+                  {pricePair.equivalentNote && (
+                    <span className="clean-price-equiv">{pricePair.equivalentNote}</span>
+                  )}
                 </div>
               )}
 
@@ -1171,7 +1196,7 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
                     </>
                   ) : (
                     <>
-                      <span>Payer {payablePrice.toLocaleString()} FCFA</span>
+                      <span>Payer {payablePair.currentFormatted}</span>
                       <ArrowRight size={15} />
                     </>
                   )}
@@ -1181,6 +1206,12 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
                   <ShieldCheck size={14} />
                   <span>Paiement 100% sécurisé FedaPay • MTN, Moov, Wave, Carte • Accès immédiat</span>
                 </div>
+
+                {userCountry.type !== 'cfa' && (
+                  <p className="currency-payment-notice">
+                    Montant débité : {payablePrice.toLocaleString()} FCFA (conversion bancaire automatique en {userCountry.currency}).
+                  </p>
+                )}
 
                 <div className="checkout-aux-actions">
                   <button

@@ -45,7 +45,8 @@ import {
   CreditCard,
   Mail,
   Phone,
-  KeyRound
+  KeyRound,
+  RotateCcw
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
@@ -107,9 +108,11 @@ export function AdminDashboard({ onClose }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [whatsappCopied, setWhatsappCopied] = useState(false);
 
-  // Tarifs des formations
+  // Tarifs des formations & Prix barrés (référence d'origine)
   const [formationPrices, setFormationPrices] = useState(() => storageService.getFormationPrices());
   const [priceInputs, setPriceInputs] = useState(() => storageService.getFormationPrices());
+  const [formationOriginalPrices, setFormationOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
+  const [originalPriceInputs, setOriginalPriceInputs] = useState(() => storageService.getFormationOriginalPrices());
   const [priceSuccessMsg, setPriceSuccessMsg] = useState('');
 
   // Statistiques de visites & Analytics réels
@@ -162,8 +165,11 @@ export function AdminDashboard({ onClose }) {
     setAdminCodes(storageService.getAdminGeneratedCodes());
     setPromoters(storageService.getAllPromoters());
     const currentPrices = storageService.getFormationPrices();
+    const currentOriginalPrices = storageService.getFormationOriginalPrices();
     setFormationPrices(currentPrices);
     setPriceInputs(currentPrices);
+    setFormationOriginalPrices(currentOriginalPrices);
+    setOriginalPriceInputs(currentOriginalPrices);
     await loadAnalytics(analyticsPeriod);
     setTimeout(() => setIsRefreshing(false), 300);
   };
@@ -284,27 +290,48 @@ export function AdminDashboard({ onClose }) {
     setPriceSuccessMsg('');
   };
 
+  const handleOriginalPriceInputChange = (key, value) => {
+    setOriginalPriceInputs(prev => ({
+      ...prev,
+      [key]: value
+    }));
+    setPriceSuccessMsg('');
+  };
+
   const handleSavePrices = (e) => {
     if (e) e.preventDefault();
     const cleanBD = Math.max(0, parseInt(priceInputs['livre-bd-storytelling'], 10) || 0);
     const cleanVideo = Math.max(0, parseInt(priceInputs['livre-videos-ia'], 10) || 0);
 
-    const updated = storageService.setFormationPrices({
-      'livre-bd-storytelling': cleanBD,
-      'livre-videos-ia': cleanVideo
-    });
+    const cleanOrigBD = Math.max(cleanBD, parseInt(originalPriceInputs['livre-bd-storytelling'], 10) || cleanBD * 2);
+    const cleanOrigVideo = Math.max(cleanVideo, parseInt(originalPriceInputs['livre-videos-ia'], 10) || cleanVideo * 2);
 
-    setFormationPrices(updated);
-    setPriceInputs(updated);
-    setPriceSuccessMsg('✅ Prix enregistrés avec succès ! Les nouveaux tarifs sont appliqués partout en direct (Vitrine, Accueil, Lecteur et Paiements).');
+    const updated = storageService.setFormationPrices(
+      {
+        'livre-bd-storytelling': cleanBD,
+        'livre-videos-ia': cleanVideo
+      },
+      {
+        'livre-bd-storytelling': cleanOrigBD,
+        'livre-videos-ia': cleanOrigVideo
+      }
+    );
+
+    setFormationPrices(updated.prices);
+    setPriceInputs(updated.prices);
+    setFormationOriginalPrices(updated.originalPrices);
+    setOriginalPriceInputs(updated.originalPrices);
+    setPriceSuccessMsg('✅ Prix enregistrés avec succès ! Le prix barré et le tarif de vente sont appliqués partout en direct.');
     setTimeout(() => setPriceSuccessMsg(''), 5000);
   };
 
   const handleResetPrices = () => {
-    if (window.confirm("Rétablir les prix de vente par défaut ?\n\n• BD & Storytelling : 2 500 FCFA\n• Vidéos IA : 3 100 FCFA")) {
+    if (window.confirm("Rétablir les tarifs par défaut ?\n\n• BD & Storytelling : 2 500 FCFA (Barré : 5 000 FCFA)\n• Vidéos IA : 3 100 FCFA (Barré : 6 000 FCFA)")) {
       const reset = storageService.resetFormationPrices();
-      setFormationPrices(reset);
-      setPriceInputs(reset);
+      setFormationPrices(reset.prices);
+      setPriceInputs(reset.prices);
+      setFormationOriginalPrices(reset.originalPrices);
+      setOriginalPriceInputs(reset.originalPrices);
       setPriceSuccessMsg('🔄 Les prix par défaut ont été rétablis avec succès.');
       setTimeout(() => setPriceSuccessMsg(''), 4000);
     }
@@ -1588,15 +1615,24 @@ export function AdminDashboard({ onClose }) {
                         </div>
 
                         <div className="pricing-card-body">
-                          <div className="pricing-current-display">
-                            <span className="pricing-display-label">Prix actuel en ligne :</span>
-                            <span className="pricing-display-val">
-                              {(formationPrices['livre-bd-storytelling'] || 2500).toLocaleString()} FCFA
-                            </span>
+                          <div className="pricing-current-display-grid">
+                            <div>
+                              <span className="pricing-display-label">Prix de vente en ligne :</span>
+                              <span className="pricing-display-val gold">
+                                {(formationPrices['livre-bd-storytelling'] || 2500).toLocaleString()} FCFA
+                              </span>
+                            </div>
+                            <div>
+                              <span className="pricing-display-label">Prix d'origine barré :</span>
+                              <span className="pricing-display-val">
+                                <del>{(formationOriginalPrices['livre-bd-storytelling'] || 5000).toLocaleString()} FCFA</del>
+                              </span>
+                            </div>
                           </div>
 
+                          {/* Champ 1 : Prix de vente actuel */}
                           <div className="pricing-input-field-group">
-                            <label htmlFor="price-bd">Nouveau tarif de vente :</label>
+                            <label htmlFor="price-bd">1. Prix de vente actuel (ce que paie le client) :</label>
                             <div className="pricing-input-currency-box">
                               <input 
                                 id="price-bd"
@@ -1625,6 +1661,47 @@ export function AdminDashboard({ onClose }) {
                               </button>
                             ))}
                           </div>
+
+                          {/* Champ 2 : Prix barré d'origine */}
+                          <div className="pricing-input-field-group">
+                            <label htmlFor="orig-price-bd">2. Prix barré (grand prix d'origine barré) :</label>
+                            <div className="pricing-input-currency-box">
+                              <input 
+                                id="orig-price-bd"
+                                type="number" 
+                                min="0" 
+                                step="100" 
+                                value={originalPriceInputs['livre-bd-storytelling'] ?? 5000}
+                                onChange={(e) => handleOriginalPriceInputChange('livre-bd-storytelling', e.target.value)}
+                                placeholder="5000"
+                                required
+                              />
+                              <span className="currency-suffix">FCFA</span>
+                            </div>
+                          </div>
+
+                          <div className="pricing-quick-chips">
+                            <span className="quick-label">Suggestions barré :</span>
+                            {[4000, 5000, 6000, 8000, 10000].map(amt => (
+                              <button 
+                                key={amt}
+                                type="button"
+                                className={`pricing-chip-btn ${Number(originalPriceInputs['livre-bd-storytelling']) === amt ? 'selected' : ''}`}
+                                onClick={() => handleOriginalPriceInputChange('livre-bd-storytelling', amt)}
+                              >
+                                {amt.toLocaleString()} F
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Aperçu visiteur */}
+                          <div className="pricing-preview-box">
+                            <span className="preview-label">Aperçu visiteur :</span>
+                            <div className="preview-rendered-badge">
+                              <span className="preview-struck">{(Number(originalPriceInputs['livre-bd-storytelling']) || 5000).toLocaleString()} FCFA</span>
+                              <span className="preview-current">{(Number(priceInputs['livre-bd-storytelling']) || 2500).toLocaleString()} FCFA</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -1647,15 +1724,24 @@ export function AdminDashboard({ onClose }) {
                         </div>
 
                         <div className="pricing-card-body">
-                          <div className="pricing-current-display">
-                            <span className="pricing-display-label">Prix actuel en ligne :</span>
-                            <span className="pricing-display-val">
-                              {(formationPrices['livre-videos-ia'] || 3100).toLocaleString()} FCFA
-                            </span>
+                          <div className="pricing-current-display-grid">
+                            <div>
+                              <span className="pricing-display-label">Prix de vente en ligne :</span>
+                              <span className="pricing-display-val gold">
+                                {(formationPrices['livre-videos-ia'] || 3100).toLocaleString()} FCFA
+                              </span>
+                            </div>
+                            <div>
+                              <span className="pricing-display-label">Prix d'origine barré :</span>
+                              <span className="pricing-display-val">
+                                <del>{(formationOriginalPrices['livre-videos-ia'] || 6000).toLocaleString()} FCFA</del>
+                              </span>
+                            </div>
                           </div>
 
+                          {/* Champ 1 : Prix de vente actuel */}
                           <div className="pricing-input-field-group">
-                            <label htmlFor="price-video">Nouveau tarif de vente :</label>
+                            <label htmlFor="price-video">1. Prix de vente actuel (ce que paie le client) :</label>
                             <div className="pricing-input-currency-box">
                               <input 
                                 id="price-video"
@@ -1684,6 +1770,47 @@ export function AdminDashboard({ onClose }) {
                               </button>
                             ))}
                           </div>
+
+                          {/* Champ 2 : Prix barré d'origine */}
+                          <div className="pricing-input-field-group">
+                            <label htmlFor="orig-price-video">2. Prix barré (grand prix d'origine barré) :</label>
+                            <div className="pricing-input-currency-box">
+                              <input 
+                                id="orig-price-video"
+                                type="number" 
+                                min="0" 
+                                step="100" 
+                                value={originalPriceInputs['livre-videos-ia'] ?? 6000}
+                                onChange={(e) => handleOriginalPriceInputChange('livre-videos-ia', e.target.value)}
+                                placeholder="6000"
+                                required
+                              />
+                              <span className="currency-suffix">FCFA</span>
+                            </div>
+                          </div>
+
+                          <div className="pricing-quick-chips">
+                            <span className="quick-label">Suggestions barré :</span>
+                            {[5000, 6000, 8000, 12000].map(amt => (
+                              <button 
+                                key={amt}
+                                type="button"
+                                className={`pricing-chip-btn ${Number(originalPriceInputs['livre-videos-ia']) === amt ? 'selected' : ''}`}
+                                onClick={() => handleOriginalPriceInputChange('livre-videos-ia', amt)}
+                              >
+                                {amt.toLocaleString()} F
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Aperçu visiteur */}
+                          <div className="pricing-preview-box">
+                            <span className="preview-label">Aperçu visiteur :</span>
+                            <div className="preview-rendered-badge">
+                              <span className="preview-struck">{(Number(originalPriceInputs['livre-videos-ia']) || 6000).toLocaleString()} FCFA</span>
+                              <span className="preview-current">{(Number(priceInputs['livre-videos-ia']) || 3100).toLocaleString()} FCFA</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1692,11 +1819,23 @@ export function AdminDashboard({ onClose }) {
                     <div className="pricing-submit-bar-card">
                       <div className="pricing-summary-info">
                         <p className="pricing-instant-reassurance">
-                          ⚡ Les nouveaux prix s'appliquent immédiatement partout sur le site et FedaPay sans rechargement.
+                          ⚡ Les prix barrés et les tarifs de vente s'affichent immédiatement partout sur le site et FedaPay.
+                        </p>
+                        <p className="pricing-subnote">
+                          Note : Aucune mention de promotion n'est affichée — seul le prix barré élégant est visible par vos clients.
                         </p>
                       </div>
 
                       <div className="pricing-buttons-row">
+                        <button 
+                          type="button" 
+                          className="btn-reset-prices"
+                          onClick={handleResetPrices}
+                          title="Rétablir les prix d'origine"
+                        >
+                          <RotateCcw size={14} />
+                          <span>Rétablir par défaut</span>
+                        </button>
                         <button 
                           type="submit" 
                           className="btn-action-primary gold btn-save-prices"

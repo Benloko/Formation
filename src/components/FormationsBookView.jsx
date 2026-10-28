@@ -7,26 +7,33 @@ import {
   ArrowRight, 
   CheckCircle2, 
   X, 
-  Smartphone, 
-  Gift, 
   Eye, 
   Play, 
-  Zap, 
-  TrendingUp, 
-  MessageSquare, 
-  Film, 
-  Palette, 
-  Lightbulb,
-  Handshake
+  Handshake,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { currencyService } from '../services/currencyService';
 import './FormationsBookView.css';
+
+const BD_GALLERY = [
+  { id: 1, img: '/images/formation/bd-scene-1-pleurs.jpg', alt: 'Scène 1' },
+  { id: 2, img: '/images/formation/bd-scene-2-espoir.jpg', alt: 'Scène 2' },
+  { id: 3, img: '/images/formation/bd-scene-3-action.jpg', alt: 'Scène 3' },
+];
+
+const VIDEO_GALLERY = [
+  { id: 1, img: '/images/formation/ariel-voisine-scene-1.jpg', alt: 'Extrait 1' },
+  { id: 2, img: '/images/formation/ariel-voisine-scene-2.jpg', alt: 'Extrait 2' },
+  { id: 3, img: '/images/formation/ariel-voisine-scene-3.jpg', alt: 'Extrait 3' },
+];
 
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
   const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
   const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
+  const [lightbox, setLightbox] = useState(null); // null | { type: 'bd' | 'video', index: number }
 
   const getUrlReductionPct = () => {
     try {
@@ -125,13 +132,55 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
     };
   }, []);
 
+  // Gestion des touches clavier pour le Lightbox (Échap, Flèches Gauche/Droite)
+  useEffect(() => {
+    if (!lightbox) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setLightbox(null);
+      } else if (e.key === 'ArrowRight') {
+        setLightbox((prev) => {
+          if (!prev) return null;
+          const gallery = prev.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY;
+          return { ...prev, index: (prev.index + 1) % gallery.length };
+        });
+      } else if (e.key === 'ArrowLeft') {
+        setLightbox((prev) => {
+          if (!prev) return null;
+          const gallery = prev.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY;
+          return { ...prev, index: (prev.index - 1 + gallery.length) % gallery.length };
+        });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightbox]);
+
+  const handleNextSlide = (e) => {
+    if (e) e.stopPropagation();
+    setLightbox((prev) => {
+      if (!prev) return null;
+      const gallery = prev.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY;
+      return { ...prev, index: (prev.index + 1) % gallery.length };
+    });
+  };
+
+  const handlePrevSlide = (e) => {
+    if (e) e.stopPropagation();
+    setLightbox((prev) => {
+      if (!prev) return null;
+      const gallery = prev.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY;
+      return { ...prev, index: (prev.index - 1 + gallery.length) % gallery.length };
+    });
+  };
+
   const bookBD = BOOKS_DATA.find((b) => b.id === 'livre-bd-storytelling') || BOOKS_DATA[0];
   const bookVideo = BOOKS_DATA.find((b) => b.id === 'livre-videos-ia') || BOOKS_DATA[1];
 
   const isBDUnlocked = storageService.isBookUnlocked(bookBD.id);
   const isVideoUnlocked = storageService.isBookUnlocked(bookVideo.id);
 
-  // Prix et réductions
+  // Prix et réductions : le prix barré doit TOUJOURS être le prix d'origine haut (origBdPrice / origVideoPrice)
   const baseBdPrice = prices['livre-bd-storytelling'] || 2500;
   const origBdPrice = originalPrices['livre-bd-storytelling'] || 5000;
   const isBdEligible = activePromo && (!activePromo.targetBookId || activePromo.targetBookId === 'all' || activePromo.targetBookId === bookBD.id);
@@ -139,10 +188,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
   const finalBdPrice = bdReductionPct > 0 
     ? Math.max(0, Math.round(baseBdPrice * (1 - bdReductionPct / 100))) 
     : baseBdPrice;
-  const bdPair = currencyService.formatPricePair(
-    finalBdPrice, 
-    bdReductionPct > 0 ? baseBdPrice : origBdPrice
-  );
+  const bdPair = currencyService.formatPricePair(finalBdPrice, origBdPrice);
 
   const baseVideoPrice = prices['livre-videos-ia'] || 3100;
   const origVideoPrice = originalPrices['livre-videos-ia'] || 6000;
@@ -151,10 +197,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
   const finalVideoPrice = videoReductionPct > 0 
     ? Math.max(0, Math.round(baseVideoPrice * (1 - videoReductionPct / 100))) 
     : baseVideoPrice;
-  const videoPair = currencyService.formatPricePair(
-    finalVideoPrice, 
-    videoReductionPct > 0 ? baseVideoPrice : origVideoPrice
-  );
+  const videoPair = currencyService.formatPricePair(finalVideoPrice, origVideoPrice);
 
   return (
     <div className="formations-book-viewport">
@@ -203,12 +246,12 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
               ==================================================================== */}
           <div className={`book-page left-page ${mobileActiveTab === 'bd' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <div className="page-inner-content page-fade-in">
-              {/* En-tête de la page */}
+              {/* En-tête de la page avec badge compact et responsive */}
               <div className="page-header-row">
                 <span className="page-category-tag">🎨 Bandes dessinées & IA</span>
                 {bdReductionPct > 0 && !isBDUnlocked && (
                   <span className="promo-applied-chip">
-                    ✨ Code <strong>{activePromo.code}</strong> actif (-{bdReductionPct}%)
+                    ✨ -{bdReductionPct}% ({activePromo.code})
                   </span>
                 )}
               </div>
@@ -264,109 +307,101 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 </div>
               </div>
 
-              {/* PARCOURS DE LA FORMATION : VISUEL ENTIER & CARTE EXPLICATIVE ALTERNÉS */}
-              <div className="formation-flow-steps">
-                {/* ÉTAPE 1 : Image 1 entière (Création du personnage) -> Carte Module 1 */}
-                <div className="flow-step-block">
-                  <div className="flow-visual-frame clean-illustration-frame">
-                    <img 
-                      src="/images/formation/scene-1-la-porte.jpg" 
-                      alt="Création du personnage sur smartphone" 
-                      className="flow-full-clean-img"
-                    />
-                  </div>
-                  <div className="animated-pillar-row-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-amber">
-                        <span className="floating-emoji">💡</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge">Module 1</span>
-                        <h4 className="pillar-main-title">Imaginer des Scénarios & Créer Votre Personnage</h4>
-                      </div>
+              {/* CARTE D'APERÇU ANIMÉE UNIQUE EN HAUT */}
+              <div 
+                className="formation-top-teaser-card"
+                onClick={() => {
+                  analyticsService.trackButtonClick('teaser_card_click_bd', 'livre-bd-storytelling', '#formations');
+                  setLightbox({ type: 'bd', index: 0 });
+                }}
+                role="button"
+                tabIndex={0}
+                title="Cliquer pour feuilleter les 3 scènes"
+              >
+                <div className="teaser-card-media-wrap">
+                  <img 
+                    src="/images/formation/bd-scene-1-pleurs.jpg" 
+                    alt="Aperçu du feuilleton BD" 
+                    className="teaser-card-img"
+                  />
+                  <div className="teaser-card-glow-pulse" aria-hidden="true"></div>
+                  <div className="teaser-card-overlay">
+                    <div className="teaser-badge-pill">
+                      <span className="teaser-dot-pulse"></span>
+                      <span>✨ Exemples de Feuilleton BD</span>
                     </div>
-                    <p className="pillar-detail-text">
-                      La méthode simple pour concevoir des intrigues palpitantes et générer un personnage principal au style soigné directement sur votre smartphone.
-                    </p>
+                    <div className="teaser-cta-pill">
+                      <Eye size={14} />
+                      <span>Cliquer pour feuilleter (1/3)</span>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* ÉTAPE 2 : Image 2 entière avec Bulle de discussion BD n°1 -> Carte Module 2 */}
-                <div className="flow-step-block">
-                  <div className="flow-visual-frame clean-illustration-frame with-speech-bubble">
-                    <img 
-                      src="/images/formation/scene-2-la-remise.jpg" 
-                      alt="Conservation du même visage" 
-                      className="flow-full-clean-img"
-                    />
-                    {/* Bulle de discussion BD élégante & nette */}
-                    <div className="comic-speech-bubble bubble-pos-top-right">
-                      <span className="bubble-text">« Regarde : mon visage reste 100% identique sur ce nouveau décor ! »</span>
-                      <div className="bubble-tail-pointer tail-down" aria-hidden="true"></div>
+              {/* LES 4 MODULES ANIMÉS GROUPÉS EN BAS */}
+              <div className="formation-vertical-cards-stack">
+                {/* Module 1 */}
+                <div className="animated-pillar-row-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-amber">
+                      <span className="floating-emoji">💡</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge">Module 1</span>
+                      <h4 className="pillar-main-title">Imaginer des Scénarios & Créer Votre Personnage</h4>
                     </div>
                   </div>
-                  <div className="animated-pillar-row-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-purple">
-                        <span className="floating-emoji">🎭</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-purple">Module 2 • Le Secret Clé</span>
-                        <h4 className="pillar-main-title">Garder le Même Visage sur Toutes Vos Images</h4>
-                      </div>
-                    </div>
-                    <p className="pillar-detail-text">
-                      La technique secrète pour que vos héros conservent exactement les mêmes traits, la même coiffure et le même style d'une scène à l'autre sans jamais se déformer.
-                    </p>
-                  </div>
+                  <p className="pillar-detail-text">
+                    La méthode simple pour concevoir des intrigues palpitantes et générer un personnage principal au style soigné directement sur votre smartphone.
+                  </p>
                 </div>
 
-                {/* ÉTAPE 3 : Image 3 entière avec Bulle de discussion BD n°2 -> Carte Module 3 */}
-                <div className="flow-step-block">
-                  <div className="flow-visual-frame clean-illustration-frame with-speech-bubble">
-                    <img 
-                      src="/images/formation/scene-3-la-revelation.jpg" 
-                      alt="Rendu final avec dialogues BD" 
-                      className="flow-full-clean-img"
-                    />
-                    {/* Bulle de discussion BD élégante & nette */}
-                    <div className="comic-speech-bubble bubble-pos-bottom-left">
-                      <span className="bubble-text">« Bulles et dialogues ajoutés facilement sur téléphone, prêts à publier ! »</span>
-                      <div className="bubble-tail-pointer tail-top" aria-hidden="true"></div>
+                {/* Module 2 */}
+                <div className="animated-pillar-row-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-purple">
+                      <span className="floating-emoji">🎭</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-purple">Module 2 • Le Secret Clé</span>
+                      <h4 className="pillar-main-title">Garder le Même Visage sur Toutes Vos Images</h4>
                     </div>
                   </div>
-                  <div className="animated-pillar-row-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-emerald">
-                        <span className="floating-emoji">💬</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-emerald">Module 3</span>
-                        <h4 className="pillar-main-title">Bulles de BD & Dialogues sur Mobile</h4>
-                      </div>
-                    </div>
-                    <p className="pillar-detail-text">
-                      Comment placer des bulles professionnelles, des textes parfaitement lisibles et des répliques percutantes directement depuis votre téléphone portable.
-                    </p>
-                  </div>
+                  <p className="pillar-detail-text">
+                    La technique secrète pour que vos héros conservent exactement les mêmes traits, la même coiffure et le même style d'une scène à l'autre sans jamais se déformer.
+                  </p>
                 </div>
 
-                {/* ÉTAPE 4 : Carte Module 4 (Publication & Croissance) */}
-                <div className="flow-step-block">
-                  <div className="animated-pillar-row-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-orange">
-                        <span className="floating-emoji">📈</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-orange">Module 4</span>
-                        <h4 className="pillar-main-title">Publication & Croissance d'Abonnés</h4>
-                      </div>
+                {/* Module 3 */}
+                <div className="animated-pillar-row-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-emerald">
+                      <span className="floating-emoji">💬</span>
                     </div>
-                    <p className="pillar-detail-text">
-                      Les stratégies pour publier sur Facebook, TikTok et WhatsApp, fidéliser une audience engagée et monétiser vos créations.
-                    </p>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-emerald">Module 3</span>
+                      <h4 className="pillar-main-title">Bulles de BD & Dialogues sur Mobile</h4>
+                    </div>
                   </div>
+                  <p className="pillar-detail-text">
+                    Comment placer des bulles professionnelles, des textes parfaitement lisibles et des répliques percutantes directement depuis votre téléphone portable.
+                  </p>
+                </div>
+
+                {/* Module 4 */}
+                <div className="animated-pillar-row-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-orange">
+                      <span className="floating-emoji">📈</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-orange">Module 4</span>
+                      <h4 className="pillar-main-title">Publication & Croissance d'Abonnés</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Les stratégies pour publier sur Facebook, TikTok et WhatsApp, fidéliser une audience engagée et monétiser vos créations.
+                  </p>
                 </div>
               </div>
 
@@ -466,12 +501,12 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
               ==================================================================== */}
           <div className={`book-page right-page ${mobileActiveTab === 'video' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <div className="page-inner-content page-fade-in">
-              {/* En-tête de la page */}
+              {/* En-tête de la page avec badge compact et responsive */}
               <div className="page-header-row">
                 <span className="page-category-tag video-tag">🎬 Vidéos avec l'IA</span>
                 {videoReductionPct > 0 && !isVideoUnlocked && (
                   <span className="promo-applied-chip video-chip">
-                    ✨ Code <strong>{activePromo.code}</strong> actif (-{videoReductionPct}%)
+                    ✨ -{videoReductionPct}% ({activePromo.code})
                   </span>
                 )}
               </div>
@@ -527,141 +562,101 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 </div>
               </div>
 
-              {/* PARCOURS DE LA FORMATION VIDÉO : VISUEL ENTIER & CARTE EXPLICATIVE ALTERNÉS */}
-              <div className="formation-flow-steps video-flow-theme">
-                {/* ÉTAPE 1 : Aperçu Vidéo 1 entier -> Carte Module 1 */}
-                <div className="flow-step-block">
-                  <div className="flow-visual-frame clean-video-player-frame">
-                    <img 
-                      src="/images/formation/ariel-voisine-scene-1.jpg" 
-                      alt="Cadrage vertical 9:16 pour smartphone" 
-                      className="flow-full-clean-img"
-                    />
-                    <div className="video-player-glow-overlay">
-                      <div className="center-play-circle">
-                        <Play size={24} fill="#ffffff" stroke="none" className="play-triangle-icon" />
-                      </div>
+              {/* CARTE D'APERÇU ANIMÉE UNIQUE EN HAUT */}
+              <div 
+                className="formation-top-teaser-card video-teaser-theme"
+                onClick={() => {
+                  analyticsService.trackButtonClick('teaser_card_click_video', 'livre-videos-ia', '#formations');
+                  setLightbox({ type: 'video', index: 0 });
+                }}
+                role="button"
+                tabIndex={0}
+                title="Cliquer pour voir les 3 extraits animés"
+              >
+                <div className="teaser-card-media-wrap">
+                  <img 
+                    src="/images/formation/ariel-voisine-scene-1.jpg" 
+                    alt="Aperçu des vidéos animées IA" 
+                    className="teaser-card-img"
+                  />
+                  <div className="teaser-card-glow-pulse video-pulse" aria-hidden="true"></div>
+                  <div className="teaser-card-overlay">
+                    <div className="teaser-badge-pill video-pill">
+                      <span className="teaser-dot-pulse cyan"></span>
+                      <span>🎬 Extraits Vidéos Réalisés avec l'IA</span>
                     </div>
-                    <div className="video-timeline-bar" aria-hidden="true">
-                      <div className="video-timeline-progress"></div>
+                    <div className="teaser-cta-pill video-cta">
+                      <Play size={13} fill="#ffffff" stroke="none" />
+                      <span>Cliquer pour regarder (1/3)</span>
                     </div>
-                    <div className="video-meta-top-badge">
-                      <span>Format 9:16 Mobile</span>
-                    </div>
-                    <div className="video-duration-pill">
-                      <span>0:12</span>
-                    </div>
-                  </div>
-                  <div className="animated-pillar-row-card video-theme-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-sky">
-                        <span className="floating-emoji">🎬</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-sky">Module 1</span>
-                        <h4 className="pillar-main-title">Scénarisation & Découpage Visuel</h4>
-                      </div>
-                    </div>
-                    <p className="pillar-detail-text">
-                      Comment découper une histoire en séquences courtes et percutantes de 10 à 30 secondes pour maximiser le taux de visionnage.
-                    </p>
                   </div>
                 </div>
+              </div>
 
-                {/* ÉTAPE 2 : Aperçu Vidéo 2 entier -> Carte Module 2 */}
-                <div className="flow-step-block">
-                  <div className="flow-visual-frame clean-video-player-frame">
-                    <img 
-                      src="/images/formation/ariel-voisine-scene-2.jpg" 
-                      alt="Animation des mouvements et expressions" 
-                      className="flow-full-clean-img"
-                    />
-                    <div className="video-player-glow-overlay">
-                      <div className="center-play-circle">
-                        <Play size={24} fill="#ffffff" stroke="none" className="play-triangle-icon" />
-                      </div>
+              {/* LES 4 MODULES ANIMÉS GROUPÉS EN BAS */}
+              <div className="formation-vertical-cards-stack video-flow-theme">
+                {/* Module 1 */}
+                <div className="animated-pillar-row-card video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-sky">
+                      <span className="floating-emoji">🎬</span>
                     </div>
-                    <div className="video-timeline-bar" aria-hidden="true">
-                      <div className="video-timeline-progress"></div>
-                    </div>
-                    <div className="video-meta-top-badge">
-                      <span>Format 9:16 Mobile</span>
-                    </div>
-                    <div className="video-duration-pill">
-                      <span>0:18</span>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-sky">Module 1</span>
+                      <h4 className="pillar-main-title">Scénarisation & Découpage Visuel</h4>
                     </div>
                   </div>
-                  <div className="animated-pillar-row-card video-theme-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-cyan">
-                        <span className="floating-emoji">⚡</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-cyan">Module 2 • Magie de l'IA</span>
-                        <h4 className="pillar-main-title">Animer les Personnages & les Mouvements</h4>
-                      </div>
-                    </div>
-                    <p className="pillar-detail-text">
-                      La méthode pour transformer une image fixe en vidéo animée : faire bouger les regards, les expressions et les décors avec l'IA gratuitement.
-                    </p>
-                  </div>
+                  <p className="pillar-detail-text">
+                    Comment découper une histoire en séquences courtes et percutantes de 10 à 30 secondes pour captiver dès les premières secondes.
+                  </p>
                 </div>
 
-                {/* ÉTAPE 3 : Aperçu Vidéo 3 entier -> Carte Module 3 */}
-                <div className="flow-step-block">
-                  <div className="flow-visual-frame clean-video-player-frame">
-                    <img 
-                      src="/images/formation/ariel-voisine-scene-3.jpg" 
-                      alt="Montage final avec conversations sur téléphone" 
-                      className="flow-full-clean-img"
-                    />
-                    <div className="video-player-glow-overlay">
-                      <div className="center-play-circle">
-                        <Play size={24} fill="#ffffff" stroke="none" className="play-triangle-icon" />
-                      </div>
+                {/* Module 2 */}
+                <div className="animated-pillar-row-card video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-cyan">
+                      <span className="floating-emoji">⚡</span>
                     </div>
-                    <div className="video-timeline-bar" aria-hidden="true">
-                      <div className="video-timeline-progress"></div>
-                    </div>
-                    <div className="video-meta-top-badge">
-                      <span>Format 9:16 Mobile</span>
-                    </div>
-                    <div className="video-duration-pill">
-                      <span>0:25</span>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-cyan">Module 2 • Magie de l'IA</span>
+                      <h4 className="pillar-main-title">Animer les Personnages & les Mouvements</h4>
                     </div>
                   </div>
-                  <div className="animated-pillar-row-card video-theme-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-violet">
-                        <span className="floating-emoji">📱</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-violet">Module 3</span>
-                        <h4 className="pillar-main-title">Assemblage & Conversations sur Mobile</h4>
-                      </div>
-                    </div>
-                    <p className="pillar-detail-text">
-                      Fusionnez vos clips animés en quelques clics sur votre smartphone, intégrez les dialogues et finalisez vos vidéos sans logiciel lourd.
-                    </p>
-                  </div>
+                  <p className="pillar-detail-text">
+                    La méthode pour transformer une image fixe en vidéo animée : faire bouger les regards, les expressions et les décors avec l'IA gratuitement.
+                  </p>
                 </div>
 
-                {/* ÉTAPE 4 : Carte Module 4 (Publication & Viralité) */}
-                <div className="flow-step-block">
-                  <div className="animated-pillar-row-card video-theme-card">
-                    <div className="pillar-card-header">
-                      <div className="pillar-icon-box box-blue">
-                        <span className="floating-emoji">🔥</span>
-                      </div>
-                      <div className="pillar-title-wrap">
-                        <span className="pillar-step-badge badge-blue">Module 4</span>
-                        <h4 className="pillar-main-title">Publication & Viralité des Formats Courts</h4>
-                      </div>
+                {/* Module 3 */}
+                <div className="animated-pillar-row-card video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-violet">
+                      <span className="floating-emoji">📱</span>
                     </div>
-                    <p className="pillar-detail-text">
-                      Les techniques pour poster efficacement, attirer l'algorithme TikTok, Reels et Shorts et faire grimper rapidement votre nombre d'abonnés.
-                    </p>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-violet">Module 3</span>
+                      <h4 className="pillar-main-title">Assemblage & Conversations sur Mobile</h4>
+                    </div>
                   </div>
+                  <p className="pillar-detail-text">
+                    Fusionnez vos clips animés en quelques clics sur votre smartphone, intégrez les dialogues et finalisez vos vidéos sans logiciel lourd.
+                  </p>
+                </div>
+
+                {/* Module 4 */}
+                <div className="animated-pillar-row-card video-theme-card">
+                  <div className="pillar-card-header">
+                    <div className="pillar-icon-box box-blue">
+                      <span className="floating-emoji">🔥</span>
+                    </div>
+                    <div className="pillar-title-wrap">
+                      <span className="pillar-step-badge badge-blue">Module 4</span>
+                      <h4 className="pillar-main-title">Publication & Viralité des Formats Courts</h4>
+                    </div>
+                  </div>
+                  <p className="pillar-detail-text">
+                    Les techniques pour poster efficacement, attirer l'algorithme TikTok, Reels et Shorts et faire grimper rapidement votre audience.
+                  </p>
                 </div>
               </div>
 
@@ -757,6 +752,88 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
           </div>
         </div>
       </div>
+
+      {/* ====================================================================
+          LIGHTBOX MODAL PLEIN ÉCRAN POUR FEUILLETER LES IMAGES PROPREMENT
+          AFFICHE L'IMAGE ENTIÈRE SANS AUCUNE DESCRIPTION, AVEC BOUTON SUIVANT
+          ==================================================================== */}
+      {lightbox && (
+        <div 
+          className="formation-lightbox-backdrop" 
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visionneuse d'exemples"
+        >
+          <div 
+            className="formation-lightbox-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Barre supérieure : compteur & croix de fermeture */}
+            <div className="lightbox-modal-header">
+              <div className="lightbox-counter-badge">
+                {lightbox.type === 'bd' ? '🎨 Feuilleton Illustré' : '🎬 Extrait Vidéo IA'} • {lightbox.index + 1} / {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length}
+              </div>
+              <button 
+                className="lightbox-modal-close"
+                onClick={() => setLightbox(null)}
+                aria-label="Fermer la vue"
+                title="Fermer (Échap)"
+              >
+                <X size={18} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            {/* Zone d'affichage : Image toute entière et propre, sans description */}
+            <div className="lightbox-modal-viewport">
+              <img 
+                src={(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY)[lightbox.index].img}
+                alt={`Scène ${lightbox.index + 1}`}
+                className="lightbox-view-img"
+              />
+            </div>
+
+            {/* Barre de navigation inférieure : bouton Précédent et Suivant simples */}
+            <div className="lightbox-modal-nav">
+              <button 
+                type="button"
+                className="lightbox-nav-btn prev-btn"
+                onClick={handlePrevSlide}
+                aria-label="Image précédente"
+              >
+                <ChevronLeft size={16} />
+                <span>Précédent</span>
+              </button>
+              
+              {/* Puces indicatrices discrètes */}
+              <div className="lightbox-nav-dots">
+                {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).map((item, idx) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`lightbox-nav-dot ${idx === lightbox.index ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightbox((prev) => ({ ...prev, index: idx }));
+                    }}
+                    aria-label={`Aller à la scène ${idx + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button 
+                type="button"
+                className="lightbox-nav-btn next-btn"
+                onClick={handleNextSlide}
+                aria-label="Image suivante"
+              >
+                <span>Suivant</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

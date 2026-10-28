@@ -44,7 +44,8 @@ import {
   MessageCircle,
   CreditCard,
   Mail,
-  Phone
+  Phone,
+  KeyRound
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
@@ -207,6 +208,32 @@ export function AdminDashboard({ onClose }) {
     if (window.confirm(`Supprimer définitivement le promoteur avec le code ${promoCode} ?\n\nCette action est irréversible.`)) {
       storageService.deletePromoter(promoterId);
       refreshData();
+    }
+  };
+
+  const handleAdminResetPassword = async (p) => {
+    const promptVal = window.prompt(
+      `Réinitialisation du mot de passe pour ${p.prenom} ${p.nom} (Code: ${p.codePromo}) :\n\n- Tapez un nouveau mot de passe pour le définir maintenant (au moins 4 caractères)\n- OU laissez VIDE et validez pour remettre à zéro (le promoteur pourra en créer un nouveau à sa prochaine connexion).`,
+      ""
+    );
+    if (promptVal === null) return;
+
+    const newPass = promptVal.trim();
+    if (newPass && newPass.length < 4) {
+      alert("Le mot de passe doit comporter au moins 4 caractères.");
+      return;
+    }
+
+    const res = await storageService.adminResetPromoterPassword(p.id, newPass);
+    if (res.success) {
+      alert(
+        newPass
+          ? `Nouveau mot de passe enregistré pour ${p.prenom} !`
+          : `Compte remis à zéro ! ${p.prenom} pourra définir son mot de passe directement à sa prochaine connexion.`
+      );
+      refreshData();
+    } else {
+      alert(`Erreur : ${res.error || "Impossible de réinitialiser le mot de passe."}`);
     }
   };
 
@@ -2039,6 +2066,14 @@ export function AdminDashboard({ onClose }) {
                                     title="Copier le message complet WhatsApp avec le lien pour le promoteur"
                                   >
                                     <Share2 size={13} />
+                                  </button>
+
+                                  <button 
+                                    className="btn-icon-tool key"
+                                    onClick={() => handleAdminResetPassword(p)}
+                                    title="Réinitialiser ou modifier le mot de passe de ce promoteur"
+                                  >
+                                    <KeyRound size={13} />
                                   </button>
 
                                   <button 

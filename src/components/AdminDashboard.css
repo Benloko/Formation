@@ -1531,6 +1531,17 @@
   color: #ffffff;
 }
 
+.btn-icon-tool.key {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.25);
+  color: #facc15;
+}
+
+.btn-icon-tool.key:hover {
+  background: rgba(234, 179, 8, 0.25);
+  color: #ffffff;
+}
+
 .btn-icon-tool.delete {
   color: #f87171;
   background: rgba(239, 68, 68, 0.08);

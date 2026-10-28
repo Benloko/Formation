@@ -1210,6 +1210,29 @@ export const storageService = {
     }
   },
 
+  // Réinitialiser ou définir le mot de passe d'un promoteur par l'admin
+  adminResetPromoterPassword: async (promoterId, newPassword = '') => {
+    try {
+      const res = await apiRequest('admin_reset_promoter_password', {
+        promoterId,
+        password: String(newPassword).trim()
+      });
+      if (res.success) {
+        const list = storageService.getAllPromoters();
+        const idx = list.findIndex(p => p.id === promoterId);
+        if (idx !== -1) {
+          list[idx].password = newPassword ? String(newPassword).trim() : null;
+          list[idx].passwordSetAt = newPassword ? new Date().toISOString() : null;
+          localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+          window.dispatchEvent(new Event('storage'));
+        }
+      }
+      return res;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
   // Vérifier la connexion du promoteur
   verifyPromoterLogin: (promoterId, password) => {
     const promoter = storageService.getPromoterById(promoterId);

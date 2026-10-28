@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/smtp.php';
 
 try {
     $pdo = getDatabaseConnection();
@@ -284,6 +285,26 @@ switch ($action) {
         echo json_encode(['success' => true, 'promoter' => $p]);
         exit;
 
+    // Réinitialisation ou modification du mot de passe par l'administrateur
+    case 'admin_reset_promoter_password':
+        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $newPassword = trim($inputData['password'] ?? '');
+        if (empty($promoterId)) {
+            echo json_encode(['success' => false, 'error' => 'Identifiant promoteur requis.']);
+            exit;
+        }
+        if (empty($newPassword)) {
+            // Remise à zéro : le compte redevient "En attente" et le promoteur configurera son mot de passe à sa prochaine visite
+            $stmt = $pdo->prepare("UPDATE promoters SET password = NULL, password_set_at = NULL, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ?");
+            $stmt->execute([$promoterId]);
+        } else {
+            $now = date('d/m/Y, H:i');
+            $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ?");
+            $stmt->execute([$newPassword, $now, $promoterId]);
+        }
+        echo json_encode(['success' => true]);
+        exit;
+
     // -------------------------------------------------------------------------
     // 4c. Mise à jour profil de retrait (Gmail de récupération + Numéro Mobile Money)
     // -------------------------------------------------------------------------
@@ -401,15 +422,18 @@ switch ($action) {
         </body>
         </html>';
 
-        $headers = [];
-        $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'Content-type: text/html; charset=UTF-8';
-        $headers[] = 'From: Mr Ben Formations <no-reply@gpower-store.com>';
-        $headers[] = 'Reply-To: contact@gpower-store.com';
-        $headers[] = 'X-Mailer: PHP/' . phpversion();
+        // Envoi réel via SMTP sécurisé (Hostinger / Gmail)
+        $mailRes = sendSmtpMail($targetEmail, $subject, $htmlMessage);
+        $mailSuccess = !empty($mailRes['success']);
 
-        // Envoi réel
-        $mailSuccess = @mail($targetEmail, $subject, $htmlMessage, implode("\r\n", $headers));
+        if (!$mailSuccess) {
+            $errDetail = $mailRes['error'] ?? "Impossible d'acheminer le courriel.";
+            echo json_encode([
+                'success' => false,
+                'error' => "Échec de l'envoi du code par e-mail : {$errDetail}"
+            ]);
+            exit;
+        }
 
         // Masquer l'adresse pour l'affichage (ex: be***@gmail.com)
         $emailParts = explode('@', $targetEmail);
@@ -419,10 +443,23 @@ switch ($action) {
 
         echo json_encode([
             'success' => true,
-            'message' => "Un code de confirmation a été envoyé sur votre Gmail.",
+            'message' => "Un code de confirmation a été envoyé sur votre adresse Gmail.",
             'maskedEmail' => $maskedEmail,
-            'mailSent' => $mailSuccess
+            'mailSent' => true
         ]);
+        exit;
+
+    // Action de test de la configuration SMTP
+    case 'test_smtp':
+        $to = $inputData['to'] ?? $_GET['to'] ?? '';
+        if (empty($to) || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['success' => false, 'error' => "Veuillez fournir une adresse email valide dans 'to'."]);
+            exit;
+        }
+        $testSubject = "Mr Ben — Test de configuration SMTP";
+        $testMsg = "<h1>Test SMTP Réussi !</h1><p>Votre serveur SMTP Mr Ben fonctionne parfaitement.</p>";
+        $res = sendSmtpMail($to, $testSubject, $testMsg);
+        echo json_encode($res);
         exit;
 
     // -------------------------------------------------------------------------

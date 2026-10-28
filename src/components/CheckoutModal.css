@@ -1808,3 +1808,60 @@
   text-align: left;
 }
 
+/* ==========================================================================
+   STYLE & CENTRAGE PREMIUM DU GUICHET DE PAIEMENT FEDAPAY
+   ========================================================================== */
+
+div[id^="fedapay_modal_"] .modal__overlay,
+.modal.is-open .modal__overlay,
+.modal__overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(7, 8, 12, 0.85) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999999 !important;
+  padding: 1.25rem !important;
+  box-sizing: border-box !important;
+}
+
+div[id^="fedapay_modal_"] .modal__container,
+.modal.is-open .modal__container,
+.modal__container {
+  width: 100% !important;
+  max-width: 440px !important;
+  height: 570px !important;
+  max-height: 88vh !important;
+  background: #ffffff !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  box-shadow: 
+    0 30px 70px -15px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 0 45px rgba(229, 179, 88, 0.25) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  margin: auto !important;
+  box-sizing: border-box !important;
+  animation: fedapayModalPop 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+div[id^="fedapay_modal_"] .modal__iframe,
+.modal.is-open .modal__iframe,
+.modal__iframe {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  border: none !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  display: block !important;
+}
+
+

@@ -15,14 +15,30 @@
           if (isAndroid && isInApp && !sessionStorage.getItem('mrben_skip_inapp_guard')) {
             var host = window.location.host;
             var path = window.location.pathname;
-            var search = window.location.search || '';
-            var hash = window.location.hash ? window.location.hash.replace('#', '') : '';
-            if (hash) {
-              var sp = new URLSearchParams(search);
-              if (!sp.has('tab')) sp.set('tab', hash);
-              search = '?' + sp.toString();
+            var sp = new URLSearchParams(window.location.search || '');
+
+            // Si le hash contient des paramètres (ex: #formations?promo=... ou #?promo=...)
+            var rawHash = window.location.hash || '';
+            if (rawHash.indexOf('?') !== -1) {
+              var hashParts = rawHash.split('?');
+              var hashTab = hashParts[0].replace('#', '');
+              if (hashTab && !sp.has('tab')) sp.set('tab', hashTab);
+              var hashParams = new URLSearchParams(hashParts[1]);
+              hashParams.forEach(function(val, key) {
+                if (!sp.has(key)) sp.set(key, val);
+              });
+            } else if (rawHash) {
+              var cleanTab = rawHash.replace('#', '');
+              if (cleanTab && !sp.has('tab')) sp.set('tab', cleanTab);
             }
-            var intentUrl = 'intent://' + host + path + search + '#Intent;scheme=https;action=android.intent.action.VIEW;end;';
+
+            // S'il y a un code promo, ouvrir directement le livre de formation
+            if ((sp.has('promo') || sp.has('code')) && !sp.has('tab')) {
+              sp.set('tab', 'formations');
+            }
+
+            var queryString = sp.toString() ? ('?' + sp.toString()) : '';
+            var intentUrl = 'intent://' + host + path + queryString + '#Intent;scheme=https;action=android.intent.action.VIEW;end;';
             window.location.replace(intentUrl);
           }
         } catch (e) {}

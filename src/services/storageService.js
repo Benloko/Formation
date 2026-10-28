@@ -973,19 +973,19 @@ export const storageService = {
       let promo = null;
       let params = null;
 
-      // 1. Depuis window.location.search (?promo=...)
+      // 1. Depuis window.location.search (?promo=... ou ?code=...)
       if (typeof window !== 'undefined' && window.location.search) {
         params = new URLSearchParams(window.location.search);
-        promo = params.get('promo');
+        promo = params.get('promo') || params.get('code');
       }
 
       // 2. Depuis window.location.hash (#formations?promo=... ou #?promo=...)
-      if (!promo && typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('promo=')) {
+      if (!promo && typeof window !== 'undefined' && window.location.hash && (window.location.hash.includes('promo=') || window.location.hash.includes('code='))) {
         const queryStr = window.location.hash.includes('?') 
           ? window.location.hash.split('?')[1] 
           : window.location.hash.replace('#', '');
         params = new URLSearchParams(queryStr);
-        promo = params.get('promo');
+        promo = params.get('promo') || params.get('code');
       }
 
       if (promo) {
@@ -993,9 +993,11 @@ export const storageService = {
         storageService.setPendingPromoCode(clean);
 
         // Si ce promoteur est transmis via les paramètres du lien mais n'existe pas encore sur cet appareil, l'enregistrer automatiquement
-        if (params && !storageService.getPromoterByCode(clean)) {
-          const pct = Math.max(1, Math.min(90, parseInt(params.get('pct') || '20', 10) || 20));
-          const name = params.get('name') || 'Partenaire';
+        const pct = params ? Math.max(1, Math.min(90, parseInt(params.get('pct') || '20', 10) || 20)) : 20;
+        const name = params ? (params.get('name') || 'Partenaire') : 'Partenaire';
+        
+        const existing = storageService.getPromoterByCode(clean);
+        if (!existing) {
           storageService.createPromoter({
             nom: '',
             prenom: decodeURIComponent(name),
@@ -1007,6 +1009,7 @@ export const storageService = {
           });
         }
 
+        window.dispatchEvent(new CustomEvent('mrben_promo_detected', { detail: { code: clean, pct } }));
         return clean;
       }
     } catch {}
@@ -1253,7 +1256,34 @@ export const storageService = {
   // Calculer et valider un code promo appliqué par un acheteur
   validatePromoCode: (code, bookId) => {
     if (!code) return { valid: false, message: "Veuillez saisir un code promo." };
-    const promoter = storageService.getPromoterByCode(code);
+    const clean = String(code).trim().toUpperCase();
+    let promoter = storageService.getPromoterByCode(clean);
+
+    // Si le promoteur n'est pas encore trouvé (ex: nouveau lien partagé avant synchro cloud complète)
+    if (!promoter) {
+      const pending = storageService.getPendingPromoCode();
+      if (pending && pending.toUpperCase() === clean) {
+        let pct = 20;
+        try {
+          if (typeof window !== 'undefined') {
+            const sp = new URLSearchParams(window.location.search);
+            const rawPct = sp.get('pct');
+            if (rawPct) pct = Math.max(1, Math.min(90, parseInt(rawPct, 10) || 20));
+          }
+        } catch {}
+        promoter = {
+          id: `prom_temp_${clean}`,
+          nom: '',
+          prenom: 'Partenaire',
+          codePromo: clean,
+          reductionPct: pct,
+          commissionPct: 50,
+          targetBookId: 'all',
+          status: 'ACTIF'
+        };
+      }
+    }
+
     if (!promoter) {
       return { valid: false, message: "Ce code promo n'existe pas." };
     }

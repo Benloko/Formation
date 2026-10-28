@@ -75,20 +75,29 @@ export function openInExternalBrowser(customUrl) {
     try {
       const parsed = new URL(currentUrl);
       const hostWithPath = parsed.host + parsed.pathname;
-      const search = parsed.search || '';
-      const hash = parsed.hash ? parsed.hash.replace('#', '') : '';
-      
-      // Si un hash existe (ex: #formations), on l'ajoute comme paramètre 'tab' pour éviter tout conflit de hash dans l'URI intent
-      let queryWithTab = search;
-      if (hash) {
-        const sp = new URLSearchParams(search);
-        if (!sp.has('tab')) {
-          sp.set('tab', hash);
-        }
-        queryWithTab = '?' + sp.toString();
+      const sp = new URLSearchParams(parsed.search || '');
+      const rawHash = parsed.hash || '';
+
+      if (rawHash.includes('?')) {
+        const hashParts = rawHash.split('?');
+        const hashTab = hashParts[0].replace('#', '');
+        if (hashTab && !sp.has('tab')) sp.set('tab', hashTab);
+        const hashParams = new URLSearchParams(hashParts[1]);
+        hashParams.forEach((val, key) => {
+          if (!sp.has(key)) sp.set(key, val);
+        });
+      } else if (rawHash) {
+        const cleanTab = rawHash.replace('#', '');
+        if (cleanTab && !sp.has('tab')) sp.set('tab', cleanTab);
       }
 
-      const intentUrl = `intent://${hostWithPath}${queryWithTab}#Intent;scheme=https;action=android.intent.action.VIEW;end;`;
+      // Si code promo présent, rediriger directement vers la vue formations
+      if ((sp.has('promo') || sp.has('code')) && !sp.has('tab')) {
+        sp.set('tab', 'formations');
+      }
+
+      const queryString = sp.toString() ? ('?' + sp.toString()) : '';
+      const intentUrl = `intent://${hostWithPath}${queryString}#Intent;scheme=https;action=android.intent.action.VIEW;end;`;
       window.location.href = intentUrl;
       return true;
     } catch {

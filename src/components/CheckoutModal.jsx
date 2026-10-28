@@ -60,7 +60,7 @@ function GoogleGIcon() {
   );
 }
 
-export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }) {
+export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, activePromo: propActivePromo }) {
   const activeBook = item || book || { id: 'livre-bd-storytelling', title: "L'Art du Storytelling & BD avec l'IA", price: 2500 };
 
   const isVideo = activeBook?.id === 'livre-videos-ia';
@@ -95,22 +95,31 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining }
   const [isVerifyingCodeInput, setIsVerifyingCodeInput] = useState(false);
 
   // Code Promo Réduction Partenaire
-  const [promoInput, setPromoInput] = useState('');
+  const [promoInput, setPromoInput] = useState(() => (propActivePromo?.code || storageService.getPendingPromoCode() || ''));
   const [promoError, setPromoError] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [appliedPromo, setAppliedPromo] = useState(() => {
+    try {
+      const codeToTry = propActivePromo?.code || storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
+      if (codeToTry) {
+        const res = storageService.validatePromoCode(codeToTry, activeBook.id);
+        if (res.valid) return res;
+      }
+    } catch {}
+    return null;
+  });
 
   useEffect(() => {
     try {
-      const detectedCode = storageService.detectAndSavePromoFromUrl();
-      if (detectedCode) {
-        const res = storageService.validatePromoCode(detectedCode, activeBook.id);
+      const codeToTry = propActivePromo?.code || storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
+      if (codeToTry && !appliedPromo) {
+        const res = storageService.validatePromoCode(codeToTry, activeBook.id);
         if (res.valid) {
           setAppliedPromo(res);
-          setPromoInput(detectedCode.toUpperCase());
+          setPromoInput(codeToTry.toUpperCase());
         }
       }
     } catch {}
-  }, [activeBook?.id]);
+  }, [activeBook?.id, propActivePromo]);
 
   const handleApplyPromo = async (e) => {
     if (e) e.preventDefault();

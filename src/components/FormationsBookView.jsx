@@ -8,24 +8,38 @@ import './FormationsBookView.css';
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
+  const getUrlReductionPct = () => {
+    try {
+      if (typeof window === 'undefined') return 20;
+      let pct = null;
+      if (window.location.search) {
+        pct = new URLSearchParams(window.location.search).get('pct');
+      }
+      if (!pct && window.location.hash && window.location.hash.includes('pct=')) {
+        const queryStr = window.location.hash.includes('?') 
+          ? window.location.hash.split('?')[1] 
+          : window.location.hash.replace('#', '');
+        pct = new URLSearchParams(queryStr).get('pct');
+      }
+      return pct ? Math.max(1, Math.min(90, parseInt(pct, 10) || 20)) : 20;
+    } catch {
+      return 20;
+    }
+  };
+
   const [activePromo, setActivePromo] = useState(() => {
     if (propActivePromo) return propActivePromo;
     try {
-      const hasPromoInUrl = (typeof window !== 'undefined') && (
-        (window.location.search && window.location.search.includes('promo=')) ||
-        (window.location.hash && window.location.hash.includes('promo='))
-      );
-      if (!hasPromoInUrl) return null;
       const code = storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
       if (code) {
         const promoter = storageService.getPromoterByCode(code);
-        if (promoter && promoter.status !== 'BLOQUÉ') {
-          return {
-            code: promoter.codePromo,
-            reductionPct: promoter.reductionPct,
-            targetBookId: promoter.targetBookId
-          };
-        }
+        if (promoter?.status === 'BLOQUÉ') return null;
+        const pct = (promoter && promoter.reductionPct) ? promoter.reductionPct : getUrlReductionPct();
+        return {
+          code: promoter?.codePromo || code,
+          reductionPct: pct,
+          targetBookId: promoter?.targetBookId || 'all'
+        };
       }
     } catch {}
     return null;
@@ -41,27 +55,24 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
     const updatePrices = (e) => {
       setPrices(e.detail || storageService.getFormationPrices());
     };
-    const updatePromo = () => {
+
+    const updatePromo = (e) => {
       try {
-        const hasPromoInUrl = (typeof window !== 'undefined') && (
-          (window.location.search && window.location.search.includes('promo=')) ||
-          (window.location.hash && window.location.hash.includes('promo='))
-        );
-        if (!hasPromoInUrl) {
-          setActivePromo(null);
-          return;
-        }
-        const code = storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
+        const eventDetail = e?.detail;
+        const code = eventDetail?.code || storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
         if (code) {
           const promoter = storageService.getPromoterByCode(code);
-          if (promoter && promoter.status !== 'BLOQUÉ') {
-            setActivePromo({
-              code: promoter.codePromo,
-              reductionPct: promoter.reductionPct,
-              targetBookId: promoter.targetBookId
-            });
+          if (promoter?.status === 'BLOQUÉ') {
+            setActivePromo(null);
             return;
           }
+          const pct = eventDetail?.pct || ((promoter && promoter.reductionPct) ? promoter.reductionPct : getUrlReductionPct());
+          setActivePromo({
+            code: promoter?.codePromo || code,
+            reductionPct: pct,
+            targetBookId: promoter?.targetBookId || 'all'
+          });
+          return;
         }
         setActivePromo(null);
       } catch {

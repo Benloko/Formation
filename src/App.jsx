@@ -19,6 +19,23 @@ import { BOOKS_DATA, DUO_PACK } from './data/booksData';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import './App.css';
 
+// Helper pour récupérer le pourcentage de réduction depuis l'URL
+const getPctFromUrl = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      if (window.location.search) {
+        const sp = new URLSearchParams(window.location.search);
+        if (sp.has('pct')) return Math.max(1, Math.min(90, parseInt(sp.get('pct'), 10) || 20));
+      }
+      if (window.location.hash && window.location.hash.includes('pct=')) {
+        const hsp = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        if (hsp.has('pct')) return Math.max(1, Math.min(90, parseInt(hsp.get('pct'), 10) || 20));
+      }
+    }
+  } catch {}
+  return 20;
+};
+
 // Helper pour synchroniser et analyser l'ancre URL (#formations, #services, #contact, #lecture, etc.) ou paramètres de requête
 const parseHash = () => {
   const hash = window.location.hash || '';
@@ -30,8 +47,12 @@ const parseHash = () => {
     }
   } catch {}
 
-  const cleanHash = (hash || '').toLowerCase();
-  if (hash === '#admin' || tabParam === 'admin') {
+  let cleanHash = (hash || '').toLowerCase();
+  if (cleanHash.includes('?')) {
+    cleanHash = cleanHash.split('?')[0];
+  }
+
+  if (cleanHash === '#admin' || tabParam === 'admin') {
     return { isAdmin: true };
   }
   if (cleanHash.startsWith('#promoteur') || cleanHash.startsWith('#espace-promoteur') || tabParam === 'promoteur') {
@@ -67,6 +88,12 @@ const parseHash = () => {
 export function App() {
   // Restauration intelligente de l'état de navigation au rechargement (F5 / Refresh)
   const getInitialNavigation = () => {
+    // Si l'URL comporte un code promo (?promo=... ou #formations?promo=...), on ouvre DIRECTEMENT la vue Formations !
+    const hasPromoInUrl = (typeof window !== 'undefined') && (
+      (window.location.search && (window.location.search.includes('promo=') || window.location.search.includes('code='))) ||
+      (window.location.hash && (window.location.hash.includes('promo=') || window.location.hash.includes('code=')))
+    );
+
     const fromHash = parseHash();
     if (fromHash?.tab) {
       let book = BOOKS_DATA[0];
@@ -81,6 +108,10 @@ export function App() {
       }
 
       return { tab: fromHash.tab, book };
+    }
+
+    if (hasPromoInUrl) {
+      return { tab: 'FORMATIONS', book: BOOKS_DATA[0] };
     }
 
     try {
@@ -129,8 +160,8 @@ export function App() {
   const [activePromoBanner, setActivePromoBanner] = useState(() => {
     try {
       const hasPromoInUrl = (typeof window !== 'undefined') && (
-        (window.location.search && window.location.search.includes('promo=')) ||
-        (window.location.hash && window.location.hash.includes('promo='))
+        (window.location.search && (window.location.search.includes('promo=') || window.location.search.includes('code='))) ||
+        (window.location.hash && (window.location.hash.includes('promo=') || window.location.hash.includes('code=')))
       );
       if (!hasPromoInUrl) {
         return null;
@@ -138,9 +169,11 @@ export function App() {
       const code = storageService.detectAndSavePromoFromUrl();
       if (code) {
         const promoter = storageService.getPromoterByCode(code);
-        if (promoter && promoter.status !== 'BLOQUÉ') {
-          return { code, reductionPct: promoter.reductionPct };
+        if (promoter?.status === 'BLOQUÉ') {
+          return null;
         }
+        const pct = (promoter && promoter.reductionPct) ? promoter.reductionPct : getPctFromUrl();
+        return { code, reductionPct: pct, targetBookId: promoter?.targetBookId || 'all' };
       }
     } catch {}
     return null;
@@ -161,8 +194,8 @@ export function App() {
     const checkPromo = () => {
       try {
         const hasPromoInUrl = (typeof window !== 'undefined') && (
-          (window.location.search && window.location.search.includes('promo=')) ||
-          (window.location.hash && window.location.hash.includes('promo='))
+          (window.location.search && (window.location.search.includes('promo=') || window.location.search.includes('code='))) ||
+          (window.location.hash && (window.location.hash.includes('promo=') || window.location.hash.includes('code=')))
         );
         if (!hasPromoInUrl) {
           setActivePromoBanner(null);
@@ -171,10 +204,13 @@ export function App() {
         const code = storageService.detectAndSavePromoFromUrl();
         if (code) {
           const promoter = storageService.getPromoterByCode(code);
-          if (promoter && promoter.status !== 'BLOQUÉ') {
-            setActivePromoBanner({ code, reductionPct: promoter.reductionPct });
+          if (promoter?.status === 'BLOQUÉ') {
+            setActivePromoBanner(null);
             return;
           }
+          const pct = (promoter && promoter.reductionPct) ? promoter.reductionPct : getPctFromUrl();
+          setActivePromoBanner({ code, reductionPct: pct, targetBookId: promoter?.targetBookId || 'all' });
+          return;
         }
         setActivePromoBanner(null);
       } catch {
@@ -186,8 +222,18 @@ export function App() {
       setActivePromoBanner(null);
     };
 
+    const onPromoDetected = (e) => {
+      const code = e.detail?.code;
+      const pct = e.detail?.pct || getPctFromUrl();
+      if (code) {
+        setActivePromoBanner({ code, reductionPct: pct });
+      }
+    };
+
     checkPromo();
     window.addEventListener('hashchange', checkPromo);
+    window.addEventListener('mrben_promo_detected', onPromoDetected);
+    window.addEventListener('mrben_promo_cleared', onPromoCleared);
     window.addEventListener('mrben_promo_detected', checkPromo);
     window.addEventListener('mrben_promo_cleared', onPromoCleared);
     return () => {
@@ -548,6 +594,7 @@ export function App() {
         <CheckoutModal 
           book={selectedBookForAction}
           item={selectedBookForAction}
+          activePromo={activePromoBanner}
           onClose={handleCloseCheckout}
           onOpenTraining={(book) => {
             if (book) setSelectedBookForAction(book);

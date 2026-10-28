@@ -24,7 +24,8 @@ import {
   Mail,
   KeyRound,
   X,
-  RotateCcw
+  RotateCcw,
+  MessageCircle
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import './PromoterPortal.css';
@@ -111,6 +112,7 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   const [recoveryError, setRecoveryError] = useState('');
   const [recoverySuccess, setRecoverySuccess] = useState('');
   const [recoveredGmail, setRecoveredGmail] = useState('');
+  const [recoveryEmailInput, setRecoveryEmailInput] = useState('');
 
   // États d'action
   const [copiedItem, setCopiedItem] = useState(null);
@@ -272,9 +274,14 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   const handleSendRecoveryCode = async () => {
     setRecoveryError('');
     setRecoverySuccess('');
-    setIsSendingCode(true);
 
-    const targetEmail = promoter?.email || selectedGmail;
+    const targetEmail = (promoter?.email || recoveryEmailInput || selectedGmail || '').trim();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setRecoveryError("Veuillez renseigner une adresse Gmail valide.");
+      return;
+    }
+
+    setIsSendingCode(true);
     const res = await storageService.sendPromoterResetCode(
       promoter?.id, 
       targetEmail, 
@@ -283,7 +290,7 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     setIsSendingCode(false);
 
     if (res.success) {
-      setMaskedGmail(res.maskedEmail || targetEmail || '');
+      setMaskedGmail(res.maskedEmail || targetEmail);
       setRecoveryStep('verify');
       setRecoverySuccess(res.message || "Un code de confirmation à 6 chiffres a été envoyé sur votre adresse Gmail.");
     } else {
@@ -522,12 +529,33 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
               {recoveryStep === 'request' ? (
                 /* ÉTAPE A : ENVOI DU CODE SUR LE GMAIL */
                 <div className="recovery-inner-col">
-                  <div className="auth-notice-alert">
-                    <Mail size={16} />
-                    <span>
-                      Cliquez ci-dessous pour recevoir un <strong>code de confirmation à 6 chiffres</strong> sur votre compte Gmail (<strong>{promoter.email || promoter.prenom}</strong>).
-                    </span>
-                  </div>
+                  {promoter.email ? (
+                    <div className="auth-notice-alert">
+                      <Mail size={16} />
+                      <span>
+                        Cliquez ci-dessous pour recevoir un <strong>code de confirmation à 6 chiffres</strong> sur votre compte Gmail (<strong>{promoter.email}</strong>).
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="auth-notice-alert">
+                        <Mail size={16} />
+                        <span>
+                          Saisissez votre compte Gmail pour recevoir votre <strong>code de confirmation à 6 chiffres</strong>.
+                        </span>
+                      </div>
+                      <div className="auth-input-group" style={{ marginBottom: '1rem', textAlign: 'left' }}>
+                        <label style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: '600' }}>Votre adresse Gmail :</label>
+                        <input 
+                          type="email" 
+                          placeholder="Ex: votrecompte@gmail.com" 
+                          value={recoveryEmailInput} 
+                          onChange={(e) => setRecoveryEmailInput(e.target.value)} 
+                          required 
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <p className="auth-step-instruction">
                     Ce code sécurisé vous permettra de valider votre identité et de définir immédiatement votre nouveau mot de passe.
@@ -563,6 +591,17 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                     </svg>
                     <span>Valider directement avec Google</span>
                   </button>
+
+                  <a 
+                    href={`https://wa.me/2290199728385?text=${encodeURIComponent("Bonjour Mr Ben, j'ai besoin d'aide pour réinitialiser mon mot de passe partenaire (Code promo: " + (promoter?.codePromo || "") + ").")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-whatsapp-direct-assist"
+                    title="Contacter Mr Ben sur WhatsApp"
+                  >
+                    <MessageCircle size={15} />
+                    <span>Besoin d'aide ? Écrire à Mr Ben</span>
+                  </a>
 
                   <button 
                     type="button" 

@@ -982,6 +982,31 @@
   transform: translateY(-1px);
 }
 
+.btn-whatsapp-direct-assist {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  background: rgba(37, 211, 102, 0.1);
+  border: 1px solid rgba(37, 211, 102, 0.25);
+  border-radius: 7px;
+  color: #86efac;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.btn-whatsapp-direct-assist:hover {
+  background: rgba(37, 211, 102, 0.2);
+  color: #ffffff;
+  border-color: rgba(37, 211, 102, 0.45);
+}
+
 /* Compte Gmail Validé */
 .verified-gmail-box {
   display: flex;

@@ -23,8 +23,8 @@ define('FEDAPAY_ENVIRONMENT', 'live');
 define('SMTP_HOST', 'smtp.hostinger.com');
 define('SMTP_PORT', 465);
 define('SMTP_SECURE', 'ssl');
-define('SMTP_USER', ''); // Ex: contact@gpower-store.com ou mrbenofficiel6@gmail.com
-define('SMTP_PASS', ''); // Mot de passe du compte mail ou Mot de passe d'application Gmail
-define('SMTP_FROM_EMAIL', ''); // Adresse expéditeur (souvent identique à SMTP_USER)
+define('SMTP_USER', 'ben@gpower-store.com');
+define('SMTP_PASS', 'Ben@20000');
+define('SMTP_FROM_EMAIL', 'ben@gpower-store.com');
 define('SMTP_FROM_NAME', 'Mr Ben — Formations IA');
 

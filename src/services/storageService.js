@@ -1163,6 +1163,40 @@ export const storageService = {
     }
   },
 
+  // Trouver et valider un promoteur avec son compte Google vérifié
+  findPromoterByGoogle: async (email, codePromo = '') => {
+    try {
+      const res = await apiRequest('find_promoter_by_google', {
+        email: String(email).trim().toLowerCase(),
+        codePromo: String(codePromo).trim().toUpperCase()
+      });
+      if (res.success && res.promoter) {
+        const list = storageService.getAllPromoters();
+        const idx = list.findIndex(p => p.id === res.promoter.id);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], ...res.promoter };
+        } else {
+          list.push(res.promoter);
+        }
+        localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+        window.dispatchEvent(new Event('storage'));
+      }
+      return res;
+    } catch (err) {
+      // Fallback local
+      const list = storageService.getAllPromoters();
+      const cleanEmail = String(email).trim().toLowerCase();
+      const p = list.find(item => item.email && item.email.toLowerCase() === cleanEmail);
+      if (p) {
+        return { success: true, promoter: p };
+      }
+      return { 
+        success: false, 
+        error: `Ce compte Google (${email}) n'est associé à aucun compte promoteur officiel.` 
+      };
+    }
+  },
+
   // Envoyer un code de confirmation par e-mail au Gmail du promoteur
   sendPromoterResetCode: async (promoterId, email = '', codePromo = '') => {
     try {

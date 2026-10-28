@@ -325,6 +325,76 @@ switch ($action) {
         exit;
 
     // -------------------------------------------------------------------------
+    // 4d. Identification et validation directe d'un promoteur par son compte Google
+    // -------------------------------------------------------------------------
+    case 'find_promoter_by_google':
+        $email = strtolower(trim($inputData['email'] ?? ''));
+        $codePromo = strtoupper(trim($inputData['codePromo'] ?? $inputData['promo'] ?? ''));
+        if (empty($email)) {
+            echo json_encode(['success' => false, 'error' => "Adresse Gmail requise."]);
+            exit;
+        }
+
+        // 1. Chercher si un promoteur possède déjà cette adresse Gmail
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE LOWER(email) = ?");
+        $stmt->execute([$email]);
+        $p = $stmt->fetch();
+
+        // 2. Si non trouvé par email, mais un code promo spécifique est fourni
+        if (!$p && !empty($codePromo)) {
+            $stmt = $pdo->prepare("SELECT * FROM promoters WHERE UPPER(code_promo) = ?");
+            $stmt->execute([$codePromo]);
+            $candidate = $stmt->fetch();
+            if ($candidate && (empty($candidate['email']) || strtolower(trim($candidate['email'])) === $email)) {
+                $stmt = $pdo->prepare("UPDATE promoters SET email = ? WHERE id = ?");
+                $stmt->execute([$email, $candidate['id']]);
+                $candidate['email'] = $email;
+                $p = $candidate;
+            }
+        }
+
+        if (!$p) {
+            echo json_encode([
+                'success' => false, 
+                'error' => "Ce compte Google ({$email}) n'est associé à aucun compte promoteur officiel."
+            ]);
+            exit;
+        }
+
+        if ($p['status'] === 'BLOQUÉ') {
+            echo json_encode([
+                'success' => false, 
+                'error' => "Ce compte promoteur est actuellement bloqué par l'administration."
+            ]);
+            exit;
+        }
+
+        $phone = !empty($p['whatsapp']) ? $p['whatsapp'] : (!empty($p['payout_phone']) ? $p['payout_phone'] : '');
+        $promoterData = [
+            'id' => $p['id'],
+            'prenom' => $p['prenom'],
+            'nom' => $p['nom'],
+            'codePromo' => $p['code_promo'],
+            'reductionPct' => (int)($p['reduction_pct'] ?? 20),
+            'commissionPct' => (int)($p['commission_pct'] ?? 50),
+            'targetBookId' => $p['target_book_id'] ?? 'all',
+            'salesCount' => (int)($p['sales_count'] ?? 0),
+            'totalEarned' => (int)($p['total_earned'] ?? 0),
+            'email' => $p['email'],
+            'whatsapp' => $phone,
+            'payoutPhone' => $phone,
+            'password' => $p['password'],
+            'status' => $p['status'] ?? 'ACTIF',
+            'salesHistory' => json_decode($p['sales_history'] ?? '[]', true) ?: []
+        ];
+
+        echo json_encode([
+            'success' => true,
+            'promoter' => $promoterData
+        ]);
+        exit;
+
+    // -------------------------------------------------------------------------
     // 4d. Envoi d'un code de confirmation par e-mail à l'adresse Gmail du promoteur
     // -------------------------------------------------------------------------
     case 'send_promoter_reset_code':

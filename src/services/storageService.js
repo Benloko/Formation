@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   ADMIN_CODES: "mrben_admin_generated_codes",
   FORMATION_PRICES: "mrben_formation_prices",
   FORMATION_ORIGINAL_PRICES: "mrben_formation_original_prices",
+  ADMIN_PASSWORD: "mrben_admin_pwd",
   PROMOTERS: "mrben_promoters_list",
   PENDING_PROMO: "mrben_pending_promo_code"
 };
@@ -986,6 +987,61 @@ export const storageService = {
     } catch {
       return { prices: DEFAULT_PRICES, originalPrices: DEFAULT_ORIGINAL_PRICES };
     }
+  },
+
+  // =========================================================================
+  // GESTION DU MOT DE PASSE ADMINISTRATEUR MR BEN
+  // =========================================================================
+  verifyAdminPassword: async (password) => {
+    const clean = String(password || '').trim();
+    if (!clean) return { success: false, message: 'Veuillez saisir votre mot de passe.' };
+
+    try {
+      const res = await apiRequest('verify_admin_password', { password: clean });
+      if (res && res.success) {
+        localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, clean);
+        return { success: true };
+      } else if (res && res.message) {
+        return { success: false, message: res.message };
+      }
+    } catch {}
+
+    // Fallback local sécurisé si pas de connexion internet
+    const localSaved = localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD);
+    if (localSaved ? (clean === localSaved) : (clean === 'ben2026')) {
+      return { success: true };
+    }
+    return { success: false, message: 'Mot de passe administrateur incorrect.' };
+  },
+
+  updateAdminPassword: async (currentPassword, newPassword) => {
+    const current = String(currentPassword || '').trim();
+    const next = String(newPassword || '').trim();
+
+    if (!next) return { success: false, message: 'Le nouveau mot de passe ne peut pas être vide.' };
+    if (next.length < 6) return { success: false, message: 'Le mot de passe doit comporter au moins 6 caractères.' };
+
+    try {
+      const res = await apiRequest('update_admin_password', {
+        currentPassword: current,
+        newPassword: next
+      });
+      if (res && res.success) {
+        localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, next);
+        return { success: true, message: res.message || 'Mot de passe modifié avec succès !' };
+      } else if (res && res.message) {
+        return { success: false, message: res.message };
+      }
+    } catch {}
+
+    // Fallback local si serveur inaccessible
+    const localSaved = localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD);
+    const isCurrentValid = localSaved ? (current === localSaved) : (current === 'ben2026');
+    if (!isCurrentValid) {
+      return { success: false, message: 'Le mot de passe actuel est incorrect.' };
+    }
+    localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, next);
+    return { success: true, message: 'Mot de passe modifié avec succès !' };
   },
 
   // =========================================================================

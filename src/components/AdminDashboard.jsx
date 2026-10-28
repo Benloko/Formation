@@ -46,7 +46,11 @@ import {
   Mail,
   Phone,
   KeyRound,
-  RotateCcw
+  RotateCcw,
+  EyeOff,
+  ShieldCheck,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
@@ -114,6 +118,18 @@ export function AdminDashboard({ onClose }) {
   const [formationOriginalPrices, setFormationOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
   const [originalPriceInputs, setOriginalPriceInputs] = useState(() => storageService.getFormationOriginalPrices());
   const [priceSuccessMsg, setPriceSuccessMsg] = useState('');
+
+  // Sécurité & Modification du mot de passe Administrateur
+  const [isVerifyingLogin, setIsVerifyingLogin] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   // Statistiques de visites & Analytics réels
   const [analyticsPeriod, setAnalyticsPeriod] = useState('7d');
@@ -343,16 +359,82 @@ export function AdminDashboard({ onClose }) {
     }
   }, [isAuthenticated]);
 
-  const handleLogin = (e) => {
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return { level: 0, label: '', color: '' };
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (pwd.length >= 12) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+    if (score <= 2) return { level: 1, label: 'Faible', color: '#f87171' };
+    if (score <= 4) return { level: 2, label: 'Robuste', color: '#fbbf24' };
+    return { level: 3, label: 'Très sécurisé (Idéal)', color: '#34d399' };
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (pinCode.trim() === 'ben2026') {
+    if (!pinCode.trim()) {
+      setPinError("Veuillez saisir votre mot de passe.");
+      return;
+    }
+    setIsVerifyingLogin(true);
+    setPinError('');
+    const res = await storageService.verifyAdminPassword(pinCode.trim());
+    setIsVerifyingLogin(false);
+    if (res.success) {
       try {
         sessionStorage.setItem('mrben_admin_session', 'active');
       } catch {}
       setIsAuthenticated(true);
       setPinError('');
     } else {
-      setPinError("Code incorrect.");
+      setPinError(res.message || "Mot de passe incorrect.");
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+
+    if (!currentPasswordInput) {
+      setPasswordChangeError("Veuillez saisir votre mot de passe actuel.");
+      return;
+    }
+    if (!newPasswordInput) {
+      setPasswordChangeError("Veuillez saisir votre nouveau mot de passe.");
+      return;
+    }
+    if (newPasswordInput.length < 6) {
+      setPasswordChangeError("Le nouveau mot de passe doit comporter au moins 6 caractères.");
+      return;
+    }
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordChangeError("Les deux nouveaux mots de passe ne correspondent pas.");
+      return;
+    }
+    if (newPasswordInput === currentPasswordInput) {
+      setPasswordChangeError("Le nouveau mot de passe doit être différent de l'actuel.");
+      return;
+    }
+
+    setIsSubmittingPassword(true);
+    const res = await storageService.updateAdminPassword(currentPasswordInput, newPasswordInput);
+    setIsSubmittingPassword(false);
+
+    if (res.success) {
+      setPasswordChangeSuccess("✅ Mot de passe modifié avec succès ! Pensez à bien le conserver.");
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setPasswordChangeSuccess('');
+      }, 2200);
+    } else {
+      setPasswordChangeError(res.message || "Erreur lors de la modification du mot de passe.");
     }
   };
 
@@ -484,14 +566,24 @@ export function AdminDashboard({ onClose }) {
             <form onSubmit={handleLogin} className="lock-input-group">
               <input 
                 type="password" 
-                placeholder="Mot de passe (ben2026)"
+                placeholder="Votre mot de passe secret"
                 value={pinCode}
                 onChange={(e) => setPinCode(e.target.value)}
                 autoFocus
+                disabled={isVerifyingLogin}
               />
-              <button type="submit" className="lock-btn-submit">
-                <span>Ouvrir</span>
-                <ArrowRight size={14} />
+              <button type="submit" className="lock-btn-submit" disabled={isVerifyingLogin}>
+                {isVerifyingLogin ? (
+                  <>
+                    <Loader2 size={14} className="spin-icon" />
+                    <span>Vérification...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Ouvrir</span>
+                    <ArrowRight size={14} />
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -605,6 +697,23 @@ export function AdminDashboard({ onClose }) {
               <div className="sidebar-tools-row">
                 <button 
                   className="btn-side-tool"
+                  onClick={() => {
+                    setPasswordChangeError('');
+                    setPasswordChangeSuccess('');
+                    setCurrentPasswordInput('');
+                    setNewPasswordInput('');
+                    setConfirmPasswordInput('');
+                    setIsPasswordModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  title="Modifier le mot de passe administrateur"
+                >
+                  <KeyRound size={15} />
+                  <span>Sécurité</span>
+                </button>
+
+                <button 
+                  className="btn-side-tool"
                   onClick={handleLogout}
                   title="Déconnexion de l'administration"
                 >
@@ -662,8 +771,25 @@ export function AdminDashboard({ onClose }) {
                 </div>
               </div>
 
-              {/* Boutons icônes uniquement pour un rendu propre et épuré */}
+              {/* Boutons d'actions rapides */}
               <div className="header-icon-actions">
+                <button 
+                  type="button"
+                  className="btn-header-security"
+                  onClick={() => {
+                    setPasswordChangeError('');
+                    setPasswordChangeSuccess('');
+                    setCurrentPasswordInput('');
+                    setNewPasswordInput('');
+                    setConfirmPasswordInput('');
+                    setIsPasswordModalOpen(true);
+                  }}
+                  title="Modifier le mot de passe administrateur"
+                >
+                  <ShieldCheck size={14} className="text-gold" />
+                  <span>Mot de passe</span>
+                </button>
+
                 <button 
                   className={`btn-icon-only ${isRefreshing ? 'refresh-spin' : ''}`}
                   onClick={refreshData}
@@ -2705,6 +2831,158 @@ export function AdminDashboard({ onClose }) {
                 </div>
               )}
 
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Modale Sécurité / Modification du mot de passe Admin */}
+      {isPasswordModalOpen && (() => {
+        const pwdStrength = getPasswordStrength(newPasswordInput);
+        return (
+          <div className="modal-overlay-backdrop" onClick={() => !isSubmittingPassword && setIsPasswordModalOpen(false)}>
+            <div className="modal-dialog-box security" onClick={(e) => e.stopPropagation()}>
+              <div className="dialog-header">
+                <div className="dialog-title-flex">
+                  <div className="security-icon-bubble">
+                    <ShieldCheck size={16} />
+                  </div>
+                  <div>
+                    <h4>Sécurité de la Console</h4>
+                    <span className="security-modal-sub">Modifier le mot de passe administrateur</span>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  className="btn-dialog-close" 
+                  onClick={() => !isSubmittingPassword && setIsPasswordModalOpen(false)}
+                  title="Fermer"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdatePassword} className="dialog-form-flow">
+                {passwordChangeError && (
+                  <div className="security-alert-box error">
+                    <AlertCircle size={14} />
+                    <span>{passwordChangeError}</span>
+                  </div>
+                )}
+
+                {passwordChangeSuccess && (
+                  <div className="security-alert-box success">
+                    <CheckCircle2 size={14} />
+                    <span>{passwordChangeSuccess}</span>
+                  </div>
+                )}
+
+                {/* Champ 1 : Mot de passe actuel */}
+                <div className="dialog-field">
+                  <label htmlFor="curr-pwd">Mot de passe actuel :</label>
+                  <div className="dialog-pwd-wrap">
+                    <input 
+                      id="curr-pwd"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPasswordInput}
+                      onChange={(e) => { setCurrentPasswordInput(e.target.value); setPasswordChangeError(''); }}
+                      placeholder="Votre mot de passe actuel"
+                      required
+                      autoFocus
+                    />
+                    <button 
+                      type="button" 
+                      className="btn-pwd-eye"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      tabIndex={-1}
+                      title={showCurrentPassword ? "Masquer" : "Afficher"}
+                    >
+                      {showCurrentPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Champ 2 : Nouveau mot de passe */}
+                <div className="dialog-field">
+                  <label htmlFor="new-pwd">Nouveau mot de passe sécurisé :</label>
+                  <div className="dialog-pwd-wrap">
+                    <input 
+                      id="new-pwd"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPasswordInput}
+                      onChange={(e) => { setNewPasswordInput(e.target.value); setPasswordChangeError(''); }}
+                      placeholder="Ex: MonCode@2026_Ultra#Ben"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      className="btn-pwd-eye"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      tabIndex={-1}
+                      title={showNewPassword ? "Masquer" : "Afficher"}
+                    >
+                      {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+
+                  {newPasswordInput && (
+                    <div className="pwd-strength-container">
+                      <div className="pwd-strength-bars">
+                        <div className={`bar ${pwdStrength.level >= 1 ? 'active' : ''}`} style={{ backgroundColor: pwdStrength.level >= 1 ? pwdStrength.color : '' }} />
+                        <div className={`bar ${pwdStrength.level >= 2 ? 'active' : ''}`} style={{ backgroundColor: pwdStrength.level >= 2 ? pwdStrength.color : '' }} />
+                        <div className={`bar ${pwdStrength.level >= 3 ? 'active' : ''}`} style={{ backgroundColor: pwdStrength.level >= 3 ? pwdStrength.color : '' }} />
+                      </div>
+                      <span className="pwd-strength-text" style={{ color: pwdStrength.color }}>
+                        {pwdStrength.label}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Champ 3 : Confirmation */}
+                <div className="dialog-field">
+                  <label htmlFor="confirm-pwd">Confirmer le nouveau mot de passe :</label>
+                  <div className="dialog-pwd-wrap">
+                    <input 
+                      id="confirm-pwd"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={confirmPasswordInput}
+                      onChange={(e) => { setConfirmPasswordInput(e.target.value); setPasswordChangeError(''); }}
+                      placeholder="Retapez à l'identique"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Boutons d'action compacts */}
+                <div className="dialog-buttons-footer">
+                  <button 
+                    type="button" 
+                    className="btn-dialog-cancel" 
+                    onClick={() => setIsPasswordModalOpen(false)}
+                    disabled={isSubmittingPassword}
+                  >
+                    Annuler
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn-dialog-submit gold"
+                    disabled={isSubmittingPassword}
+                  >
+                    {isSubmittingPassword ? (
+                      <>
+                        <Loader2 size={14} className="spin-icon" />
+                        <span>Validation...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check size={14} />
+                        <span>Enregistrer</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         );

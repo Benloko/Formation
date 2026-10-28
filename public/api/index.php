@@ -843,6 +843,85 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Données de prix manquantes.']);
         }
         break;
+
+    // -------------------------------------------------------------------------
+    // 9.1. Vérification du mot de passe administrateur
+    // -------------------------------------------------------------------------
+    case 'verify_admin_password':
+        $password = trim($inputData['password'] ?? '');
+        if ($password === '') {
+            echo json_encode(['success' => false, 'message' => 'Veuillez saisir votre mot de passe.']);
+            break;
+        }
+
+        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'admin_password'");
+        $stmt->execute();
+        $storedRow = $stmt->fetch();
+        $storedHash = $storedRow ? trim($storedRow['setting_value'] ?? '') : '';
+
+        $isValid = false;
+        if (empty($storedHash)) {
+            // Mot de passe par défaut
+            $isValid = ($password === 'ben2026');
+        } else {
+            if (password_verify($password, $storedHash) || $password === $storedHash) {
+                $isValid = true;
+            }
+        }
+
+        if ($isValid) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Mot de passe administrateur incorrect.']);
+        }
+        break;
+
+    // -------------------------------------------------------------------------
+    // 9.2. Mise à jour du mot de passe administrateur
+    // -------------------------------------------------------------------------
+    case 'update_admin_password':
+        $currentPassword = trim($inputData['currentPassword'] ?? '');
+        $newPassword = trim($inputData['newPassword'] ?? '');
+
+        if ($newPassword === '') {
+            echo json_encode(['success' => false, 'message' => 'Le nouveau mot de passe ne peut pas être vide.']);
+            break;
+        }
+        if (strlen($newPassword) < 6) {
+            echo json_encode(['success' => false, 'message' => 'Le mot de passe doit comporter au moins 6 caractères.']);
+            break;
+        }
+
+        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'admin_password'");
+        $stmt->execute();
+        $storedRow = $stmt->fetch();
+        $storedHash = $storedRow ? trim($storedRow['setting_value'] ?? '') : '';
+
+        $isCurrentValid = false;
+        if (empty($storedHash)) {
+            $isCurrentValid = ($currentPassword === 'ben2026');
+        } else {
+            if (password_verify($currentPassword, $storedHash) || $currentPassword === $storedHash) {
+                $isCurrentValid = true;
+            }
+        }
+
+        if (!$isCurrentValid) {
+            echo json_encode(['success' => false, 'message' => 'Le mot de passe actuel est incorrect.']);
+            break;
+        }
+
+        $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('admin_password', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+        try {
+            $stmt->execute([$newHash, $newHash]);
+        } catch (Exception $e) {
+            $stmt = $pdo->prepare("INSERT OR REPLACE INTO settings (setting_key, setting_value) VALUES ('admin_password', ?)");
+            $stmt->execute([$newHash]);
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Mot de passe administrateur mis à jour avec succès.']);
+        break;
     // -------------------------------------------------------------------------
     // 10. Enregistrement d'une visite ou interaction en direct
     // -------------------------------------------------------------------------

@@ -105,9 +105,16 @@ export function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(() => window.location.hash === '#admin');
   const [isPromoterOpen, setIsPromoterOpen] = useState(() => (window.location.hash || '').toLowerCase().startsWith('#promoteur'));
 
-  // Bannière de code promo détecté via lien d'un promoteur
+  // Bannière de code promo détecté via lien d'un promoteur (UNIQUEMENT si l'URL courante comporte un lien promo)
   const [activePromoBanner, setActivePromoBanner] = useState(() => {
     try {
+      const hasPromoInUrl = (typeof window !== 'undefined') && (
+        (window.location.search && window.location.search.includes('promo=')) ||
+        (window.location.hash && window.location.hash.includes('promo='))
+      );
+      if (!hasPromoInUrl) {
+        return null;
+      }
       const code = storageService.detectAndSavePromoFromUrl();
       if (code) {
         const promoter = storageService.getPromoterByCode(code);
@@ -133,24 +140,42 @@ export function App() {
 
     const checkPromo = () => {
       try {
+        const hasPromoInUrl = (typeof window !== 'undefined') && (
+          (window.location.search && window.location.search.includes('promo=')) ||
+          (window.location.hash && window.location.hash.includes('promo='))
+        );
+        if (!hasPromoInUrl) {
+          setActivePromoBanner(null);
+          return;
+        }
         const code = storageService.detectAndSavePromoFromUrl();
         if (code) {
           const promoter = storageService.getPromoterByCode(code);
           if (promoter && promoter.status !== 'BLOQUÉ') {
             setActivePromoBanner({ code, reductionPct: promoter.reductionPct });
+            return;
           }
         }
-      } catch {}
+        setActivePromoBanner(null);
+      } catch {
+        setActivePromoBanner(null);
+      }
+    };
+
+    const onPromoCleared = () => {
+      setActivePromoBanner(null);
     };
 
     checkPromo();
     window.addEventListener('hashchange', checkPromo);
     window.addEventListener('mrben_promo_detected', checkPromo);
+    window.addEventListener('mrben_promo_cleared', onPromoCleared);
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('focus', onWindowFocus);
       window.removeEventListener('hashchange', checkPromo);
       window.removeEventListener('mrben_promo_detected', checkPromo);
+      window.removeEventListener('mrben_promo_cleared', onPromoCleared);
     };
   }, []);
 

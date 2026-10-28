@@ -63,6 +63,22 @@ const DEFAULT_ORDERS = [];
   } catch {}
 })();
 
+// Purge immédiate de tout code promo fantôme bloqué dans localStorage si l'URL ne contient aucun lien promo
+(function purgeGhostPromoCode() {
+  try {
+    if (typeof window !== 'undefined') {
+      const hasPromoInUrl = (
+        (window.location.search && window.location.search.includes('promo=')) ||
+        (window.location.hash && window.location.hash.includes('promo='))
+      );
+      if (!hasPromoInUrl) {
+        localStorage.removeItem(STORAGE_KEYS.PENDING_PROMO);
+        sessionStorage.removeItem(STORAGE_KEYS.PENDING_PROMO);
+      }
+    }
+  } catch {}
+})();
+
 // Base d'accès API Hostinger (avec fallback transparent sur le domaine officiel en local)
 const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
   ? 'https://formation.gpower-store.com/api'
@@ -221,6 +237,7 @@ export const storageService = {
     try {
       localStorage.removeItem("mrben_logged_in_gmail");
       localStorage.removeItem(STORAGE_KEYS.UNLOCKED_CODES);
+      storageService.clearPendingPromoCode();
       sessionStorage.removeItem("mrben_reader_page_livre-bd-storytelling");
       sessionStorage.removeItem("mrben_reader_page_livre-videos-ia");
       return true;
@@ -237,6 +254,7 @@ export const storageService = {
       localStorage.removeItem(STORAGE_KEYS.UNLOCKED_CODES);
       localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER);
       localStorage.removeItem(STORAGE_KEYS.ORDERS);
+      storageService.clearPendingPromoCode();
       return true;
     } catch {
       return false;
@@ -919,34 +937,33 @@ export const storageService = {
   // =========================================================================
   // GESTION DES CODES PROMO & PROMOTEURS (COMMISSION & ESPACE PRIVÉ)
   // =========================================================================
-  // Sauvegarder un code promo provenant du lien du promoteur
+  // Sauvegarder un code promo provenant du lien du promoteur (session uniquement)
   setPendingPromoCode: (code) => {
     try {
       if (!code) return;
       const clean = String(code).trim().toUpperCase();
       sessionStorage.setItem(STORAGE_KEYS.PENDING_PROMO, clean);
-      localStorage.setItem(STORAGE_KEYS.PENDING_PROMO, clean);
+      localStorage.removeItem(STORAGE_KEYS.PENDING_PROMO); // Plus de localStorage permanent
       window.dispatchEvent(new CustomEvent('mrben_promo_detected', { detail: { code: clean } }));
     } catch {}
   },
 
-  // Récupérer le code promo actuellement mémorisé
+  // Récupérer le code promo actuellement mémorisé (uniquement en session active)
   getPendingPromoCode: () => {
     try {
-      const code = sessionStorage.getItem(STORAGE_KEYS.PENDING_PROMO) || 
-                   localStorage.getItem(STORAGE_KEYS.PENDING_PROMO) || 
-                   null;
+      const code = sessionStorage.getItem(STORAGE_KEYS.PENDING_PROMO);
       return code ? String(code).trim().toUpperCase() : null;
     } catch {
       return null;
     }
   },
 
-  // Nettoyer le code promo mémorisé
+  // Nettoyer définitivement le code promo mémorisé
   clearPendingPromoCode: () => {
     try {
       sessionStorage.removeItem(STORAGE_KEYS.PENDING_PROMO);
       localStorage.removeItem(STORAGE_KEYS.PENDING_PROMO);
+      window.dispatchEvent(new CustomEvent('mrben_promo_cleared'));
     } catch {}
   },
 
@@ -993,7 +1010,7 @@ export const storageService = {
         return clean;
       }
     } catch {}
-    return storageService.getPendingPromoCode();
+    return null;
   },
 
   getAllPromoters: () => {

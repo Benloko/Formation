@@ -11,6 +11,11 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
   const [activePromo, setActivePromo] = useState(() => {
     if (propActivePromo) return propActivePromo;
     try {
+      const hasPromoInUrl = (typeof window !== 'undefined') && (
+        (window.location.search && window.location.search.includes('promo=')) ||
+        (window.location.hash && window.location.hash.includes('promo='))
+      );
+      if (!hasPromoInUrl) return null;
       const code = storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
       if (code) {
         const promoter = storageService.getPromoterByCode(code);
@@ -38,6 +43,14 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
     };
     const updatePromo = () => {
       try {
+        const hasPromoInUrl = (typeof window !== 'undefined') && (
+          (window.location.search && window.location.search.includes('promo=')) ||
+          (window.location.hash && window.location.hash.includes('promo='))
+        );
+        if (!hasPromoInUrl) {
+          setActivePromo(null);
+          return;
+        }
         const code = storageService.getPendingPromoCode() || storageService.detectAndSavePromoFromUrl();
         if (code) {
           const promoter = storageService.getPromoterByCode(code);
@@ -51,11 +64,18 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
           }
         }
         setActivePromo(null);
-      } catch {}
+      } catch {
+        setActivePromo(null);
+      }
+    };
+
+    const onPromoCleared = () => {
+      setActivePromo(null);
     };
 
     window.addEventListener('mrben_price_changed', updatePrices);
     window.addEventListener('mrben_promo_detected', updatePromo);
+    window.addEventListener('mrben_promo_cleared', onPromoCleared);
     window.addEventListener('storage', () => {
       setPrices(storageService.getFormationPrices());
       updatePromo();
@@ -63,6 +83,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
     return () => {
       window.removeEventListener('mrben_price_changed', updatePrices);
       window.removeEventListener('mrben_promo_detected', updatePromo);
+      window.removeEventListener('mrben_promo_cleared', onPromoCleared);
     };
   }, []);
 

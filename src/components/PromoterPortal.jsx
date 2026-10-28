@@ -405,8 +405,6 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   const getShareTemplates = (p, link) => {
     const code = p?.codePromo || 'PROMO';
     const pct = p?.reductionPct || 20;
-    const prenom = p?.prenom ? `${p.prenom}` : '';
-    const signature = prenom ? `\n— Partagé par ${prenom}` : '';
 
     return [
       {
@@ -414,28 +412,28 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
         title: '🌟 BD & Storytelling IA',
         badge: 'Recommandé',
         shortDesc: 'Création de BD captivantes et belles images avec l\'IA sur smartphone',
-        message: `Salut ! Tu veux apprendre à concevoir des Bandes Dessinées captivantes et des Belles Images avec l'Intelligence Artificielle ? 🎨📖\n\nMr Ben (Ben Histoire) a préparé une méthode pas à pas, 100% accessible sur smartphone même sans savoir dessiner.\n\n🎁 Grâce à mon partenariat exclusif, profite de -${pct}% de réduction immédiate avec mon code promo : *${code}*\n\n👉 Accède directement aux formations officielles ici :\n${link}${signature}`
+        message: `Apprends à concevoir facilement de superbes Bandes Dessinées et des illustrations captivantes avec l'IA grâce à la méthode de Mr Ben, 100% accessible sur smartphone. Profite de -${pct}% de réduction immédiate en utilisant mon code promo *${code}* sur le lien officiel : ${link}`
       },
       {
         id: 'video',
         title: '🎬 Vidéos TikTok & Reels',
         badge: 'Viral & Vues',
         shortDesc: 'Vidéos virales, animations et personnages cohérents sans abonnement payant',
-        message: `Tu veux faire exploser tes vues et monétiser tes vidéos sur TikTok, Facebook Reels et YouTube Shorts avec l'IA ? 🎬🔥\n\nDécouvre la formation complète de Mr Ben pour créer des personnages cohérents et des animations immersives avec un simple téléphone.\n\n🎁 Profite de -${pct}% de réduction avec mon code partenaire : *${code}*\n\n👉 Découvre le programme et inscris-toi ici :\n${link}${signature}`
+        message: `Découvre comment créer des vidéos ultra virales, animer tes personnages et monétiser tes contenus sur TikTok, Reels et Shorts avec l'IA. Profite de -${pct}% de réduction immédiate en utilisant mon code promo *${code}* sur le lien officiel : ${link}`
       },
       {
         id: 'discount',
         title: '🎁 Bon Plan Réduction -' + pct + '%',
         badge: 'Offre VIP',
         shortDesc: 'Focus direct sur le code promo et l\'économie immédiate',
-        message: `Bonne nouvelle ! 🎉 En tant que partenaire officiel de Mr Ben, je t'offre un accès privilégié avec -${pct}% de réduction immédiate sur toutes les formations officielles (BD, Vidéos IA, Storytelling) !\n\nUtilise mon code promo exclusif lors de ta commande : *${code}*\n\n👉 Clique ici pour voir les formations à prix réduit :\n${link}${signature}`
+        message: `Profite d'une réduction exclusive de -${pct}% sur toutes les formations officielles de Mr Ben (Bandes Dessinées & Vidéos Virales avec l'IA) en utilisant mon code promo *${code}* sur ce lien : ${link}`
       },
       {
         id: 'short',
         title: '⚡ Court & Statut WhatsApp',
         badge: 'Statut / SMS',
         shortDesc: 'Court et concis, parfait pour Statut WhatsApp ou Story Instagram',
-        message: `Apprends à créer des BD et Vidéos virales avec l'IA grâce à Mr Ben 🚀\n🎁 Bénéficie de -${pct}% avec mon code : *${code}*\n👉 Accès direct : ${link}`
+        message: `Formations BD & Vidéos virales avec l'IA par Mr Ben 🚀 Bénéficie de -${pct}% de réduction immédiate en utilisant mon code promo *${code}* ici : ${link}`
       }
     ];
   };
@@ -1237,7 +1235,7 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                 title="Partager sur tous vos réseaux sociaux (WhatsApp, TikTok, Facebook, etc.)"
               >
                 <Share2 size={16} />
-                <span>Partager (WhatsApp, TikTok, Facebook...)</span>
+                <span>Partager</span>
               </button>
 
               <button

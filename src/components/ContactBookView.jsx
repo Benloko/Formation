@@ -43,14 +43,14 @@ export function ContactBookView({ onClose }) {
 
   const handlePromoterWhatsApp = (e) => {
     if (e) e.stopPropagation();
-    const text = encodeURIComponent("Bonjour Mr Ben, je souhaite devenir promoteur officiel et obtenir mon Code Promo personnel pour gagner 1 000 FCFA sur chaque vente.");
+    const text = encodeURIComponent("Bonjour Mr Ben, je souhaite devenir promoteur officiel et obtenir mon Code Promo personnel pour gagner des commissions sur chaque vente.");
     window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
   };
 
   const handlePromoterEmail = (e) => {
     if (e) e.stopPropagation();
     const subject = encodeURIComponent("Demande de Code Promo Promoteur - Mr Ben");
-    const body = encodeURIComponent("Bonjour Mr Ben,\n\nJe souhaite devenir promoteur officiel et obtenir mon propre Code Promo pour recommander vos formations et toucher 1 000 FCFA sur chaque vente.\n\nMerci !");
+    const body = encodeURIComponent("Bonjour Mr Ben,\n\nJe souhaite devenir promoteur officiel et obtenir mon propre Code Promo pour recommander vos formations et toucher mes commissions sur chaque vente.\n\nMerci !");
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
   };
 
@@ -98,14 +98,14 @@ export function ContactBookView({ onClose }) {
                   <div className="round-icon-circle circle-promoter">
                     <Sparkles size={22} />
                   </div>
-                  <span className="round-badge badge-promoter">🌟 Gagnez 1 000 F / Vente</span>
+                  <span className="round-badge badge-promoter">🌟 Gagnez sur chaque vente</span>
                 </div>
 
                 <div className="round-card-content">
                   <h3 className="round-title">Devenez Promoteur Officiel</h3>
-                  <p className="round-coord promoter-highlight">1 000 FCFA cash sur chaque vente</p>
+                  <p className="round-coord promoter-highlight">Gagnez des commissions cash sur chaque vente</p>
                   <p className="round-desc">
-                    Recevez votre <strong>Code Promo officiel</strong> à partager. À chaque achat effectué avec votre code, vous encaissez immédiatement <strong>1 000 FCFA</strong>. Pour l'activer, écrivez-nous :
+                    Recevez votre <strong>Code Promo officiel</strong> à partager. À chaque achat effectué avec votre code, vous encaissez immédiatement vos commissions. Pour l'activer, écrivez-nous :
                   </p>
                 </div>
 

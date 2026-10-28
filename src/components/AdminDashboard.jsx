@@ -210,6 +210,30 @@ export function AdminDashboard({ onClose }) {
     }
   };
 
+  const formatPhoneNumber = (val) => {
+    if (!val) return '';
+    const cleaned = String(val).trim().replace(/[\s.-]+/g, '');
+    if (/^229\d{10}$/.test(cleaned)) {
+      return `+229 ${cleaned.slice(3, 5)} ${cleaned.slice(5, 7)} ${cleaned.slice(7, 9)} ${cleaned.slice(9, 11)} ${cleaned.slice(11, 13)}`;
+    }
+    if (/^229\d{8}$/.test(cleaned)) {
+      return `+229 ${cleaned.slice(3, 5)} ${cleaned.slice(5, 7)} ${cleaned.slice(7, 9)} ${cleaned.slice(9, 11)}`;
+    }
+    if (/^\+229\d{10}$/.test(cleaned)) {
+      return `+229 ${cleaned.slice(4, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)} ${cleaned.slice(10, 12)} ${cleaned.slice(12, 14)}`;
+    }
+    if (/^\+229\d{8}$/.test(cleaned)) {
+      return `+229 ${cleaned.slice(4, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)} ${cleaned.slice(10, 12)}`;
+    }
+    if (/^\d{10}$/.test(cleaned)) {
+      return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 4)} ${cleaned.slice(4, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)}`;
+    }
+    if (/^\d{8}$/.test(cleaned)) {
+      return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 4)} ${cleaned.slice(4, 6)} ${cleaned.slice(6, 8)}`;
+    }
+    return val;
+  };
+
   const handleCopyPromoterPortalLink = (promoterItem) => {
     const portalUrl = `${window.location.origin}/#promoteur?code=${promoterItem.codePromo}`;
     navigator.clipboard.writeText(portalUrl);
@@ -1925,42 +1949,33 @@ export function AdminDashboard({ onClose }) {
                       <tbody>
                         {promoters.map((p) => {
                           const isBlocked = p.status === 'BLOQUÉ';
+                          const phoneDisplay = formatPhoneNumber(p.whatsapp || p.payoutPhone);
                           return (
                             <tr key={p.id} className={isBlocked ? 'row-faded' : ''}>
                               <td>
-                                <div className="student-info-col">
-                                  <div className="promoter-title-strip">
-                                    <strong className="student-name">{p.prenom} {p.nom}</strong>
-                                    {p.password ? (
-                                      <span className="badge-acc-ready" title="Mot de passe et profil enregistrés">✓ Activé</span>
-                                    ) : (
-                                      <span className="badge-acc-pending" title="En attente de 1ère connexion par le promoteur">⏳ En attente</span>
-                                    )}
+                                <div className="promoter-profile-cell">
+                                  <div className="promoter-avatar-badge">
+                                    {(p.prenom || p.nom || 'P').charAt(0).toUpperCase()}
                                   </div>
-
-                                  <div className="promoter-coords-box">
-                                    {/* Numéro WhatsApp / Mobile Money */}
-                                    <span className={`promoter-coord-item ${p.whatsapp || p.payoutPhone ? 'has-val' : 'missing'}`}>
-                                      <Phone size={10} className="coord-icon" />
-                                      <strong>{p.whatsapp || p.payoutPhone || 'WhatsApp en attente'}</strong>
-                                    </span>
-
-                                    {/* Compte Gmail */}
-                                    <span className={`promoter-coord-item ${p.email ? 'has-val' : 'missing'}`}>
-                                      <Mail size={10} className="coord-icon" />
-                                      <span>{p.email || 'Gmail en attente'}</span>
-                                    </span>
-                                  </div>
-
-                                  <div className="promoter-meta-row">
-                                    <button 
-                                      className="btn-copy-portal-inline"
-                                      onClick={() => handleCopyPromoterPortalLink(p)}
-                                      title="Copier le lien direct de cet espace promoteur"
-                                    >
-                                      {copiedLinkPromoter === p.id ? <Check size={11} className="text-green" /> : <Link2 size={11} />}
-                                      <span>{copiedLinkPromoter === p.id ? 'Lien copié !' : 'Copier son lien d\'accès'}</span>
-                                    </button>
+                                  <div className="promoter-identity-details">
+                                    <strong className="promoter-name-text">{p.prenom} {p.nom}</strong>
+                                    <div className="promoter-sub-contacts">
+                                      {phoneDisplay && (
+                                        <span className="promoter-contact-pill phone" title="WhatsApp / Téléphone">
+                                          <Phone size={10} className="contact-icon phone" />
+                                          <span>{phoneDisplay}</span>
+                                        </span>
+                                      )}
+                                      {p.email && (
+                                        <span className="promoter-contact-pill email" title="Gmail">
+                                          <Mail size={10} className="contact-icon email" />
+                                          <span>{p.email}</span>
+                                        </span>
+                                      )}
+                                      {!phoneDisplay && !p.email && (
+                                        <span className="promoter-contact-pending">Contacts en attente</span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </td>
@@ -1994,6 +2009,8 @@ export function AdminDashboard({ onClose }) {
                               <td>
                                 {isBlocked ? (
                                   <span className="pill-status-blocked">⛔ Bloqué</span>
+                                ) : !p.password ? (
+                                  <span className="pill-status-pending" title="En attente de 1ère connexion par le promoteur">⏳ En attente</span>
                                 ) : (
                                   <span className="pill-status-avail">🟢 Actif</span>
                                 )}

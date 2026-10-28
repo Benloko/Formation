@@ -356,42 +356,54 @@
 }
 
 /* ==========================================================================
-   STICKER DU LIVRE (100% DÉTOURÉ SANS AUCUN ARTEFACT)
+   HERO VISUEL : COUVERTURE 3D + MINIATURE DU RÉSULTAT RÉEL CRÉÉ
    ========================================================================== */
 
-.book-sticker-container {
-  position: relative;
+.formation-visual-hero-row {
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin: 0.1rem 0 0.45rem 0;
-  height: 140px; /* Hauteur strictement identique sur les 2 pages */
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin: 0.15rem 0 0.45rem 0;
+  padding: 0.35rem 0.6rem;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
 }
 
-.book-sticker-img {
-  max-height: 135px;
+/* Colonne Livre 3D */
+.hero-book-cover-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.book-hero-3d-img {
+  max-height: 102px;
   width: auto;
   object-fit: contain;
-  /* Ombre portée découpée propre */
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.25))
-          drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.22))
+          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
   transition: transform 0.25s ease;
 }
 
-.book-sticker-img:hover {
-  transform: translateY(-3px) scale(1.02);
+.book-hero-3d-img:hover {
+  transform: translateY(-2px) scale(1.02);
 }
 
-/* Badge de prix & best-seller (taille discrète et affinée) */
-.book-price-badge {
-  position: absolute;
-  bottom: 0px;
-  right: 18%;
+/* Badge de prix sous la couverture */
+.hero-book-cover-col .book-price-badge {
+  position: static;
+  margin-top: 0.25rem;
+  transform: none;
   background: #11131a;
   color: #fff;
-  padding: 0.16rem 0.42rem;
+  padding: 0.14rem 0.45rem;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -399,11 +411,11 @@
   border: 1px solid rgba(229, 179, 88, 0.45);
 }
 
-.book-price-strikethrough-wrap {
+.hero-book-cover-col .book-price-strikethrough-wrap {
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  line-height: 1.1;
+  gap: 0.3rem;
+  line-height: 1;
 }
 
 .price-tag-struck {
@@ -422,59 +434,23 @@
   color: #f7d786;
 }
 
-.badge-highlight {
-  font-size: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #cbd5e1;
-}
-
 .video-price {
-  border-color: rgba(56, 189, 248, 0.45);
+  border-color: rgba(56, 189, 248, 0.45) !important;
 }
 
 .video-price .price-tag {
   color: #7dd3fc;
 }
 
-/* Version débloquée : petite pilule discrète et élégante */
-.book-price-badge.is-unlocked {
-  padding: 0.15rem 0.45rem;
-  border-radius: 12px;
-  flex-direction: row;
+.hero-book-cover-col .book-price-badge.is-unlocked {
   background: rgba(16, 185, 129, 0.12);
   border: 1px solid rgba(16, 185, 129, 0.5);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  padding: 0.12rem 0.45rem;
 }
 
-.book-price-badge.is-unlocked .price-tag {
+.hero-book-cover-col .book-price-badge.is-unlocked .price-tag {
   font-size: 0.68rem;
   color: #10b981;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.book-price-badge.video-price.is-unlocked {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.5);
-}
-
-.book-price-badge.video-price.is-unlocked .price-tag {
-  color: #10b981;
-}
-
-/* Badge de prix avec réduction active */
-.book-price-badge.has-discount {
-  background: #14111d;
-  border-color: rgba(168, 85, 247, 0.7);
-  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.35);
-  padding: 0.18rem 0.55rem;
-}
-
-.book-price-badge.video-price.has-discount {
-  background: #0c1626;
-  border-color: rgba(56, 189, 248, 0.7);
-  box-shadow: 0 3px 12px rgba(56, 189, 248, 0.3);
 }
 
 .promo-badge-prices {
@@ -485,7 +461,7 @@
 }
 
 .promo-old-price {
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   color: #94a3b8;
   text-decoration: line-through;
   opacity: 0.75;
@@ -493,7 +469,7 @@
 
 .promo-new-price {
   font-family: var(--font-serif);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: #fde047;
 }
@@ -502,25 +478,105 @@
   color: #38bdf8;
 }
 
-.promo-pill-badge {
-  background: #7c3aed;
-  color: #ffffff !important;
-  font-size: 0.52rem;
-  font-weight: 800;
-  padding: 0.08rem 0.4rem;
-  border-radius: 8px;
-  letter-spacing: 0.03em;
-  margin-top: 0.12rem;
-  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.4);
+/* CARTE RÉSULTAT CONCRET (CE QUE VOUS ALLEZ CRÉER) */
+.hero-concrete-sample-card {
+  position: relative;
+  flex: 1;
+  max-width: 220px;
+  background: #ffffff;
+  border: 1.5px solid rgba(217, 119, 6, 0.3);
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.promo-pill-badge.video-pill {
-  background: #0284c7;
-  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.4);
+.hero-concrete-sample-card:hover {
+  transform: translateY(-2px);
+  border-color: #d97706;
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.2);
+}
+
+.concrete-sample-img-box {
+  position: relative;
+  width: 100%;
+  height: 90px;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.concrete-sample-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.3s ease;
+}
+
+.hero-concrete-sample-card:hover .concrete-sample-thumbnail {
+  transform: scale(1.05);
+}
+
+.sample-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  backdrop-filter: blur(2px);
+}
+
+.hero-concrete-sample-card:hover .sample-hover-overlay {
+  opacity: 1;
+}
+
+.concrete-sample-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.4rem;
+  background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border-top: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.sample-sparkle {
+  color: #d97706;
+}
+
+/* Adaptation pour la carte vidéo */
+.hero-concrete-sample-card.video-sample-card {
+  border-color: rgba(2, 132, 199, 0.35);
+}
+
+.hero-concrete-sample-card.video-sample-card:hover {
+  border-color: #0284c7;
+  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+}
+
+.concrete-sample-tag.video-sample-tag {
+  background: linear-gradient(90deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0369a1;
+  border-top-color: rgba(2, 132, 199, 0.25);
 }
 
 /* ==========================================================================
-   CORPS DE PAGE : TITRE, ACCROCHE, 4 PILIERS & BONUS CALIBRÉS
+   CORPS DE PAGE : TITRE, ACCROCHE PUNCHY & BADGES CLÉS
    ========================================================================== */
 
 .book-page-body {
@@ -531,111 +587,211 @@
 
 .formation-book-title {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.22;
   color: #1c1917;
   margin-bottom: 0.15rem;
 }
 
-.formation-author-line {
-  font-size: 0.74rem;
-  font-style: italic;
-  color: #78716c;
-  margin-bottom: 0.35rem;
-}
-
-.formation-lead-desc {
-  font-size: 0.8rem;
-  line-height: 1.42;
+.formation-catchy-lead {
+  font-size: 0.77rem;
+  line-height: 1.35;
   color: #44403c;
-  margin-bottom: 0.45rem;
-  min-height: 38px; /* Calibrage strict de l'accroche */
-}
-
-/* Boîte des 4 piliers de la méthode */
-.formation-highlights-box {
-  background: rgba(0, 0, 0, 0.025);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 5px;
-  padding: 0.45rem 0.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-bottom: 0.45rem;
-}
-
-.highlight-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
-  font-size: 0.73rem;
-  line-height: 1.32;
-  color: #292524;
-}
-
-.highlight-icon {
-  color: #b45309;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.right-page .highlight-icon {
-  color: #0284c7;
-}
-
-.highlight-item strong {
-  color: #0c0a09;
-}
-
-/* Mention Assistance Privée & Choix de Niche */
-.guidance-mini-callout,
-.bonus-mini-callout {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.45rem;
-  background: #fefce8;
-  border: 1px solid rgba(234, 179, 8, 0.45);
-  border-radius: 6px;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.72rem;
-  line-height: 1.38;
-  color: #713f12;
   margin-bottom: 0.4rem;
 }
 
-.guidance-icon,
-.bonus-icon {
-  color: #d97706;
-  flex-shrink: 0;
-  margin-top: 1px;
+/* 3 BADGES CLÉS (SMARTPHONE, IA GRATUITE, MENTORAT) */
+.formation-key-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
 }
 
-/* Note discrète insérée en bas du Super Bonus */
-.formation-discrete-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.35rem;
-  background: rgba(254, 243, 199, 0.45);
-  border: 1px solid rgba(217, 119, 6, 0.25);
-  border-radius: 4px;
-  padding: 0.26rem 0.55rem;
-  font-size: 0.69rem;
-  line-height: 1.35;
-  color: #44403c;
+.key-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.key-pill.pill-phone {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.key-pill.pill-free {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.key-pill.pill-mentorship {
+  background: #fefce8;
+  color: #854d0e;
+  border-color: #fde047;
+}
+
+.key-pill.pill-trending {
+  background: #f0f9ff;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+/* ==========================================================================
+   4 PILIERS DE FORMATION EN GRILLE VISUELLE COMPACTE (2x2)
+   ========================================================================== */
+
+.formation-pillars-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.38rem;
   margin-bottom: 0.45rem;
 }
 
-.discrete-note-icon {
-  color: #d97706;
+.pillar-mini-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.42rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.pillar-mini-card:hover {
+  border-color: rgba(217, 119, 6, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.right-page .pillar-mini-card:hover {
+  border-color: rgba(2, 132, 199, 0.4);
+}
+
+.pillar-icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   margin-top: 1px;
 }
 
-.formation-discrete-note em {
+.pillar-bulb {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.pillar-palette {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.pillar-chat {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.pillar-growth {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.pillar-film {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.pillar-zap {
+  background: #cffafe;
+  color: #0891b2;
+}
+
+.pillar-voice {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.pillar-growth-blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.pillar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.pillar-text strong {
+  font-size: 0.69rem;
   font-weight: 700;
-  color: #92400e;
-  font-style: normal;
+  color: #1c1917;
+  line-height: 1.2;
+}
+
+.pillar-text p {
+  font-size: 0.63rem;
+  line-height: 1.25;
+  color: #57534e;
+  margin: 0;
+}
+
+/* ==========================================================================
+   BARRE DE CONFIANCE : MENTORAT & SERVICES DE MONÉTISATION
+   ========================================================================== */
+
+.mentorship-trust-bar {
+  background: rgba(254, 252, 232, 0.7);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+}
+
+.right-page .mentorship-trust-bar {
+  background: rgba(240, 249, 255, 0.75);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.trust-mentorship-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: #713f12;
+}
+
+.right-page .trust-mentorship-line {
+  color: #0369a1;
+}
+
+.trust-check-icon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.trust-services-line {
+  font-size: 0.65rem;
+  color: #78716c;
+  line-height: 1.25;
+  padding-left: 1.15rem;
 }
 
 .services-link-inline-btn {
@@ -656,6 +812,178 @@
 .services-link-inline-btn:hover {
   color: #78350f;
 }
+
+/* ==========================================================================
+   MODAL LIGHTBOX : APERÇU AGRANDI DU RÉSULTAT RÉEL
+   ========================================================================== */
+
+.formation-result-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(8, 10, 15, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  animation: resultModalFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes resultModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.formation-result-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  background: #11131a;
+  border: 1px solid rgba(229, 179, 88, 0.35);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+  animation: resultModalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes resultModalSlideUp {
+  from {
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.formation-result-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.formation-result-modal-close:hover {
+  background: rgba(220, 38, 38, 0.85);
+  border-color: #dc2626;
+  transform: scale(1.08);
+}
+
+.formation-result-modal-header {
+  padding: 1rem 1.2rem 0.6rem 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.result-modal-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.result-modal-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.2rem 0;
+}
+
+.result-modal-subtitle {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.formation-result-modal-body {
+  padding: 0.8rem 1.2rem;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #08090d;
+}
+
+.result-modal-image-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-modal-preview-img {
+  max-width: 100%;
+  max-height: 52vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65);
+}
+
+.result-modal-preview-img.video-preview-img {
+  max-height: 58vh;
+  border-radius: 18px;
+}
+
+.result-modal-caption {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  text-align: center;
+  font-weight: 600;
+}
+
+.formation-result-modal-footer {
+  padding: 0.75rem 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: #11131a;
+}
+
+.btn-modal-action-unlock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #11131a;
+  border: none;
+  border-radius: 7px;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-modal-action-unlock:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.5);
+}
+
 
 /* ==========================================================================
    VUE 2 : PAGE TOURNÉE (SOMMAIRE DES MODULES DÉTAILLÉS)
@@ -1085,16 +1413,83 @@
     display: flex !important;
   }
 
-  .book-sticker-container {
-    height: 130px;
+  .formation-visual-hero-row {
+    padding: 0.3rem 0.45rem;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
   }
 
-  .book-sticker-img {
-    max-height: 125px;
+  .book-hero-3d-img {
+    max-height: 85px;
+  }
+
+  .hero-concrete-sample-card {
+    max-width: 175px;
+  }
+
+  .concrete-sample-img-box {
+    height: 75px;
+  }
+
+  .concrete-sample-tag {
+    font-size: 0.6rem;
+    padding: 0.18rem 0.3rem;
+  }
+
+  .formation-key-pills-row {
+    gap: 0.25rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .key-pill {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
+  }
+
+  .formation-pillars-grid {
+    gap: 0.32rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .pillar-mini-card {
+    padding: 0.3rem 0.4rem;
+    gap: 0.35rem;
+  }
+
+  .pillar-icon-wrap {
+    width: 22px;
+    height: 22px;
+  }
+
+  .pillar-text strong {
+    font-size: 0.66rem;
+  }
+
+  .pillar-text p {
+    font-size: 0.6rem;
+  }
+
+  .mentorship-trust-bar {
+    padding: 0.25rem 0.45rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .trust-mentorship-line {
+    font-size: 0.65rem;
+  }
+
+  .trust-services-line {
+    font-size: 0.62rem;
+    padding-left: 1rem;
   }
 
   .formation-book-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+  }
+
+  .formation-catchy-lead {
+    font-size: 0.74rem;
+    margin-bottom: 0.35rem;
   }
 
   .book-close-red-cross {

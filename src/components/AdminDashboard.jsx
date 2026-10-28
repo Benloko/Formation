@@ -41,7 +41,10 @@ import {
   Radio,
   Briefcase,
   FileText,
-  MessageCircle
+  MessageCircle,
+  CreditCard,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
@@ -992,7 +995,7 @@ export function AdminDashboard({ onClose }) {
                       </div>
                       <div className="kpi-card-number">{analyticsData.kpis?.totalInteractions || 0}</div>
                       <div className="kpi-card-sub">
-                        <span>Clics d'intérêt, déblocage & WhatsApp</span>
+                        <span>Clics d'intérêt, déblocage & paiements</span>
                       </div>
                     </div>
 
@@ -1268,6 +1271,7 @@ export function AdminDashboard({ onClose }) {
                                   {item.event === 'page_view' ? 'Consultation de la page' : 
                                    item.event.includes('unlock') ? '🎯 Clic Débloquer formation' :
                                    item.event.includes('demo') ? '📖 Lecture d\'un extrait' :
+                                   item.event.includes('fedapay') || item.event.includes('pay') ? '💳 Paiement FedaPay' :
                                    item.event.includes('whatsapp') ? '💬 Clic WhatsApp' : 
                                    item.event.includes('switch') ? '🔄 Bascule de formation' : item.event}
                                 </span>
@@ -1318,6 +1322,7 @@ export function AdminDashboard({ onClose }) {
                                     <div className="f-btn-icon-bubble">
                                       {btn.id === 'unlock' && <Lock size={12} />}
                                       {btn.id === 'demo' && <BookOpen size={12} />}
+                                      {btn.id === 'fedapay' && <CreditCard size={12} />}
                                       {btn.id === 'whatsapp' && <MessageCircle size={12} />}
                                       {btn.id === 'switch' && <ArrowRight size={12} />}
                                       {btn.id === 'cta_home' && <Sparkles size={12} />}
@@ -1924,16 +1929,37 @@ export function AdminDashboard({ onClose }) {
                             <tr key={p.id} className={isBlocked ? 'row-faded' : ''}>
                               <td>
                                 <div className="student-info-col">
-                                  <strong className="student-name">{p.prenom} {p.nom}</strong>
+                                  <div className="promoter-title-strip">
+                                    <strong className="student-name">{p.prenom} {p.nom}</strong>
+                                    {p.password ? (
+                                      <span className="badge-acc-ready" title="Mot de passe et profil enregistrés">✓ Activé</span>
+                                    ) : (
+                                      <span className="badge-acc-pending" title="En attente de 1ère connexion par le promoteur">⏳ En attente</span>
+                                    )}
+                                  </div>
+
+                                  <div className="promoter-coords-box">
+                                    {/* Numéro WhatsApp / Mobile Money */}
+                                    <span className={`promoter-coord-item ${p.whatsapp || p.payoutPhone ? 'has-val' : 'missing'}`}>
+                                      <Phone size={10} className="coord-icon" />
+                                      <strong>{p.whatsapp || p.payoutPhone || 'WhatsApp en attente'}</strong>
+                                    </span>
+
+                                    {/* Compte Gmail */}
+                                    <span className={`promoter-coord-item ${p.email ? 'has-val' : 'missing'}`}>
+                                      <Mail size={10} className="coord-icon" />
+                                      <span>{p.email || 'Gmail en attente'}</span>
+                                    </span>
+                                  </div>
+
                                   <div className="promoter-meta-row">
-                                    <span className="student-email">{p.whatsapp || 'WhatsApp non renseigné'}</span>
                                     <button 
                                       className="btn-copy-portal-inline"
                                       onClick={() => handleCopyPromoterPortalLink(p)}
                                       title="Copier le lien direct de cet espace promoteur"
                                     >
                                       {copiedLinkPromoter === p.id ? <Check size={11} className="text-green" /> : <Link2 size={11} />}
-                                      <span>{copiedLinkPromoter === p.id ? 'Lien copié !' : 'Copier son lien'}</span>
+                                      <span>{copiedLinkPromoter === p.id ? 'Lien copié !' : 'Copier son lien d\'accès'}</span>
                                     </button>
                                   </div>
                                 </div>
@@ -2281,9 +2307,9 @@ export function AdminDashboard({ onClose }) {
                     </div>
                   </div>
 
-                  <div className="dialog-fields-row">
+                  <div className="dialog-fields-row single-col">
                     <div className="dialog-field">
-                      <label>Code Promo à créer :</label>
+                      <label>Code Promo unique du partenaire :</label>
                       <input 
                         type="text" 
                         placeholder="Ex: SAMUEL20 ou BEN20"
@@ -2293,15 +2319,13 @@ export function AdminDashboard({ onClose }) {
                         className="dialog-input code-input"
                       />
                     </div>
-                    <div className="dialog-field">
-                      <label>Numéro WhatsApp :</label>
-                      <input 
-                        type="tel" 
-                        placeholder="Ex: +229 97 00 00 00"
-                        value={promoterForm.whatsapp}
-                        onChange={(e) => setPromoterForm({ ...promoterForm, whatsapp: e.target.value })}
-                        className="dialog-input"
-                      />
+                  </div>
+
+                  <div className="promoter-auto-setup-notice">
+                    <Sparkles size={14} className="notice-sparkle-icon" />
+                    <div className="notice-text">
+                      <strong>Numéro WhatsApp & Gmail renseignés par le promoteur :</strong>
+                      <p>Vous n'avez pas besoin de saisir son numéro ni son e-mail. Le promoteur les enregistrera lui-même lors de sa 1ère connexion sécurisée.</p>
                     </div>
                   </div>
 

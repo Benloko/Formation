@@ -259,14 +259,15 @@ switch ($action) {
         }
 
         $now = date('d/m/Y, H:i');
-        $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END WHERE id = ?");
-        $stmt->execute([$password, $now, $email, $email, $payoutPhone, $payoutPhone, $promoterId]);
+        $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END, whatsapp = CASE WHEN ? != '' THEN ? ELSE whatsapp END WHERE id = ?");
+        $stmt->execute([$password, $now, $email, $email, $payoutPhone, $payoutPhone, $payoutPhone, $payoutPhone, $promoterId]);
 
         // Retourner le promoteur mis à jour
         $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
         $stmt->execute([$promoterId]);
         $p = $stmt->fetch();
         if ($p) {
+            $phone = !empty($p['whatsapp']) ? $p['whatsapp'] : (!empty($p['payout_phone']) ? $p['payout_phone'] : '');
             $p['reductionPct'] = (int)($p['reduction_pct'] ?? 20);
             $p['commissionPct'] = (int)($p['commission_pct'] ?? 50);
             $p['codePromo'] = $p['code_promo'] ?? '';
@@ -274,7 +275,8 @@ switch ($action) {
             $p['salesCount'] = (int)($p['sales_count'] ?? 0);
             $p['totalEarned'] = (int)($p['total_earned'] ?? 0);
             $p['email'] = $p['email'] ?? '';
-            $p['payoutPhone'] = $p['payout_phone'] ?? $p['whatsapp'] ?? '';
+            $p['whatsapp'] = $phone;
+            $p['payoutPhone'] = $phone;
             $p['passwordSetAt'] = $p['password_set_at'] ?? '';
             $p['salesHistory'] = json_decode($p['sales_history'] ?? '[]', true) ?: [];
         }
@@ -295,8 +297,8 @@ switch ($action) {
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE promoters SET email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END WHERE id = ?");
-        $stmt->execute([$email, $email, $payoutPhone, $payoutPhone, $promoterId]);
+        $stmt = $pdo->prepare("UPDATE promoters SET email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END, whatsapp = CASE WHEN ? != '' THEN ? ELSE whatsapp END WHERE id = ?");
+        $stmt->execute([$email, $email, $payoutPhone, $payoutPhone, $payoutPhone, $payoutPhone, $promoterId]);
 
         echo json_encode(['success' => true]);
         exit;
@@ -956,7 +958,7 @@ switch ($action) {
                 'buttons' => [
                     'unlock' => ['id' => 'unlock', 'name' => "Bouton « Débloquer cette formation »", 'count' => 0, 'tag' => 'Déblocage'],
                     'demo' => ['id' => 'demo', 'name' => "Bouton « Lire l'extrait gratuit »", 'count' => 0, 'tag' => 'Lecture Démo'],
-                    'whatsapp' => ['id' => 'whatsapp', 'name' => "Bouton « Payer sur WhatsApp »", 'count' => 0, 'tag' => 'WhatsApp'],
+                    'fedapay' => ['id' => 'fedapay', 'name' => "Paiement en ligne FedaPay (Mobile Money)", 'count' => 0, 'tag' => 'Paiement Live'],
                     'switch' => ['id' => 'switch', 'name' => "Bouton « Voir formation Vidéos IA »", 'count' => 0, 'tag' => 'Navigation']
                 ]
             ],
@@ -968,7 +970,7 @@ switch ($action) {
                 'buttons' => [
                     'unlock' => ['id' => 'unlock', 'name' => "Bouton « Débloquer cette formation »", 'count' => 0, 'tag' => 'Déblocage'],
                     'demo' => ['id' => 'demo', 'name' => "Bouton « Lire l'extrait gratuit »", 'count' => 0, 'tag' => 'Lecture Démo'],
-                    'whatsapp' => ['id' => 'whatsapp', 'name' => "Bouton « Payer sur WhatsApp »", 'count' => 0, 'tag' => 'WhatsApp'],
+                    'fedapay' => ['id' => 'fedapay', 'name' => "Paiement en ligne FedaPay (Mobile Money)", 'count' => 0, 'tag' => 'Paiement Live'],
                     'switch' => ['id' => 'switch', 'name' => "Bouton « Voir formation BD »", 'count' => 0, 'tag' => 'Navigation']
                 ]
             ],
@@ -1005,12 +1007,12 @@ switch ($action) {
                 $targetF = 'livre-videos-ia';
             }
 
-            if (strpos($evt, 'unlock') !== false) {
+            if (strpos($evt, 'fedapay') !== false || strpos($evt, 'pay') !== false || strpos($evt, 'whatsapp') !== false) {
+                $btnKey = ($targetF !== 'general') ? 'fedapay' : 'cta_home';
+            } else if (strpos($evt, 'unlock') !== false) {
                 $btnKey = 'unlock';
             } else if (strpos($evt, 'demo') !== false) {
                 $btnKey = 'demo';
-            } else if (strpos($evt, 'whatsapp') !== false) {
-                $btnKey = ($targetF !== 'general') ? 'whatsapp' : 'cta_home';
             } else if (strpos($evt, 'switch_video') !== false) {
                 $targetF = 'livre-bd-storytelling';
                 $btnKey = 'switch';

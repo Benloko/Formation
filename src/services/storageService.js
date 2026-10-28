@@ -130,7 +130,7 @@ export const storageService = {
               const existing = map.get(key) || {};
               const mergedPassword = (r.password && r.password.trim()) ? r.password.trim() : (existing.password || '');
               const mergedEmail = (r.email && r.email.trim()) ? r.email.trim().toLowerCase() : (existing.email || '');
-              const mergedPayoutPhone = (r.payoutPhone || r.payout_phone || '').trim() || (existing.payoutPhone || existing.whatsapp || '');
+              const mergedPayoutPhone = (r.payoutPhone || r.payout_phone || r.whatsapp || '').trim() || (existing.payoutPhone || existing.whatsapp || '');
               const mergedPasswordSetAt = r.passwordSetAt || r.password_set_at || existing.passwordSetAt || null;
               map.set(key, { 
                 ...existing, 
@@ -138,6 +138,7 @@ export const storageService = {
                 password: mergedPassword, 
                 email: mergedEmail, 
                 payoutPhone: mergedPayoutPhone,
+                whatsapp: mergedPayoutPhone,
                 passwordSetAt: mergedPasswordSetAt
               });
             }
@@ -1102,7 +1103,11 @@ export const storageService = {
       list[idx].password = cleanPwd;
       list[idx].passwordSetAt = new Date().toISOString();
       if (email) list[idx].email = String(email).trim().toLowerCase();
-      if (payoutPhone) list[idx].payoutPhone = String(payoutPhone).trim();
+      if (payoutPhone) {
+        const cleanPhone = String(payoutPhone).trim();
+        list[idx].payoutPhone = cleanPhone;
+        list[idx].whatsapp = cleanPhone;
+      }
 
       localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
       window.dispatchEvent(new Event('storage'));
@@ -1133,7 +1138,11 @@ export const storageService = {
       if (idx === -1) return { success: false, message: "Promoteur introuvable." };
 
       if (email) list[idx].email = String(email).trim().toLowerCase();
-      if (payoutPhone) list[idx].payoutPhone = String(payoutPhone).trim();
+      if (payoutPhone) {
+        const cleanPhone = String(payoutPhone).trim();
+        list[idx].payoutPhone = cleanPhone;
+        list[idx].whatsapp = cleanPhone;
+      }
 
       localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
       window.dispatchEvent(new Event('storage'));

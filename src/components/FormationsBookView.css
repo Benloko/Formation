@@ -720,32 +720,211 @@
   margin-top: auto;
   padding-top: 0.5rem;
   border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .btn-unlock-formation-card {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.52rem 0.95rem;
+  display: block;
+  padding: 0.55rem 0.85rem;
   background: linear-gradient(135deg, #1c1917 0%, #292524 100%);
   color: #fceec5;
   font-family: var(--font-serif);
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  border: 1px solid rgba(229, 179, 88, 0.5);
-  border-radius: 4px;
+  border: 1px solid rgba(229, 179, 88, 0.55);
+  border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .btn-unlock-formation-card:hover {
   background: linear-gradient(135deg, #0c0a09 0%, #1c1917 100%);
   border-color: #f7d786;
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+}
+
+.btn-unlock-formation-card:active {
+  transform: translateY(1px);
+}
+
+.btn-unlock-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  width: 100%;
+}
+
+.btn-unlock-headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.btn-unlock-title {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fceec5;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.btn-unlock-sparkle {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.btn-unlock-arrow {
+  color: #fbbf24;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.btn-unlock-formation-card:hover .btn-unlock-arrow {
+  transform: translateX(3px);
+}
+
+.btn-unlock-subline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-unlock-price-tags {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.btn-price-discounted {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fde047;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.video-card-btn .btn-price-discounted {
+  color: #7dd3fc;
+}
+
+.btn-price-struck {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #a8a29e;
+  text-decoration: line-through;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.btn-promo-tag {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(234, 179, 8, 0.25);
+  color: #fef08a;
+  border: 1px solid rgba(234, 179, 8, 0.55);
+  border-radius: 999px;
+  padding: 0.06rem 0.45rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.video-card-btn .btn-promo-tag {
+  background: rgba(56, 189, 248, 0.25);
+  color: #bae6fd;
+  border-color: rgba(56, 189, 248, 0.55);
+}
+
+.btn-price-single {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fceec5;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.btn-unlock-hint {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #d1fae5;
+  white-space: nowrap;
+}
+
+/* Bouton pour une formation déjà débloquée */
+.btn-unlock-formation-card.book-unlocked-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
+}
+
+.btn-unlock-formation-card.book-unlocked-btn:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border-color: #6ee7b7 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5) !important;
+}
+
+.btn-unlock-formation-card.book-unlocked-btn .btn-unlock-title {
+  color: #ffffff;
+}
+
+.unlocked-icon-check {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+/* Bouton avec réduction code promo */
+.btn-unlock-formation-card.card-has-promo {
+  border-color: rgba(234, 179, 8, 0.75);
+  background: linear-gradient(135deg, #221c16 0%, #352a1a 100%);
+  color: #fef08a;
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.25);
+}
+
+.video-card-btn {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #bae6fd;
+}
+
+.video-card-btn:hover {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+  border-color: #38bdf8;
+}
+
+.video-card-btn .btn-unlock-title {
+  color: #bae6fd;
+}
+
+.video-card-btn .btn-unlock-sparkle,
+.video-card-btn .btn-unlock-arrow {
+  color: #38bdf8;
+}
+
+.btn-unlock-formation-card.video-card-btn.card-has-promo {
+  border-color: rgba(56, 189, 248, 0.75);
+  background: linear-gradient(135deg, #0e1e38 0%, #172d54 100%);
+  color: #bae6fd;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
 }
 
 /* Petit bouton simple et discret pour basculer vers l'autre formation */
@@ -775,74 +954,6 @@
   color: #1c1917;
   text-decoration-color: #1c1917;
   background: rgba(0, 0, 0, 0.04);
-}
-
-.video-card-btn {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-color: rgba(56, 189, 248, 0.5);
-  color: #bae6fd;
-}
-
-.video-card-btn:hover {
-  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
-  border-color: #38bdf8;
-}
-
-/* Bouton pour une formation déjà débloquée */
-.btn-unlock-formation-card.book-unlocked-btn {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-  border-color: #34d399 !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
-}
-
-.btn-unlock-formation-card.book-unlocked-btn:hover {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  border-color: #6ee7b7 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5) !important;
-}
-
-.unlocked-icon-check {
-  color: #ffffff;
-}
-
-/* Bouton avec réduction code promo */
-.btn-unlock-formation-card.card-has-promo {
-  border-color: rgba(234, 179, 8, 0.75);
-  background: linear-gradient(135deg, #221c16 0%, #352a1a 100%);
-  color: #fef08a;
-  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.25);
-}
-
-.btn-unlock-formation-card.video-card-btn.card-has-promo {
-  border-color: rgba(56, 189, 248, 0.75);
-  background: linear-gradient(135deg, #0e1e38 0%, #172d54 100%);
-  color: #bae6fd;
-  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
-}
-
-.btn-card-text-promo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.btn-card-text-promo strong {
-  color: #fde047;
-  font-weight: 800;
-}
-
-.video-card-btn .btn-card-text-promo strong {
-  color: #7dd3fc;
-}
-
-.btn-slashed-original {
-  text-decoration: line-through;
-  opacity: 0.6;
-  font-size: 0.78rem;
-  font-weight: 400;
-  margin-left: 0.2rem;
 }
 
 /* ==========================================================================
@@ -968,5 +1079,83 @@
 
   .formation-book-title {
     font-size: 1.1rem;
+  }
+
+  .book-close-red-cross {
+    top: 0.65rem;
+    right: 0.65rem;
+    width: 28px;
+    height: 28px;
+  }
+
+  .btn-unlock-formation-card {
+    padding: 0.52rem 0.65rem;
+    border-radius: 6px;
+  }
+
+  .btn-unlock-headline {
+    gap: 0.4rem;
+  }
+
+  .btn-unlock-title {
+    font-size: 0.9rem;
+  }
+
+  .btn-price-discounted {
+    font-size: 0.92rem;
+  }
+
+  .btn-price-struck {
+    font-size: 0.74rem;
+  }
+
+  .btn-promo-tag {
+    font-size: 0.65rem;
+    padding: 0.04rem 0.38rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .btn-unlock-title {
+    font-size: 0.85rem;
+  }
+
+  .btn-price-discounted {
+    font-size: 0.88rem;
+  }
+
+  .btn-price-struck {
+    font-size: 0.72rem;
+  }
+
+  .btn-unlock-headline {
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .btn-unlock-formation-card {
+    padding: 0.45rem 0.45rem;
+  }
+
+  .btn-unlock-title {
+    font-size: 0.78rem;
+  }
+
+  .btn-price-discounted {
+    font-size: 0.82rem;
+  }
+
+  .btn-price-struck {
+    font-size: 0.68rem;
+  }
+
+  .btn-promo-tag {
+    font-size: 0.6rem;
+    padding: 0.03rem 0.3rem;
+  }
+
+  .btn-unlock-headline {
+    gap: 0.25rem;
   }
 }

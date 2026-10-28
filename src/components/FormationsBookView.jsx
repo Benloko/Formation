@@ -271,24 +271,40 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     className="btn-unlock-formation-card book-unlocked-btn"
                     onClick={() => onUnlockBook({ ...bookBD, price: baseBdPrice })}
                   >
-                    <CheckCircle2 size={15} className="unlocked-icon-check" />
-                    <span>Formation Débloquée • Ouvrir</span>
-                    <ArrowRight size={14} />
+                    <div className="btn-unlock-card-body">
+                      <div className="btn-unlock-headline">
+                        <CheckCircle2 size={16} className="unlocked-icon-check" />
+                        <span className="btn-unlock-title">Formation Débloquée • Ouvrir</span>
+                        <ArrowRight size={14} className="btn-unlock-arrow" />
+                      </div>
+                      <div className="btn-unlock-subline">
+                        <span className="btn-unlock-hint">Accéder immédiatement au contenu</span>
+                      </div>
+                    </div>
                   </button>
                 ) : (
                   <button 
                     className={`btn-unlock-formation-card ${bdReductionPct > 0 ? 'card-has-promo' : ''}`}
                     onClick={() => onUnlockBook({ ...bookBD, price: finalBdPrice, originalPrice: baseBdPrice })}
                   >
-                    <Sparkles size={14} />
-                    {bdReductionPct > 0 ? (
-                      <span className="btn-card-text-promo">
-                        Débloquer cette formation (<strong>{finalBdPrice.toLocaleString()} F</strong> <del className="btn-slashed-original">{baseBdPrice.toLocaleString()} F</del>)
-                      </span>
-                    ) : (
-                      <span>Débloquer cette formation ({baseBdPrice.toLocaleString()} F)</span>
-                    )}
-                    <ArrowRight size={14} />
+                    <div className="btn-unlock-card-body">
+                      <div className="btn-unlock-headline">
+                        <Sparkles size={14} className="btn-unlock-sparkle" />
+                        <span className="btn-unlock-title">Débloquer cette formation</span>
+                        <ArrowRight size={14} className="btn-unlock-arrow" />
+                      </div>
+                      <div className="btn-unlock-subline">
+                        {bdReductionPct > 0 ? (
+                          <div className="btn-unlock-price-tags">
+                            <span className="btn-price-discounted">{finalBdPrice.toLocaleString()} FCFA</span>
+                            <span className="btn-price-struck">{baseBdPrice.toLocaleString()} FCFA</span>
+                            <span className="btn-promo-tag">-{bdReductionPct}%</span>
+                          </div>
+                        ) : (
+                          <span className="btn-price-single">{baseBdPrice.toLocaleString()} FCFA • Accès à vie</span>
+                        )}
+                      </div>
+                    </div>
                   </button>
                 )}
 
@@ -419,24 +435,40 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     className="btn-unlock-formation-card video-card-btn book-unlocked-btn"
                     onClick={() => onUnlockBook({ ...bookVideo, price: baseVideoPrice })}
                   >
-                    <CheckCircle2 size={15} className="unlocked-icon-check" />
-                    <span>Formation Débloquée • Ouvrir</span>
-                    <ArrowRight size={14} />
+                    <div className="btn-unlock-card-body">
+                      <div className="btn-unlock-headline">
+                        <CheckCircle2 size={16} className="unlocked-icon-check" />
+                        <span className="btn-unlock-title">Formation Débloquée • Ouvrir</span>
+                        <ArrowRight size={14} className="btn-unlock-arrow" />
+                      </div>
+                      <div className="btn-unlock-subline">
+                        <span className="btn-unlock-hint">Accéder immédiatement au contenu</span>
+                      </div>
+                    </div>
                   </button>
                 ) : (
                   <button 
                     className={`btn-unlock-formation-card video-card-btn ${videoReductionPct > 0 ? 'card-has-promo' : ''}`}
                     onClick={() => onUnlockBook({ ...bookVideo, price: finalVideoPrice, originalPrice: baseVideoPrice })}
                   >
-                    <Sparkles size={14} />
-                    {videoReductionPct > 0 ? (
-                      <span className="btn-card-text-promo">
-                        Débloquer cette formation (<strong>{finalVideoPrice.toLocaleString()} F</strong> <del className="btn-slashed-original">{baseVideoPrice.toLocaleString()} F</del>)
-                      </span>
-                    ) : (
-                      <span>Débloquer cette formation ({baseVideoPrice.toLocaleString()} F)</span>
-                    )}
-                    <ArrowRight size={14} />
+                    <div className="btn-unlock-card-body">
+                      <div className="btn-unlock-headline">
+                        <Sparkles size={14} className="btn-unlock-sparkle" />
+                        <span className="btn-unlock-title">Débloquer cette formation</span>
+                        <ArrowRight size={14} className="btn-unlock-arrow" />
+                      </div>
+                      <div className="btn-unlock-subline">
+                        {videoReductionPct > 0 ? (
+                          <div className="btn-unlock-price-tags">
+                            <span className="btn-price-discounted">{finalVideoPrice.toLocaleString()} FCFA</span>
+                            <span className="btn-price-struck">{baseVideoPrice.toLocaleString()} FCFA</span>
+                            <span className="btn-promo-tag">-{videoReductionPct}%</span>
+                          </div>
+                        ) : (
+                          <span className="btn-price-single">{baseVideoPrice.toLocaleString()} FCFA • Accès à vie</span>
+                        )}
+                      </div>
+                    </div>
                   </button>
                 )}
 

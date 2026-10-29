@@ -837,28 +837,34 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
         onClose();
       }}>
         <div 
-          className={`flow-modal-container ${step === 'unlocked_showcase' ? 'showcase-mode' : ''}`}
+          className={`flow-modal-wrapper ${step === 'unlocked_showcase' ? 'showcase-mode' : ''}`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Petite croix rouge épurée pour fermer avec grande zone tactile */}
-          <button 
-            type="button"
-            className="flow-close-red-cross" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleForceCloseFedaPay();
-              onClose();
-            }} 
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              handleForceCloseFedaPay();
-              onClose();
-            }}
-            aria-label="Fermer" 
-            title="Fermer"
+          {/* Bouton croix épurée pure AU-DESSUS de la carte, sans cercle ni fond */}
+          <div className="flow-modal-top-bar">
+            <button 
+              type="button"
+              className="flow-modal-pure-close" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleForceCloseFedaPay();
+                onClose();
+              }} 
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                handleForceCloseFedaPay();
+                onClose();
+              }}
+              aria-label="Fermer" 
+              title="Fermer"
+            >
+              <X size={21} strokeWidth={2.2} />
+            </button>
+          </div>
+
+          <div 
+            className={`flow-modal-container ${step === 'unlocked_showcase' ? 'showcase-mode' : ''}`}
           >
-            <X size={18} strokeWidth={2.5} />
-          </button>
 
         {/* ====================================================================
             ÉTAPE 1 : CHOISIR UN COMPTE GMAIL DÉJÀ VÉRIFIÉ (SANS RETAPER LE CODE !)
@@ -1366,8 +1372,9 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
-    </div>
     </>
   );
 }

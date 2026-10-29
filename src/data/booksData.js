@@ -385,6 +385,7 @@ Dans la prochaine étape (**Étape 3 : L'Incrustation des Textes & Bulles de Dia
           {
             pageNumber: 9,
             title: "3.1 L'Art du Dialogue Visuel & Les Outils Disponibles",
+            heroImage: "/images/formation/lessons/bd_etape3_bulles_dialogue.jpg",
             type: "step",
             content: `### Donner de la voix à vos héros sans gâcher la beauté du dessin
 
@@ -424,6 +425,7 @@ Parmi les meilleures applications disponibles, on retrouve notamment **PixelLab*
           {
             pageNumber: 10,
             title: "3.2 Cas Pratique : Tutoriel Pas-à-Pas avec « Ajouter du texte »",
+            heroImage: "/images/formation/lessons/bd_etape3_bulles_dialogue.jpg",
             type: "step",
             content: `### Tutoriel complet : De l'image brute à la planche BD terminée
 

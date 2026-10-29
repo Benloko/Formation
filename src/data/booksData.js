@@ -560,6 +560,7 @@ Appuyez sur le bouton noir **« ENREGISTRER »** : votre planche finale est sauv
           {
             pageNumber: 11,
             title: "4.1 Le Rythme Quotidien, l'Animation de la Page & Le Tremplin Vidéo IA",
+            heroImage: "/images/formation/lessons/bd_etape4_croissance_reseaux.jpg",
             type: "step",
             content: `### La méthode pour faire grandir votre audience et exploser en abonnés
 

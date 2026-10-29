@@ -374,12 +374,30 @@ export function BookReader({
             ) : (
               /* Contenu textuel épuré, soigné et direct */
               <div className="reader-article-body">
-                <header className="article-header">
-                  <span className="article-chapter-breadcrumb">
-                    {currentPage.chapterTitle}
-                  </span>
-                  <h1 className="article-main-title">{currentPage.title}</h1>
-                </header>
+                {currentPage.heroImage ? (
+                  <header className="article-hero-banner-container">
+                    <img 
+                      src={currentPage.heroImage} 
+                      alt={currentPage.title} 
+                      className="article-hero-cover-img"
+                    />
+                    <div className="article-hero-overlay-scrim" aria-hidden="true" />
+                    <div className="article-hero-text-overlay">
+                      <span className="article-hero-chapter-pill">
+                        <Sparkles size={12} />
+                        <span>{currentPage.chapterTitle}</span>
+                      </span>
+                      <h1 className="article-hero-main-title">{currentPage.title}</h1>
+                    </div>
+                  </header>
+                ) : (
+                  <header className="article-header">
+                    <span className="article-chapter-breadcrumb">
+                      {currentPage.chapterTitle}
+                    </span>
+                    <h1 className="article-main-title">{currentPage.title}</h1>
+                  </header>
+                )}
 
                 <div className="article-content">
                   {currentPage.content.split('\n\n').map((paragraph, pIdx) => {

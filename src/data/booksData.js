@@ -23,6 +23,7 @@ export const BOOKS_DATA = [
           {
             pageNumber: 1,
             title: "Vue d'ensemble : Ce que résume cette formation",
+            heroImage: "/images/formation/lessons/bd_etape1_vue_ensemble.jpg",
             type: "intro",
             content: `### Bienvenue dans ma méthode de création
 

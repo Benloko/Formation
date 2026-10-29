@@ -64,11 +64,8 @@ export function ServicesBookView({ onClose }) {
           </div>
 
           <div className="single-page-scrollable-content">
-            {/* En-tête de la page de livre (sans mention d'édition superflue) */}
+            {/* En-tête de la page de livre */}
             <div className="single-page-header">
-              <div className="header-meta-row">
-                <span className="service-category-tag">Accompagnement & Solutions Clés en Main</span>
-              </div>
               <h1 className="single-page-main-title">Nos Services Professionnels</h1>
               <p className="single-page-subtitle">
                 Des actifs digitaux prêts à l'emploi, des créations de comptes monétisables et des formations pratiques pour accélérer vos activités sans repartir de zéro.

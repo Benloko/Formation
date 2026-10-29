@@ -36,8 +36,16 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
   const [mobileActiveTab, setMobileActiveTab] = useState('bd'); // 'bd' | 'video'
   const [prices, setPrices] = useState(() => storageService.getFormationPrices());
   const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
-  const [, setCurrentCountry] = useState(() => currencyService.getCurrentCountry());
   const [lightbox, setLightbox] = useState(null); // null | { type: 'bd' | 'video', index: number }
+  const [teaserBdIndex, setTeaserBdIndex] = useState(0);
+
+  // Défilement automatique des scènes BD chaque 2 secondes sur la carte d'aperçu
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTeaserBdIndex((prev) => (prev + 1) % BD_GALLERY.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
 
   const getUrlReductionPct = () => {
     try {
@@ -250,27 +258,27 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
               ==================================================================== */}
           <div className={`book-page left-page ${mobileActiveTab === 'bd' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <div className="page-inner-content page-fade-in">
-              {/* En-tête de la page avec badge compact et responsive */}
-              <div className="page-header-row">
-                <span className="page-category-tag">🎨 Bandes dessinées & IA</span>
-                {bdReductionPct > 0 && !isBDUnlocked && (
-                  <span className="promo-applied-chip">
-                    ✨ -{bdReductionPct}% ({activePromo.code})
-                  </span>
-                )}
-              </div>
-
-              {/* LIVRE 3D EN HAUT SEUL : TOURNANT DOUCEMENT AVEC HALO LUMINEUX */}
+              {/* LIVRE 3D EN HAUT : CLIC SUR LE LIVRE OU LE BADGE OUVRE/DÉBLOQUE */}
               <div className="book-floating-hero">
                 <div className="book-halo-glow" aria-hidden="true"></div>
                 <img 
                   src="/books/book_bd_cover.png" 
                   alt="Livre BD & Storytelling" 
-                  className="book-rotating-3d"
+                  className="book-rotating-3d clickable-book-cover"
+                  onClick={() => onUnlockBook({ ...bookBD, price: isBDUnlocked ? baseBdPrice : finalBdPrice, originalPrice: origBdPrice })}
+                  style={{ cursor: 'pointer' }}
+                  title={isBDUnlocked ? "Cliquer pour ouvrir la formation débloquée" : "Cliquer pour débloquer cette formation"}
                 />
                 
-                {/* Badge de prix barré net sous le livre */}
-                <div className={`book-price-badge-animated ${isBDUnlocked ? 'is-unlocked' : ''}`}>
+                {/* Badge de prix cliquable sous le livre */}
+                <div 
+                  className={`book-price-badge-animated ${isBDUnlocked ? 'is-unlocked' : ''}`}
+                  onClick={() => onUnlockBook({ ...bookBD, price: isBDUnlocked ? baseBdPrice : finalBdPrice, originalPrice: origBdPrice })}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: 'pointer' }}
+                  title={isBDUnlocked ? "Cliquer pour ouvrir la formation débloquée" : "Cliquer pour débloquer cette formation"}
+                >
                   {isBDUnlocked ? (
                     <span className="price-tag-unlocked">✓ Formation Débloquée</span>
                   ) : (
@@ -311,22 +319,23 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 </div>
               </div>
 
-              {/* CARTE D'APERÇU ANIMÉE UNIQUE EN HAUT */}
+              {/* CARTE D'APERÇU ANIMÉE UNIQUE EN HAUT (IMAGES DÉFILANT TOUTES LES 2 SECONDES) */}
               <div 
                 className="formation-top-teaser-card"
                 onClick={() => {
                   analyticsService.trackButtonClick('teaser_card_click_bd', 'livre-bd-storytelling', '#formations');
-                  setLightbox({ type: 'bd', index: 0 });
+                  setLightbox({ type: 'bd', index: teaserBdIndex });
                 }}
                 role="button"
                 tabIndex={0}
-                title="Cliquer pour feuilleter les 4 scènes"
+                title="Cliquer pour regarder en grand format"
               >
                 <div className="teaser-card-media-wrap">
                   <img 
-                    src="/images/formation/bd-exemples/image1.jpeg" 
-                    alt="Aperçu d'une histoire en BD" 
-                    className="teaser-card-img"
+                    key={teaserBdIndex}
+                    src={BD_GALLERY[teaserBdIndex].img} 
+                    alt={`Aperçu BD - Scène ${teaserBdIndex + 1}`} 
+                    className="teaser-card-img teaser-card-cycle-anim"
                   />
                   <div className="teaser-card-glow-pulse" aria-hidden="true"></div>
                   <div className="teaser-card-overlay">
@@ -501,27 +510,27 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
               ==================================================================== */}
           <div className={`book-page right-page ${mobileActiveTab === 'video' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <div className="page-inner-content page-fade-in">
-              {/* En-tête de la page avec badge compact et responsive */}
-              <div className="page-header-row">
-                <span className="page-category-tag video-tag">🎬 Vidéos avec l'IA</span>
-                {videoReductionPct > 0 && !isVideoUnlocked && (
-                  <span className="promo-applied-chip video-chip">
-                    ✨ -{videoReductionPct}% ({activePromo.code})
-                  </span>
-                )}
-              </div>
-
-              {/* LIVRE 3D EN HAUT SEUL : TOURNANT DOUCEMENT AVEC HALO BLEU/CYAN */}
+              {/* LIVRE 3D EN HAUT : CLIC SUR LE LIVRE OU LE BADGE OUVRE/DÉBLOQUE */}
               <div className="book-floating-hero">
                 <div className="book-halo-glow video-halo" aria-hidden="true"></div>
                 <img 
                   src="/books/book_video_cover.png?v=2" 
                   alt="Livre Vidéos Virales IA" 
-                  className="book-rotating-3d video-book-rotating"
+                  className="book-rotating-3d video-book-rotating clickable-book-cover"
+                  onClick={() => onUnlockBook({ ...bookVideo, price: isVideoUnlocked ? baseVideoPrice : finalVideoPrice, originalPrice: origVideoPrice })}
+                  style={{ cursor: 'pointer' }}
+                  title={isVideoUnlocked ? "Cliquer pour ouvrir la formation débloquée" : "Cliquer pour débloquer cette formation"}
                 />
                 
-                {/* Badge de prix barré net sous le livre */}
-                <div className={`book-price-badge-animated video-badge-animated ${isVideoUnlocked ? 'is-unlocked' : ''}`}>
+                {/* Badge de prix cliquable sous le livre */}
+                <div 
+                  className={`book-price-badge-animated video-badge-animated ${isVideoUnlocked ? 'is-unlocked' : ''}`}
+                  onClick={() => onUnlockBook({ ...bookVideo, price: isVideoUnlocked ? baseVideoPrice : finalVideoPrice, originalPrice: origVideoPrice })}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: 'pointer' }}
+                  title={isVideoUnlocked ? "Cliquer pour ouvrir la formation débloquée" : "Cliquer pour débloquer cette formation"}
+                >
                   {isVideoUnlocked ? (
                     <span className="price-tag-unlocked">✓ Formation Débloquée</span>
                   ) : (
@@ -769,17 +778,20 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             className="formation-lightbox-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Bouton fermeture discret en haut à droite */}
-            <button 
-              className="lightbox-pure-close"
-              onClick={() => setLightbox(null)}
-              aria-label="Fermer la vue"
-              title="Fermer (Échap)"
-            >
-              <X size={20} strokeWidth={2.2} />
-            </button>
+            {/* Barre supérieure AU-DESSUS du média avec croix pure sans rond */}
+            <div className="lightbox-top-bar">
+              <button 
+                type="button"
+                className="lightbox-pure-close"
+                onClick={() => setLightbox(null)}
+                aria-label="Fermer la vue"
+                title="Fermer (Échap)"
+              >
+                <X size={26} strokeWidth={2.4} />
+              </button>
+            </div>
 
-            {/* Zone d'affichage : Image ou Vidéo toute entière, propre, bords arrondis, sans carte blanche */}
+            {/* Zone d'affichage : Image ou Vidéo toute entière, prend bien toute la largeur gauche/droite */}
             <div className="lightbox-pure-viewport">
               {lightbox.type === 'video' ? (
                 <video 

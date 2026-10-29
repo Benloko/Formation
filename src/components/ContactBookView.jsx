@@ -80,13 +80,6 @@ export function ContactBookView({ onClose }) {
           </div>
 
           <div className="single-page-scrollable-content">
-            {/* En-tête épuré et sobre */}
-            <div className="single-page-header">
-              <div className="header-meta-row">
-                <span className="contact-category-tag">Canaux Directs & Partenariat</span>
-              </div>
-            </div>
-
             {/* Grille stylisée des canaux (avec la Carte Promoteur en tête, identique en largeur et format) */}
             <div className="contact-round-grid">
               {/* CARTE 0 : DEVENIR PROMOTEUR (Format et largeur identiques aux autres cartes) */}

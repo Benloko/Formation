@@ -2007,6 +2007,41 @@ div[id^="fedapay_modal_"] .modal__container,
   animation: fedapayModalPop 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* Indicateur de chargement moderne et sécurisé au centre du guichet FedaPay */
+div[id^="fedapay_modal_"] .modal__container::before,
+.modal.is-open .modal__container::before {
+  content: "";
+  position: absolute;
+  top: calc(50% - 30px);
+  left: calc(50% - 16px);
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(245, 158, 11, 0.2);
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: fedapayLoaderSpin 0.75s linear infinite;
+  z-index: 1;
+}
+
+div[id^="fedapay_modal_"] .modal__container::after,
+.modal.is-open .modal__container::after {
+  content: "Connexion sécurisée à FedaPay...";
+  position: absolute;
+  top: calc(50% + 18px);
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #64748b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+@keyframes fedapayLoaderSpin {
+  to { transform: rotate(360deg); }
+}
+
 div[id^="fedapay_modal_"] .modal__iframe,
 .modal.is-open .modal__iframe,
 .modal__iframe {
@@ -2015,8 +2050,10 @@ div[id^="fedapay_modal_"] .modal__iframe,
   min-height: 100% !important;
   border: none !important;
   border-radius: 22px !important;
-  background: #ffffff !important;
+  background: transparent !important;
   display: block !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
 
 

@@ -38,6 +38,18 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
   const [originalPrices, setOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
   const [lightbox, setLightbox] = useState(null); // null | { type: 'bd' | 'video', index: number }
   const [teaserBdIndex, setTeaserBdIndex] = useState(0);
+  const teaserVideoRef = React.useRef(null);
+
+  // Mettre en pause la vidéo d'aperçu d'arrière-plan quand la lightbox est ouverte
+  useEffect(() => {
+    if (teaserVideoRef.current) {
+      if (lightbox) {
+        teaserVideoRef.current.pause();
+      } else {
+        teaserVideoRef.current.play().catch(() => {});
+      }
+    }
+  }, [lightbox]);
 
   // Défilement automatique des scènes BD chaque 2 secondes sur la carte d'aperçu
   useEffect(() => {
@@ -302,7 +314,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   Apprenez à créer vos propres histoires illustrées et bâtissez une audience fidèle directement depuis votre smartphone.
                 </p>
 
-                {/* 3 Badges Clés avec Émojis Rebondissants */}
+                {/* Badges Clés avec Émojis Rebondissants */}
                 <div className="formation-key-pills-row">
                   <div className="key-pill pill-phone">
                     <span className="floating-emoji">📱</span>
@@ -311,10 +323,6 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   <div className="key-pill pill-free">
                     <span className="floating-emoji">🆓</span>
                     <span>Outils IA 100% Gratuits</span>
-                  </div>
-                  <div className="key-pill pill-mentorship">
-                    <span className="floating-emoji">🤝</span>
-                    <span>Notre Accompagnement Privé</span>
                   </div>
                 </div>
               </div>
@@ -554,7 +562,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   Transformez de simples images fixes en vidéos animées dynamiques et captivez votre public sur TikTok et Reels.
                 </p>
 
-                {/* 3 Badges Clés avec Émojis Rebondissants */}
+                {/* Badges Clés avec Émojis Rebondissants */}
                 <div className="formation-key-pills-row">
                   <div className="key-pill pill-phone">
                     <span className="floating-emoji">📱</span>
@@ -563,10 +571,6 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   <div className="key-pill pill-free">
                     <span className="floating-emoji">🆓</span>
                     <span>Animation IA Gratuite</span>
-                  </div>
-                  <div className="key-pill pill-trending">
-                    <span className="floating-emoji">🔥</span>
-                    <span>Format Viral TikTok/Reels</span>
                   </div>
                 </div>
               </div>
@@ -584,11 +588,13 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
               >
                 <div className="teaser-card-media-wrap">
                   <video 
+                    ref={teaserVideoRef}
                     src="/images/formation/video-exemple/sante.mp4" 
                     muted 
                     playsInline 
                     loop 
                     autoPlay 
+                    preload="metadata"
                     className="teaser-card-img"
                     style={{ objectFit: 'cover' }}
                   />
@@ -799,6 +805,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   controls 
                   autoPlay 
                   playsInline 
+                  preload="auto"
                   className="lightbox-pure-media"
                 />
               ) : (

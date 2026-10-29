@@ -493,9 +493,26 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
 
   const handleClaimPayoutWhatsApp = () => {
     const payoutTarget = promoter?.payoutPhone || promoter?.whatsapp || 'Numéro Mobile Money du profil';
-    const text = `Bonjour Mr Ben ! Je suis ${promoter?.prenom || ''} ${promoter?.nom || ''}, promoteur avec le code ${promoter?.codePromo}. J'ai accumulé ${(promoter?.totalEarned || 0).toLocaleString()} FCFA de commissions sur mon espace partenaire et je souhaite faire le point pour mon versement sur mon compte Mobile Money (${payoutTarget}). Merci !`;
-    const url = `https://wa.me/22900000000?text=${encodeURIComponent(text)}`;
+    const text = `Bonjour Mr Ben ! Je suis ${promoter?.prenom || ''} ${promoter?.nom || ''}, promoteur officiel avec le code ${promoter?.codePromo}. J'ai accumulé ${(promoter?.totalEarned || 0).toLocaleString()} FCFA de commissions sur mon espace partenaire et je souhaite faire le point pour mon versement sur mon compte Mobile Money (${payoutTarget}). Merci !`;
+    const url = `https://wa.me/2290199728385?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
+  };
+
+  const handleClaimPayoutGmail = () => {
+    const payoutTarget = promoter?.payoutPhone || promoter?.whatsapp || 'Numéro Mobile Money du profil';
+    const subject = `Demande de versement commissions - Promoteur ${promoter?.codePromo || ''}`;
+    const body = `Bonjour Mr Ben,
+
+Je suis ${promoter?.prenom || ''} ${promoter?.nom || ''}, promoteur officiel avec le code ${promoter?.codePromo}.
+J'ai accumulé un total de ${(promoter?.totalEarned || 0).toLocaleString()} FCFA de commissions sur mon espace partenaire.
+
+Informations pour mon versement :
+- Compte Mobile Money : ${payoutTarget}
+- Email associé : ${promoter?.email || ''}
+
+Merci de procéder au versement de mes gains.`;
+    const mailtoUrl = `mailto:mrbenofficiel6@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_blank');
   };
 
   if (!promoter) {
@@ -1124,17 +1141,29 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
                   </span>
                 </div>
                 <p className="payout-help-note">
-                  Les virements s'effectuent par Mobile Money (MTN, Moov, Wave). Cliquez ci-contre pour faire le point avec Mr Ben sur WhatsApp.
+                  Les virements s'effectuent par Mobile Money (MTN, Moov, Wave). Cliquez ci-contre pour faire le point avec Mr Ben sur WhatsApp ou par Gmail.
                 </p>
               </div>
-              <button 
-                type="button" 
-                className="btn-payout-action"
-                onClick={handleClaimPayoutWhatsApp}
-              >
-                <span>Demander mon versement</span>
-                <ArrowRight size={13} />
-              </button>
+              <div className="payout-actions-group">
+                <button 
+                  type="button" 
+                  className="btn-payout-action btn-payout-whatsapp"
+                  onClick={handleClaimPayoutWhatsApp}
+                  title="Demander mon versement sur WhatsApp (+229 01 99 72 83 85)"
+                >
+                  <MessageCircle size={14} />
+                  <span>Demander sur WhatsApp</span>
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-payout-action btn-payout-gmail"
+                  onClick={handleClaimPayoutGmail}
+                  title="Demander mon versement par Gmail (mrbenofficiel6@gmail.com)"
+                >
+                  <Mail size={14} />
+                  <span>Demander par Gmail</span>
+                </button>
+              </div>
             </div>
 
           </main>

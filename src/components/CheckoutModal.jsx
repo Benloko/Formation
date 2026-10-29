@@ -397,11 +397,6 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
         return;
       }
 
-      // Succès ! Le compte est vérifié
-      try {
-        confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 } });
-      } catch {}
-
       // Mettre à jour la liste des comptes
       const updatedAccounts = storageService.getGoogleAccounts();
       setAccounts(updatedAccounts);
@@ -411,6 +406,9 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
       // Vérifier si ce compte a déjà réglé la formation
       const check = storageService.checkGmailAccess(pendingEmail, activeBook.id);
       if (check.hasAccess) {
+        try {
+          confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+        } catch {}
         setCompletedOrder(check.order);
         setStep('unlocked_showcase');
       } else {
@@ -467,16 +465,14 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
     setSelectedGmail(cleanEmail);
     storageService.setLoggedInGmail(cleanEmail);
     storageService.addGoogleAccount(cleanEmail, name || cleanEmail.split('@')[0]);
-
-    try {
-      confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
-    } catch {}
-
     const updated = storageService.getGoogleAccounts();
     setAccounts(updated);
 
     const check = storageService.checkGmailAccess(cleanEmail, activeBook.id);
     if (check.hasAccess) {
+      try {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      } catch {}
       setCompletedOrder(check.order);
       setStep('unlocked_showcase');
     } else {

@@ -1111,7 +1111,8 @@
   overflow: hidden;
 }
 
-.lightbox-view-img {
+.lightbox-view-img,
+.lightbox-view-video {
   max-width: 100%;
   max-height: calc(88vh - 135px);
   width: auto;

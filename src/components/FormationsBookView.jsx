@@ -17,15 +17,19 @@ import { currencyService } from '../services/currencyService';
 import './FormationsBookView.css';
 
 const BD_GALLERY = [
-  { id: 1, img: '/images/formation/bd-scene-1-pleurs.jpg', alt: 'Scène 1' },
-  { id: 2, img: '/images/formation/bd-scene-2-espoir.jpg', alt: 'Scène 2' },
-  { id: 3, img: '/images/formation/bd-scene-3-action.jpg', alt: 'Scène 3' },
+  { id: 1, img: '/images/formation/bd-exemples/image1.jpeg', alt: 'Scène 1' },
+  { id: 2, img: '/images/formation/bd-exemples/image2.jpeg', alt: 'Scène 2' },
+  { id: 3, img: '/images/formation/bd-exemples/image3.jpeg', alt: 'Scène 3' },
+  { id: 4, img: '/images/formation/bd-exemples/image4.jpeg', alt: 'Scène 4' },
 ];
 
 const VIDEO_GALLERY = [
-  { id: 1, img: '/images/formation/ariel-voisine-scene-1.jpg', alt: 'Extrait 1' },
-  { id: 2, img: '/images/formation/ariel-voisine-scene-2.jpg', alt: 'Extrait 2' },
-  { id: 3, img: '/images/formation/ariel-voisine-scene-3.jpg', alt: 'Extrait 3' },
+  { 
+    id: 1, 
+    video: '/images/formation/video-exemple/sante.mp4', 
+    poster: '/images/formation/bd-exemples/image1.jpeg',
+    alt: 'Extrait Vidéo' 
+  },
 ];
 
 export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, activePromo: propActivePromo }) {
@@ -316,11 +320,11 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 }}
                 role="button"
                 tabIndex={0}
-                title="Cliquer pour feuilleter les 3 scènes"
+                title="Cliquer pour feuilleter les 4 scènes"
               >
                 <div className="teaser-card-media-wrap">
                   <img 
-                    src="/images/formation/bd-scene-1-pleurs.jpg" 
+                    src="/images/formation/bd-exemples/image1.jpeg" 
                     alt="Aperçu d'une histoire en BD" 
                     className="teaser-card-img"
                   />
@@ -332,7 +336,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     </div>
                     <div className="teaser-cta-pill">
                       <Eye size={14} />
-                      <span>Cliquer pour feuilleter (1/3)</span>
+                      <span>Cliquer pour feuilleter (1/4)</span>
                     </div>
                   </div>
                 </div>
@@ -571,23 +575,27 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 }}
                 role="button"
                 tabIndex={0}
-                title="Cliquer pour voir les 3 extraits animés"
+                title="Cliquer pour regarder l'extrait vidéo"
               >
                 <div className="teaser-card-media-wrap">
-                  <img 
-                    src="/images/formation/ariel-voisine-scene-1.jpg" 
-                    alt="Aperçu des vidéos animées IA" 
+                  <video 
+                    src="/images/formation/video-exemple/sante.mp4" 
+                    muted 
+                    playsInline 
+                    loop 
+                    autoPlay 
                     className="teaser-card-img"
+                    style={{ objectFit: 'cover' }}
                   />
                   <div className="teaser-card-glow-pulse video-pulse" aria-hidden="true"></div>
                   <div className="teaser-card-overlay">
                     <div className="teaser-badge-pill video-pill">
                       <span className="teaser-dot-pulse cyan"></span>
-                      <span>🎬 Extraits Vidéos Réalisés avec l'IA</span>
+                      <span>🎬 Extrait Vidéo Réalisé avec l'IA</span>
                     </div>
                     <div className="teaser-cta-pill video-cta">
                       <Play size={13} fill="#ffffff" stroke="none" />
-                      <span>Cliquer pour regarder (1/3)</span>
+                      <span>Cliquer pour regarder</span>
                     </div>
                   </div>
                 </div>
@@ -784,53 +792,65 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
               </button>
             </div>
 
-            {/* Zone d'affichage : Image toute entière et propre, sans description */}
+            {/* Zone d'affichage : Image ou Vidéo toute entière et propre, sans description */}
             <div className="lightbox-modal-viewport">
-              <img 
-                src={(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY)[lightbox.index].img}
-                alt={`Scène ${lightbox.index + 1}`}
-                className="lightbox-view-img"
-              />
+              {lightbox.type === 'video' ? (
+                <video 
+                  src={VIDEO_GALLERY[lightbox.index].video}
+                  controls 
+                  autoPlay 
+                  playsInline 
+                  className="lightbox-view-video"
+                />
+              ) : (
+                <img 
+                  src={BD_GALLERY[lightbox.index].img}
+                  alt={`Scène ${lightbox.index + 1}`}
+                  className="lightbox-view-img"
+                />
+              )}
             </div>
 
-            {/* Barre de navigation inférieure : bouton Précédent et Suivant simples */}
-            <div className="lightbox-modal-nav">
-              <button 
-                type="button"
-                className="lightbox-nav-btn prev-btn"
-                onClick={handlePrevSlide}
-                aria-label="Image précédente"
-              >
-                <ChevronLeft size={16} />
-                <span>Précédent</span>
-              </button>
-              
-              {/* Puces indicatrices discrètes */}
-              <div className="lightbox-nav-dots">
-                {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).map((item, idx) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`lightbox-nav-dot ${idx === lightbox.index ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightbox((prev) => ({ ...prev, index: idx }));
-                    }}
-                    aria-label={`Aller à la scène ${idx + 1}`}
-                  />
-                ))}
+            {/* Barre de navigation inférieure : bouton Précédent et Suivant (si plus d'1 élément) */}
+            {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length > 1 ? (
+              <div className="lightbox-modal-nav">
+                <button 
+                  type="button"
+                  className="lightbox-nav-btn prev-btn"
+                  onClick={handlePrevSlide}
+                  aria-label="Image précédente"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Précédent</span>
+                </button>
+                
+                {/* Puces indicatrices discrètes */}
+                <div className="lightbox-nav-dots">
+                  {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).map((item, idx) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`lightbox-nav-dot ${idx === lightbox.index ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightbox((prev) => ({ ...prev, index: idx }));
+                      }}
+                      aria-label={`Aller à la scène ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <button 
+                  type="button"
+                  className="lightbox-nav-btn next-btn"
+                  onClick={handleNextSlide}
+                  aria-label="Image suivante"
+                >
+                  <span>Suivant</span>
+                  <ChevronRight size={16} />
+                </button>
               </div>
-
-              <button 
-                type="button"
-                className="lightbox-nav-btn next-btn"
-                onClick={handleNextSlide}
-                aria-label="Image suivante"
-              >
-                <span>Suivant</span>
-                <ChevronRight size={16} />
-              </button>
-            </div>
+            ) : null}
           </div>
         </div>
       )}

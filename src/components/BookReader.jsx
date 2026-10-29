@@ -396,7 +396,7 @@ export function BookReader({
                 )}
 
                 <div className="article-content">
-                  {currentPage.content.split('\n\n').map((paragraph, pIdx) => {
+                  {currentPage.content.split(/\n\s*\n+/).map((paragraph, pIdx) => {
                     const trimmed = paragraph.trim();
                     if (!trimmed) return null;
                     if (trimmed.startsWith('### ')) {
@@ -407,6 +407,18 @@ export function BookReader({
                     }
                     if (trimmed.startsWith('#### ')) {
                       return <h3 key={pIdx} className="art-h3">{trimmed.replace('#### ', '')}</h3>;
+                    }
+                    // Support blockquotes starting with >
+                    if (trimmed.startsWith('> ') || trimmed.startsWith('>')) {
+                      const quoteText = trimmed.split('\n').map(l => l.replace(/^>\s*/, '')).join(' ');
+                      const parsedHtml = quoteText
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                      return (
+                        <blockquote key={pIdx} className="art-blockquote">
+                          <div dangerouslySetInnerHTML={{ __html: parsedHtml }} />
+                        </blockquote>
+                      );
                     }
                     // Support markdown image ![alt](src)
                     const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
@@ -483,10 +495,23 @@ export function BookReader({
                         </ol>
                       );
                     }
-                    const parsedParagraph = trimmed
+                    // Formatter le paragraphe avec fluidité sans faux sauts de ligne intempestifs
+                    const pLines = trimmed.split('\n');
+                    let formattedText = '';
+                    pLines.forEach((line, idx) => {
+                      const l = line.trim();
+                      if (!l) return;
+                      if (idx === 0) {
+                        formattedText += l;
+                      } else if (l.startsWith('👉') || l.startsWith('•') || l.startsWith('-') || l.startsWith('🟢')) {
+                        formattedText += '<br />' + l;
+                      } else {
+                        formattedText += ' ' + l;
+                      }
+                    });
+                    const parsedParagraph = formattedText
                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                      .replace(/\n/g, '<br />');
+                      .replace(/\*(.*?)\*/g, '<em>$1</em>');
                     return (
                       <p 
                         key={pIdx} 

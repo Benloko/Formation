@@ -330,13 +330,9 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   />
                   <div className="teaser-card-glow-pulse" aria-hidden="true"></div>
                   <div className="teaser-card-overlay">
-                    <div className="teaser-badge-pill">
-                      <span className="teaser-dot-pulse"></span>
-                      <span>✨ Exemples d'histoire en BD</span>
-                    </div>
+                    <span className="teaser-simple-tag">Extrait</span>
                     <div className="teaser-cta-pill">
-                      <Eye size={14} />
-                      <span>Cliquer pour feuilleter (1/4)</span>
+                      <span>Regarder</span>
                     </div>
                   </div>
                 </div>
@@ -589,13 +585,9 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   />
                   <div className="teaser-card-glow-pulse video-pulse" aria-hidden="true"></div>
                   <div className="teaser-card-overlay">
-                    <div className="teaser-badge-pill video-pill">
-                      <span className="teaser-dot-pulse cyan"></span>
-                      <span>🎬 Extrait Vidéo Réalisé avec l'IA</span>
-                    </div>
+                    <span className="teaser-simple-tag video-tag">Extrait</span>
                     <div className="teaser-cta-pill video-cta">
-                      <Play size={13} fill="#ffffff" stroke="none" />
-                      <span>Cliquer pour regarder</span>
+                      <span>Regarder</span>
                     </div>
                   </div>
                 </div>
@@ -777,60 +769,65 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             className="formation-lightbox-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Barre supérieure : compteur & croix de fermeture */}
-            <div className="lightbox-modal-header">
-              <div className="lightbox-counter-badge">
-                {lightbox.type === 'bd' ? '🎨 Histoire en BD' : '🎬 Extrait Vidéo IA'} • {lightbox.index + 1} / {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length}
-              </div>
-              <button 
-                className="lightbox-modal-close"
-                onClick={() => setLightbox(null)}
-                aria-label="Fermer la vue"
-                title="Fermer (Échap)"
-              >
-                <X size={18} strokeWidth={2.5} />
-              </button>
-            </div>
+            {/* Bouton fermeture discret en haut à droite */}
+            <button 
+              className="lightbox-pure-close"
+              onClick={() => setLightbox(null)}
+              aria-label="Fermer la vue"
+              title="Fermer (Échap)"
+            >
+              <X size={20} strokeWidth={2.2} />
+            </button>
 
-            {/* Zone d'affichage : Image ou Vidéo toute entière et propre, sans description */}
-            <div className="lightbox-modal-viewport">
+            {/* Zone d'affichage : Image ou Vidéo toute entière, propre, bords arrondis, sans carte blanche */}
+            <div className="lightbox-pure-viewport">
               {lightbox.type === 'video' ? (
                 <video 
                   src={VIDEO_GALLERY[lightbox.index].video}
                   controls 
                   autoPlay 
                   playsInline 
-                  className="lightbox-view-video"
+                  className="lightbox-pure-media"
                 />
               ) : (
                 <img 
                   src={BD_GALLERY[lightbox.index].img}
                   alt={`Scène ${lightbox.index + 1}`}
-                  className="lightbox-view-img"
+                  className="lightbox-pure-media"
                 />
               )}
             </div>
 
-            {/* Barre de navigation inférieure : bouton Précédent et Suivant (si plus d'1 élément) */}
-            {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length > 1 ? (
-              <div className="lightbox-modal-nav">
+            {/* Flèches de navigation sobres & professionnelles (si plusieurs éléments) */}
+            {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length > 1 && (
+              <>
                 <button 
                   type="button"
-                  className="lightbox-nav-btn prev-btn"
+                  className="lightbox-pure-nav-btn prev-arrow"
                   onClick={handlePrevSlide}
-                  aria-label="Image précédente"
+                  aria-label="Précédent"
+                  title="Précédent"
                 >
-                  <ChevronLeft size={16} />
-                  <span>Précédent</span>
+                  <ChevronLeft size={22} strokeWidth={2.4} />
                 </button>
-                
-                {/* Puces indicatrices discrètes */}
-                <div className="lightbox-nav-dots">
+
+                <button 
+                  type="button"
+                  className="lightbox-pure-nav-btn next-arrow"
+                  onClick={handleNextSlide}
+                  aria-label="Suivant"
+                  title="Suivant"
+                >
+                  <ChevronRight size={22} strokeWidth={2.4} />
+                </button>
+
+                {/* Petits points discrets en bas */}
+                <div className="lightbox-pure-dots">
                   {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).map((item, idx) => (
                     <button
                       key={item.id}
                       type="button"
-                      className={`lightbox-nav-dot ${idx === lightbox.index ? 'active' : ''}`}
+                      className={`lightbox-pure-dot ${idx === lightbox.index ? 'active' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         setLightbox((prev) => ({ ...prev, index: idx }));
@@ -839,18 +836,8 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                     />
                   ))}
                 </div>
-
-                <button 
-                  type="button"
-                  className="lightbox-nav-btn next-btn"
-                  onClick={handleNextSlide}
-                  aria-label="Image suivante"
-                >
-                  <span>Suivant</span>
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            ) : null}
+              </>
+            )}
           </div>
         </div>
       )}

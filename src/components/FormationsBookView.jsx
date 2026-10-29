@@ -268,7 +268,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 {/* Badge de prix barré net sous le livre */}
                 <div className={`book-price-badge-animated ${isBDUnlocked ? 'is-unlocked' : ''}`}>
                   {isBDUnlocked ? (
-                    <span className="price-tag-gold">✓ Formation Débloquée</span>
+                    <span className="price-tag-unlocked">✓ Formation Débloquée</span>
                   ) : (
                     <div className="book-price-strikethrough-wrap">
                       <span className="price-tag-struck">{bdPair.originalFormatted}</span>
@@ -523,7 +523,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 {/* Badge de prix barré net sous le livre */}
                 <div className={`book-price-badge-animated video-badge-animated ${isVideoUnlocked ? 'is-unlocked' : ''}`}>
                   {isVideoUnlocked ? (
-                    <span className="price-tag-gold">✓ Formation Débloquée</span>
+                    <span className="price-tag-unlocked">✓ Formation Débloquée</span>
                   ) : (
                     <div className="book-price-strikethrough-wrap">
                       <span className="price-tag-struck">{videoPair.originalFormatted}</span>

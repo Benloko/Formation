@@ -490,11 +490,26 @@
   }
 }
 
+/* Badge "Formation Débloquée" : fond vert foncé plein + texte blanc = lisible sur le papier ivoire */
 .book-price-badge-animated.is-unlocked {
-  background: rgba(16, 185, 129, 0.15) !important;
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
   border-color: #10b981 !important;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.35) !important;
+  padding: 0.3rem 0.95rem;
   animation: none;
+}
+
+.price-tag-unlocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .book-price-strikethrough-wrap {

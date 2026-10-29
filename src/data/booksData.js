@@ -145,6 +145,7 @@ En créant cette complicité avec vos lecteurs, vous ne faites pas que publier d
           {
             pageNumber: 6,
             title: "2.1 Le Duo Indispensable : ChatGPT l'Architecte & Gemini le Peintre",
+            heroImage: "/images/formation/lessons/bd_etape2_master_prompt.jpg",
             type: "step",
             content: `### Ne confondez jamais l'outil qui rédige et l'outil qui peint
 
@@ -174,6 +175,7 @@ Il doit préciser le style artistique, la focale de la caméra, la position exac
           {
             pageNumber: 7,
             title: "2.2 Apprêter le Fil de Discussion & Verrouiller l'ADN des Personnages",
+            heroImage: "/images/formation/lessons/bd_etape2_master_prompt.jpg",
             type: "step",
             content: `### Comment cadrer l'IA pour qu'elle produise des merveilles sans s'égarer
 
@@ -243,6 +245,7 @@ Dans chaque scène suivante, ChatGPT reprend automatiquement ces balises physiqu
           {
             pageNumber: 8,
             title: "2.3 Cas Pratique : Les 3 Scènes Enchaînées avec l'Exemplaire Officiel",
+            heroImage: "/images/formation/lessons/bd_etape2_master_prompt.jpg",
             type: "step",
             content: `### Du dialogue dans ChatGPT à la génération dans Gemini
 

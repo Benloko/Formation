@@ -637,6 +637,7 @@ Les planches de BD sont idéales pour fidéliser vos lecteurs, mais pour toucher
           {
             pageNumber: 1,
             title: "Vue d'ensemble : Ce que résume cette formation",
+            heroImage: "/images/formation/lessons/video_etape1_gemini_prompt.jpg",
             type: "intro",
             content: `### Bienvenue dans ma méthode de création vidéo
 
@@ -662,6 +663,7 @@ Vous n'avez pas besoin de compétences techniques avancées. Avec votre téléph
           {
             pageNumber: 2,
             title: "1.1 Apprêter l'interface de discussion avec Google Gemini",
+            heroImage: "/images/formation/lessons/video_etape1_gemini_prompt.jpg",
             type: "step",
             content: `### Comment conditionner Google Gemini pour devenir votre scénariste vidéo
 
@@ -703,6 +705,7 @@ Contrairement à d'autres outils, **Google Gemini** est 100% gratuit, accessible
           {
             pageNumber: 3,
             title: "1.2 La méthode d'envoi scène par scène & L'Exemplaire de Prompt",
+            heroImage: "/images/formation/lessons/video_etape1_gemini_prompt.jpg",
             type: "step",
             content: `### Le déroulement concret pour chaque scène de votre feuilleton
 
@@ -790,6 +793,7 @@ Pour la scène suivante de votre épisode, restez simplement dans la même discu
           {
             pageNumber: 4,
             title: "2.1 Génération sur Google Flow & Montage Rapide (CapCut / YouCut)",
+            heroImage: "/images/formation/lessons/video_etape2_google_flow.jpg",
             type: "step",
             content: `### Du Prompt au Clip Vidéo : Le Guide Pas à Pas sur Google Flow
 
@@ -932,6 +936,7 @@ Tout se fait directement sur votre smartphone grâce à deux applications gratui
           {
             pageNumber: 5,
             title: "3.1 Le Rythme Quotidien, les Hashtags Stratégiques & Le Tremplin Storytelling",
+            heroImage: "/images/formation/lessons/video_etape3_croissance_reseaux.jpg",
             type: "step",
             content: `### La méthode pour faire décoller vos vidéos et bâtir un empire d'abonnés
 

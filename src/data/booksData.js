@@ -5,13 +5,13 @@ export const BOOKS_DATA = [
     id: "livre-bd-storytelling",
     type: "bd",
     title: "L'Art du Storytelling & Bandes Dessinées avec l'IA",
-    subtitle: "La méthode complète de Mr Ben pour créer des feuilletons captivants",
+    subtitle: "La méthode complète de Mr Ben pour créer des histoires captivantes",
     coverTag: "FORMATION 1",
     price: 2500,
     originalPrice: 5000,
     currency: "FCFA",
     badge: "Best-seller",
-    description: "Apprenez pas à pas la méthode de Mr Ben pour concevoir des bandes dessinées captivantes et des feuilletons viraux sur les réseaux sociaux.",
+    description: "Apprenez pas à pas la méthode de Mr Ben pour concevoir des bandes dessinées captivantes et des histoires virales sur les réseaux sociaux.",
     freePreviewPages: 1, // Page 1 en lecture libre pour découvrir le résumé et la méthode
     chapters: [
       {
@@ -614,7 +614,7 @@ Les planches de BD sont idéales pour fidéliser vos lecteurs, mais pour toucher
     originalPrice: 6000,
     currency: "FCFA",
     badge: "Formation 2",
-    description: "La méthode pas à pas de Mr Ben pour créer des feuilletons vidéos animés percutants et viraux avec l'intelligence artificielle.",
+    description: "La méthode pas à pas de Mr Ben pour créer des histoires en vidéos animées percutantes et virales avec l'intelligence artificielle.",
     freePreviewPages: 1,
     chapters: [
       {

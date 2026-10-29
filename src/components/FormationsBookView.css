@@ -248,9 +248,15 @@
 .page-inner-content {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0; /* garde sa hauteur réelle : la page défile au lieu d'écraser le contenu */
   min-height: 100%;
   height: auto;
   padding-bottom: 2rem;
+}
+
+/* Aucun bloc (carte d'aperçu, modules…) ne doit être écrasé à 0px de hauteur */
+.page-inner-content > * {
+  flex-shrink: 0;
 }
 
 .page-fade-in {

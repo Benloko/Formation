@@ -287,7 +287,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                   L'Art du Storytelling & Bandes Dessinées
                 </h2>
                 <p className="formation-catchy-lead">
-                  Apprenez à créer vos propres feuilletons illustrés et bâtissez une audience fidèle directement depuis votre smartphone.
+                  Apprenez à créer vos propres histoires illustrées et bâtissez une audience fidèle directement depuis votre smartphone.
                 </p>
 
                 {/* 3 Badges Clés avec Émojis Rebondissants */}
@@ -321,14 +321,14 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
                 <div className="teaser-card-media-wrap">
                   <img 
                     src="/images/formation/bd-scene-1-pleurs.jpg" 
-                    alt="Aperçu du feuilleton BD" 
+                    alt="Aperçu d'une histoire en BD" 
                     className="teaser-card-img"
                   />
                   <div className="teaser-card-glow-pulse" aria-hidden="true"></div>
                   <div className="teaser-card-overlay">
                     <div className="teaser-badge-pill">
                       <span className="teaser-dot-pulse"></span>
-                      <span>✨ Exemples de Feuilleton BD</span>
+                      <span>✨ Exemples d'histoire en BD</span>
                     </div>
                     <div className="teaser-cta-pill">
                       <Eye size={14} />
@@ -772,7 +772,7 @@ export function FormationsBookView({ onClose, onUnlockBook, onGoToServices, acti
             {/* Barre supérieure : compteur & croix de fermeture */}
             <div className="lightbox-modal-header">
               <div className="lightbox-counter-badge">
-                {lightbox.type === 'bd' ? '🎨 Feuilleton Illustré' : '🎬 Extrait Vidéo IA'} • {lightbox.index + 1} / {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length}
+                {lightbox.type === 'bd' ? '🎨 Histoire en BD' : '🎬 Extrait Vidéo IA'} • {lightbox.index + 1} / {(lightbox.type === 'bd' ? BD_GALLERY : VIDEO_GALLERY).length}
               </div>
               <button 
                 className="lightbox-modal-close"

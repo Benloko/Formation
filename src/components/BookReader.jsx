@@ -383,10 +383,6 @@ export function BookReader({
                     />
                     <div className="article-hero-overlay-scrim" aria-hidden="true" />
                     <div className="article-hero-text-overlay">
-                      <span className="article-hero-chapter-pill">
-                        <Sparkles size={12} />
-                        <span>{currentPage.chapterTitle}</span>
-                      </span>
                       <h1 className="article-hero-main-title">{currentPage.title}</h1>
                     </div>
                   </header>

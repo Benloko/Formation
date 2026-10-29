@@ -48,6 +48,7 @@ Vous n'avez pas besoin de savoir dessiner, ni d'avoir un ordinateur sophistiqué
           {
             pageNumber: 2,
             title: "1.1 Trouver une histoire qui captive votre audience",
+            heroImage: "/images/formation/lessons/bd_etape1_vue_ensemble.jpg",
             type: "step",
             content: `### Où trouver des idées qui touchent vraiment les gens ?
 
@@ -70,6 +71,7 @@ Dès que cet imprévu apparaît, l'histoire est lancée. Vous n'avez pas besoin 
           {
             pageNumber: 3,
             title: "1.2 Les 3 piliers indispensables d'un épisode réussi",
+            heroImage: "/images/formation/lessons/bd_etape1_vue_ensemble.jpg",
             type: "step",
             content: `### Comment concevoir une planche qui frappe l'œil ?
 
@@ -94,6 +96,7 @@ Chaque épisode doit apporter un petit détail tout en laissant une porte ouvert
           {
             pageNumber: 4,
             title: "1.3 La méthode du ralenti narratif pour tenir sur la durée",
+            heroImage: "/images/formation/lessons/bd_etape1_vue_ensemble.jpg",
             type: "strategy",
             content: `### Le secret pour créer des feuilletons de 50 ou 100 épisodes
 
@@ -114,6 +117,7 @@ En procédant ainsi, vous donnez à chaque épisode le temps de respirer et de c
           {
             pageNumber: 5,
             title: "1.4 L'art du cliffhanger et le secret de l'engagement",
+            heroImage: "/images/formation/lessons/bd_etape1_vue_ensemble.jpg",
             type: "strategy",
             content: `### Transformer vos lecteurs en commentateurs passionnés
 

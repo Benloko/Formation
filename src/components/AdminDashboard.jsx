@@ -50,7 +50,8 @@ import {
   EyeOff,
   ShieldCheck,
   AlertCircle,
-  Loader2
+  Loader2,
+  Edit2
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { analyticsService } from '../services/analyticsService';
@@ -105,6 +106,22 @@ export function AdminDashboard({ onClose }) {
   const [promoters, setPromoters] = useState(() => storageService.getAllPromoters());
   const [promoCreatedSuccess, setPromoCreatedSuccess] = useState(null);
   const [promoterError, setPromoterError] = useState('');
+
+  // Modification / Édition d'un promoteur & Code promo & Pourcentages
+  const [isEditPromoModalOpen, setIsEditPromoModalOpen] = useState(false);
+  const [editPromoterForm, setEditPromoterForm] = useState({
+    id: '',
+    nom: '',
+    prenom: '',
+    codePromo: '',
+    targetBookId: 'all',
+    reductionPct: '20',
+    commissionPct: '50',
+    whatsapp: ''
+  });
+  const [editPromoterError, setEditPromoterError] = useState('');
+  const [editPromoterSuccess, setEditPromoterSuccess] = useState('');
+  const [isUpdatingPromoter, setIsUpdatingPromoter] = useState(false);
 
   // États d'action
   const [copiedCode, setCopiedCode] = useState(null);
@@ -218,6 +235,57 @@ export function AdminDashboard({ onClose }) {
       refreshData();
     } else {
       setPromoterError(res.message || "Erreur lors de la création du promoteur.");
+    }
+  };
+
+  const handleOpenEditPromoter = (p) => {
+    setEditPromoterError('');
+    setEditPromoterSuccess('');
+    setEditPromoterForm({
+      id: p.id,
+      nom: p.nom || '',
+      prenom: p.prenom || '',
+      codePromo: p.codePromo || '',
+      targetBookId: p.targetBookId || 'all',
+      reductionPct: String(p.reductionPct ?? 20),
+      commissionPct: String(p.commissionPct ?? 50),
+      whatsapp: p.whatsapp || p.payoutPhone || ''
+    });
+    setIsEditPromoModalOpen(true);
+  };
+
+  const handleUpdatePromoter = async (e) => {
+    e.preventDefault();
+    setEditPromoterError('');
+    setEditPromoterSuccess('');
+    setIsUpdatingPromoter(true);
+
+    try {
+      const res = await storageService.updatePromoter({
+        id: editPromoterForm.id,
+        codePromo: editPromoterForm.codePromo,
+        reductionPct: editPromoterForm.reductionPct,
+        commissionPct: editPromoterForm.commissionPct,
+        nom: editPromoterForm.nom,
+        prenom: editPromoterForm.prenom,
+        whatsapp: editPromoterForm.whatsapp,
+        targetBookId: editPromoterForm.targetBookId
+      });
+
+      if (res.success) {
+        setEditPromoterSuccess("Code promo et pourcentages modifiés avec succès !");
+        refreshData();
+        setTimeout(() => {
+          setIsEditPromoModalOpen(false);
+          setEditPromoterSuccess('');
+        }, 900);
+      } else {
+        setEditPromoterError(res.message || "Erreur lors de la modification du promoteur.");
+      }
+    } catch (err) {
+      setEditPromoterError("Une erreur est survenue lors de l'enregistrement.");
+    } finally {
+      setIsUpdatingPromoter(false);
     }
   };
 
@@ -2272,14 +2340,23 @@ export function AdminDashboard({ onClose }) {
                                 </div>
                               </td>
                               <td>
-                                <button 
-                                  className="code-badge-copy"
-                                  onClick={() => handleCopy(p.codePromo)}
-                                  title="Copier le code promo"
-                                >
-                                  <code>{p.codePromo}</code>
-                                  {copiedCode === p.codePromo ? <Check size={11} className="text-green" /> : <Copy size={11} />}
-                                </button>
+                                <div className="promoter-code-cell-wrapper">
+                                  <button 
+                                    className="code-badge-copy"
+                                    onClick={() => handleCopy(p.codePromo)}
+                                    title="Copier le code promo"
+                                  >
+                                    <code>{p.codePromo}</code>
+                                    {copiedCode === p.codePromo ? <Check size={11} className="text-green" /> : <Copy size={11} />}
+                                  </button>
+                                  <button
+                                    className="btn-icon-tool-mini edit"
+                                    onClick={() => handleOpenEditPromoter(p)}
+                                    title="Modifier ce code promo ou ses pourcentages"
+                                  >
+                                    <Edit2 size={10} />
+                                  </button>
+                                </div>
                               </td>
                               <td>
                                 <span className="label-formation-clean gold">
@@ -2287,10 +2364,22 @@ export function AdminDashboard({ onClose }) {
                                 </span>
                               </td>
                               <td>
-                                <span className="pill-status-avail">-{p.reductionPct}%</span>
+                                <button 
+                                  className="pill-status-avail clickable"
+                                  onClick={() => handleOpenEditPromoter(p)}
+                                  title="Cliquer pour modifier la réduction de l'élève"
+                                >
+                                  -{p.reductionPct}%
+                                </button>
                               </td>
                               <td>
-                                <span className="pill-status-avail purple">{p.commissionPct}%</span>
+                                <button 
+                                  className="pill-status-avail purple clickable"
+                                  onClick={() => handleOpenEditPromoter(p)}
+                                  title="Cliquer pour modifier la commission du promoteur"
+                                >
+                                  {p.commissionPct}%
+                                </button>
                               </td>
                               <td>
                                 <strong>{p.salesCount || 0}</strong>
@@ -2309,6 +2398,14 @@ export function AdminDashboard({ onClose }) {
                               </td>
                               <td style={{ textAlign: 'right' }}>
                                 <div className="row-icon-actions">
+                                  <button 
+                                    className="btn-icon-tool edit"
+                                    onClick={() => handleOpenEditPromoter(p)}
+                                    title="Modifier le code promo, la réduction et la commission"
+                                  >
+                                    <Edit2 size={13} />
+                                  </button>
+
                                   <button 
                                     className="btn-icon-tool copy-link"
                                     onClick={() => handleCopyPromoterPortalLink(p)}
@@ -2830,6 +2927,228 @@ export function AdminDashboard({ onClose }) {
                   </button>
                 </div>
               )}
+
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ====================================================================
+          MODALE 2b : MODIFICATION DU PROMOTEUR, DU CODE PROMO & DES POURCENTAGES
+         ==================================================================== */}
+      {isEditPromoModalOpen && (() => {
+        const priceBook1 = Number(formationPrices['livre-bd-storytelling']) || 2500;
+        const priceBook2 = Number(formationPrices['livre-videos-ia']) || 2500;
+
+        const reductionPctNum = Math.min(90, Math.max(1, Number(editPromoterForm.reductionPct) || 0));
+        const commissionPctNum = Math.min(90, Math.max(1, Number(editPromoterForm.commissionPct) || 0));
+
+        // Formation 1 : BD & Storytelling
+        const discount1 = Math.round((priceBook1 * reductionPctNum) / 100);
+        const buyerPays1 = Math.max(0, priceBook1 - discount1);
+        const promoterGain1 = Math.round((buyerPays1 * commissionPctNum) / 100);
+        const mrBenGain1 = Math.max(0, buyerPays1 - promoterGain1);
+
+        // Formation 2 : Vidéos Virales avec l'IA
+        const discount2 = Math.round((priceBook2 * reductionPctNum) / 100);
+        const buyerPays2 = Math.max(0, priceBook2 - discount2);
+        const promoterGain2 = Math.round((buyerPays2 * commissionPctNum) / 100);
+        const mrBenGain2 = Math.max(0, buyerPays2 - promoterGain2);
+
+        return (
+          <div className="modal-overlay-backdrop">
+            <div className="modal-dialog-box promo">
+              
+              <div className="dialog-header">
+                <div className="dialog-title-flex">
+                  <Edit2 size={18} className="text-cyan" />
+                  <div>
+                    <h4>Modifier le Promoteur & Code Promo</h4>
+                    <p>Ajustez le code promo, la réduction élève et la commission partenaire en direct.</p>
+                  </div>
+                </div>
+                <button 
+                  className="btn-dialog-close" 
+                  onClick={() => setIsEditPromoModalOpen(false)}
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdatePromoter} className="dialog-form-flow">
+                {editPromoterError && (
+                  <div className="dialog-error-banner">
+                    {editPromoterError}
+                  </div>
+                )}
+
+                {editPromoterSuccess && (
+                  <div className="dialog-success-banner" style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.4)', color: '#4ade80', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={16} />
+                    <span>{editPromoterSuccess}</span>
+                  </div>
+                )}
+
+                <div className="dialog-fields-row">
+                  <div className="dialog-field">
+                    <label>Prénom du promoteur :</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Samuel"
+                      value={editPromoterForm.prenom}
+                      onChange={(e) => setEditPromoterForm({ ...editPromoterForm, prenom: e.target.value })}
+                      required
+                      className="dialog-input"
+                    />
+                  </div>
+                  <div className="dialog-field">
+                    <label>Nom de famille :</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Agbo"
+                      value={editPromoterForm.nom}
+                      onChange={(e) => setEditPromoterForm({ ...editPromoterForm, nom: e.target.value })}
+                      required
+                      className="dialog-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="dialog-fields-row single-col">
+                  <div className="dialog-field">
+                    <label>Code Promo unique du partenaire :</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: SAMUEL20 ou BEN20"
+                      value={editPromoterForm.codePromo}
+                      onChange={(e) => setEditPromoterForm({ ...editPromoterForm, codePromo: e.target.value.toUpperCase().replace(/\s+/g, '') })}
+                      required
+                      className="dialog-input code-input"
+                    />
+                    <small style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                      Ce code promo sera instantanément mis à jour pour tous les futurs acheteurs et dans son espace partenaire.
+                    </small>
+                  </div>
+                </div>
+
+                <div className="dialog-fields-row">
+                  <div className="dialog-field">
+                    <label>Réduction accordée à l'élève (%) :</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      max="90"
+                      placeholder="Ex: 20"
+                      value={editPromoterForm.reductionPct}
+                      onChange={(e) => setEditPromoterForm({ ...editPromoterForm, reductionPct: e.target.value })}
+                      required
+                      className="dialog-input"
+                    />
+                  </div>
+
+                  <div className="dialog-field">
+                    <label>Commission du promoteur (%) :</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      max="90"
+                      placeholder="Ex: 50"
+                      value={editPromoterForm.commissionPct}
+                      onChange={(e) => setEditPromoterForm({ ...editPromoterForm, commissionPct: e.target.value })}
+                      required
+                      className="dialog-input"
+                    />
+                  </div>
+                </div>
+
+                {/* CALCUL EN TEMPS RÉEL SIMULTANÉ POUR CHAQUE FORMATION */}
+                <div className="promo-live-calculator-card">
+                  <div className="calc-header-badge">
+                    <Calculator size={14} className="text-purple" />
+                    <span>Calcul en temps réel avec vos nouveaux pourcentages :</span>
+                  </div>
+
+                  <div className="dual-calc-container">
+                    {/* Formation 1 */}
+                    <div className="formation-calc-card book1">
+                      <div className="formation-calc-header">
+                        <span className="formation-calc-badge-tag">📕 Livre 1 : BD & Storytelling</span>
+                        <span className="formation-calc-price-tag">{priceBook1.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="calc-metrics-grid mini">
+                        <div className="calc-metric-pill buyer">
+                          <span className="pill-label">L'acheteur paie</span>
+                          <strong className="pill-value">{buyerPays1.toLocaleString()} F</strong>
+                          <span className="pill-hint">(-{reductionPctNum}%)</span>
+                        </div>
+                        <div className="calc-metric-pill promoter">
+                          <span className="pill-label">Gain Promoteur</span>
+                          <strong className="pill-value">+{promoterGain1.toLocaleString()} F</strong>
+                          <span className="pill-hint">({commissionPctNum}%)</span>
+                        </div>
+                        <div className="calc-metric-pill mrben">
+                          <span className="pill-label">Votre part</span>
+                          <strong className="pill-value">+{mrBenGain1.toLocaleString()} F</strong>
+                          <span className="pill-hint">(Reste net)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Formation 2 */}
+                    <div className="formation-calc-card book2">
+                      <div className="formation-calc-header">
+                        <span className="formation-calc-badge-tag">🎬 Livre 2 : Vidéos Virales IA</span>
+                        <span className="formation-calc-price-tag">{priceBook2.toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="calc-metrics-grid mini">
+                        <div className="calc-metric-pill buyer">
+                          <span className="pill-label">L'acheteur paie</span>
+                          <strong className="pill-value">{buyerPays2.toLocaleString()} F</strong>
+                          <span className="pill-hint">(-{reductionPctNum}%)</span>
+                        </div>
+                        <div className="calc-metric-pill promoter">
+                          <span className="pill-label">Gain Promoteur</span>
+                          <strong className="pill-value">+{promoterGain2.toLocaleString()} F</strong>
+                          <span className="pill-hint">({commissionPctNum}%)</span>
+                        </div>
+                        <div className="calc-metric-pill mrben">
+                          <span className="pill-label">Votre part</span>
+                          <strong className="pill-value">+{mrBenGain2.toLocaleString()} F</strong>
+                          <span className="pill-hint">(Reste net)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="calc-summary-sentence">
+                    💡 Avec ces paramètres : l'élève paie avec <strong>-{reductionPctNum}%</strong> de réduction, le promoteur touche <strong>{commissionPctNum}%</strong> sur le paiement, et tout le reste vous revient directement.
+                  </div>
+                </div>
+
+                <div className="dialog-buttons-footer">
+                  <button 
+                    type="button" 
+                    className="btn-dialog-cancel"
+                    onClick={() => setIsEditPromoModalOpen(false)}
+                    disabled={isUpdatingPromoter}
+                  >
+                    Annuler
+                  </button>
+                  <button type="submit" className="btn-dialog-submit purple" disabled={isUpdatingPromoter}>
+                    {isUpdatingPromoter ? (
+                      <>
+                        <Loader2 size={14} className="spin" />
+                        <span>Enregistrement...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check size={14} />
+                        <span>Enregistrer les modifications</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
 
             </div>
           </div>

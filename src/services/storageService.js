@@ -128,11 +128,11 @@ export const storageService = {
           const local = storageService.getAllPromoters();
           const map = new Map();
           local.forEach(l => {
-            const key = (l.codePromo || '').trim().toUpperCase();
+            const key = l.id || (l.codePromo || '').trim().toUpperCase();
             if (key) map.set(key, l);
           });
           res.promoters.forEach(r => {
-            const key = (r.codePromo || '').trim().toUpperCase();
+            const key = r.id || (r.codePromo || '').trim().toUpperCase();
             if (key) {
               const existing = map.get(key) || {};
               const mergedPassword = (r.password && r.password.trim()) ? r.password.trim() : (existing.password || '');
@@ -151,8 +151,9 @@ export const storageService = {
             }
           });
           DEFAULT_PROMOTERS.forEach(d => {
-            const key = d.codePromo.toUpperCase();
-            if (!map.has(key)) map.set(key, d);
+            if (!map.has(d.id) && !map.has(d.codePromo.toUpperCase())) {
+              map.set(d.id, d);
+            }
           });
           localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(Array.from(map.values())));
         }
@@ -1132,7 +1133,7 @@ export const storageService = {
       const customList = saved ? JSON.parse(saved) : [];
       const merged = [...customList];
       DEFAULT_PROMOTERS.forEach(def => {
-        if (!merged.some(p => (p.codePromo || '').trim().toUpperCase() === def.codePromo.toUpperCase())) {
+        if (!merged.some(p => p.id === def.id || (p.codePromo || '').trim().toUpperCase() === def.codePromo.toUpperCase())) {
           merged.push(def);
         }
       });
@@ -1198,6 +1199,64 @@ export const storageService = {
       return { success: true, promoter: newPromoter };
     } catch {
       return { success: false, message: "Erreur lors de la création du promoteur." };
+    }
+  },
+
+  // Mettre à jour les informations, le code promo et les pourcentages d'un promoteur
+  updatePromoter: async ({ id, codePromo, reductionPct, commissionPct, nom, prenom, whatsapp, targetBookId }) => {
+    try {
+      const list = storageService.getAllPromoters();
+      const cleanCode = (codePromo || '').trim().toUpperCase();
+
+      if (!cleanCode) {
+        return { success: false, message: "Le code promo ne peut pas être vide." };
+      }
+
+      // Vérifier qu'un AUTRE promoteur n'utilise pas déjà ce code promo
+      const duplicate = list.find(p => p.id !== id && (p.codePromo || '').trim().toUpperCase() === cleanCode);
+      if (duplicate) {
+        return { 
+          success: false, 
+          message: `Le code promo "${cleanCode}" est déjà attribué à ${duplicate.prenom || duplicate.nom || 'un autre promoteur'}.` 
+        };
+      }
+
+      const idx = list.findIndex(p => p.id === id);
+      if (idx === -1) {
+        return { success: false, message: "Promoteur introuvable." };
+      }
+
+      list[idx].codePromo = cleanCode;
+      list[idx].reductionPct = Math.max(1, Math.min(90, Math.round(Number(reductionPct) || 20)));
+      list[idx].commissionPct = Math.max(1, Math.min(90, Math.round(Number(commissionPct) || 50)));
+      if (nom !== undefined) list[idx].nom = (nom || '').trim();
+      if (prenom !== undefined) list[idx].prenom = (prenom || '').trim();
+      if (whatsapp !== undefined) list[idx].whatsapp = (whatsapp || '').trim();
+      if (targetBookId !== undefined) list[idx].targetBookId = targetBookId || 'all';
+
+      localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+      window.dispatchEvent(new Event('storage'));
+
+      // Synchronisation cloud avec Hostinger
+      try {
+        await apiRequest('update_promoter', {
+          promoterId: id,
+          id,
+          codePromo: cleanCode,
+          reductionPct: list[idx].reductionPct,
+          commissionPct: list[idx].commissionPct,
+          nom: list[idx].nom,
+          prenom: list[idx].prenom,
+          whatsapp: list[idx].whatsapp,
+          targetBookId: list[idx].targetBookId
+        });
+      } catch (err) {
+        console.warn("Synchro cloud update_promoter:", err);
+      }
+
+      return { success: true, promoter: list[idx] };
+    } catch {
+      return { success: false, message: "Erreur lors de la modification du promoteur." };
     }
   },
 

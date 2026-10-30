@@ -231,6 +231,81 @@ switch ($action) {
         break;
 
     // -------------------------------------------------------------------------
+    // 2b. Mise à jour d'un promoteur (Code promo, pourcentages, infos)
+    // -------------------------------------------------------------------------
+    case 'update_promoter':
+        $id = trim($inputData['promoterId'] ?? $inputData['id'] ?? '');
+        if (empty($id)) {
+            echo json_encode(['success' => false, 'message' => 'Identifiant du promoteur requis.']);
+            exit();
+        }
+
+        $code = strtoupper(trim($inputData['codePromo'] ?? ''));
+        if (empty($code)) {
+            echo json_encode(['success' => false, 'message' => 'Le code promo ne peut pas être vide.']);
+            exit();
+        }
+
+        // Vérifier si le code promo est déjà utilisé par un AUTRE promoteur
+        $stmt = $pdo->prepare("SELECT id FROM promoters WHERE UPPER(code_promo) = ? AND id != ?");
+        $stmt->execute([$code, $id]);
+        if ($stmt->fetch()) {
+            echo json_encode(['success' => false, 'message' => "Le code promo \"$code\" est déjà attribué à un autre partenaire."]);
+            exit();
+        }
+
+        // Vérifier existence
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
+        $stmt->execute([$id]);
+        $existing = $stmt->fetch();
+        if (!$existing) {
+            echo json_encode(['success' => false, 'message' => 'Promoteur introuvable.']);
+            exit();
+        }
+
+        $nom = isset($inputData['nom']) ? trim($inputData['nom']) : ($existing['nom'] ?? '');
+        $prenom = isset($inputData['prenom']) ? trim($inputData['prenom']) : ($existing['prenom'] ?? '');
+        $whatsapp = isset($inputData['whatsapp']) ? trim($inputData['whatsapp']) : ($existing['whatsapp'] ?? '');
+        $targetBookId = isset($inputData['targetBookId']) ? $inputData['targetBookId'] : ($existing['target_book_id'] ?? 'all');
+        $reductionPct = max(1, min(90, (int)($inputData['reductionPct'] ?? $existing['reduction_pct'] ?? 20)));
+        $commissionPct = max(1, min(90, (int)($inputData['commissionPct'] ?? $existing['commission_pct'] ?? 50)));
+
+        $stmt = $pdo->prepare("UPDATE promoters SET 
+            nom = ?, 
+            prenom = ?, 
+            code_promo = ?, 
+            whatsapp = ?, 
+            target_book_id = ?, 
+            reduction_pct = ?, 
+            commission_pct = ? 
+            WHERE id = ?");
+        $stmt->execute([$nom, $prenom, $code, $whatsapp, $targetBookId, $reductionPct, $commissionPct, $id]);
+
+        // Retourner le promoteur mis à jour
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
+        $stmt->execute([$id]);
+        $updated = $stmt->fetch();
+        if ($updated) {
+            $updated['reductionPct'] = (int)($updated['reduction_pct'] ?? $reductionPct);
+            $updated['commissionPct'] = (int)($updated['commission_pct'] ?? $commissionPct);
+            $updated['codePromo'] = $updated['code_promo'] ?? $code;
+            $updated['targetBookId'] = $updated['target_book_id'] ?? $targetBookId;
+            $updated['salesCount'] = (int)($updated['sales_count'] ?? 0);
+            $updated['totalEarned'] = (int)($updated['total_earned'] ?? 0);
+            $updated['email'] = $updated['email'] ?? '';
+            $updated['payoutPhone'] = $updated['payout_phone'] ?? $updated['whatsapp'] ?? '';
+            $updated['passwordSetAt'] = $updated['password_set_at'] ?? '';
+            $updated['salesHistory'] = json_decode($updated['sales_history'] ?? '[]', true) ?: [];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Promoteur et code promo mis à jour avec succès.',
+            'promoter' => $updated
+        ]);
+        break;
+
+    // -------------------------------------------------------------------------
     // 3. Suppression d'un promoteur
     // -------------------------------------------------------------------------
     case 'delete_promoter':

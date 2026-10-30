@@ -127,9 +127,13 @@ switch ($action) {
             $o['itemId'] = $o['item_id'] ?? '';
             $o['itemTitle'] = $o['item_title'] ?? '';
             $o['amount'] = (int)($o['amount'] ?? 0);
+            $o['code'] = $o['code'] ?? '';
             $o['promoCode'] = $o['promo_code'] ?? null;
             $o['discountAmount'] = (int)($o['discount_amount'] ?? 0);
             $o['paymentMethod'] = $o['payment_method'] ?? '';
+            $o['status'] = $o['status'] ?? 'Actif';
+            $o['date'] = !empty($o['date']) ? $o['date'] : (isset($o['created_at']) ? date('d/m/Y, H:i', strtotime($o['created_at'])) : date('d/m/Y, H:i'));
+            $o['transactionId'] = $o['transaction_id'] ?? '';
         }
 
         // Tarifs & Prix d'origine barrés
@@ -159,12 +163,33 @@ switch ($action) {
             }
         }
 
-        // Formations débloquées pour l'email connecté
+        // Formations débloquées pour l'email connecté (avec recoupement orders et codes VIP)
         $unlocked = [];
         if (!empty($email)) {
             $stmt = $pdo->prepare("SELECT book_id FROM unlocked_books WHERE LOWER(email) = ?");
             $stmt->execute([$email]);
-            $unlocked = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $unlocked1 = $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+            $stmt2 = $pdo->prepare("SELECT item_id FROM orders WHERE LOWER(client_email) = ? AND (status IS NULL OR status != 'BLOQUÉ')");
+            $stmt2->execute([$email]);
+            $unlocked2 = $stmt2->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+            $stmt3 = $pdo->prepare("SELECT item_id FROM admin_codes WHERE LOWER(used_by) = ? AND status = 'UTILISÉ'");
+            $stmt3->execute([$email]);
+            $unlocked3 = $stmt3->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+            $merged = array_values(array_unique(array_filter(array_merge($unlocked1, $unlocked2, $unlocked3))));
+            $unlocked = $merged;
+
+            // Assurer la persistance immédiate dans unlocked_books
+            foreach ($merged as $bId) {
+                if (!in_array($bId, $unlocked1)) {
+                    try {
+                        $ins = $pdo->prepare("INSERT IGNORE INTO unlocked_books (email, book_id, book_title, code) VALUES (?, ?, ?, 'AUTO_SYNC')");
+                        $ins->execute([$email, $bId, ($bId === 'livre-bd-storytelling' ? "L'Art du Storytelling & BD" : "Création de Vidéos Virales avec l'IA")]);
+                    } catch (Exception $e) {}
+                }
+            }
         }
 
         echo json_encode([
@@ -838,10 +863,11 @@ switch ($action) {
         $date = $inputData['date'] ?? date('d/m/Y, H:i');
 
         if (!empty($clientEmail) && !empty($itemId)) {
-            // Insérer commande
+            // Insérer commande (idempotent)
             $stmt = $pdo->prepare("INSERT INTO orders (
                 id, client_name, client_email, client_phone, item_id, item_title, amount, code, promo_code, discount_amount, payment_method, status, date
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Actif', ?)");
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Actif', ?)
+            ON DUPLICATE KEY UPDATE status = 'Actif'");
             $stmt->execute([$id, $clientName, $clientEmail, $clientPhone, $itemId, $itemTitle, $amount, $code, $promoCode, $discountAmount, $paymentMethod, $date]);
 
             // Débloquer la formation
@@ -1396,12 +1422,14 @@ switch ($action) {
             if ($eventName === 'transaction.approved' || $txStatus === 'approved') {
                 $txId = (string)($tx['id'] ?? '');
                 $amount = (int)($tx['amount'] ?? 0);
-                $customer = $tx['customer'] ?? [];
-                $clientEmail = strtolower(trim($customer['email'] ?? ''));
-                $clientName = trim(($customer['firstname'] ?? '') . ' ' . ($customer['lastname'] ?? 'Client'));
+                $metadata = $tx['custom_metadata'] ?? [];
+                $clientEmail = strtolower(trim($metadata['buyerEmail'] ?? $customer['email'] ?? ''));
+                $clientName = trim(($customer['firstname'] ?? '') . ' ' . ($customer['lastname'] ?? ''));
+                if (empty($clientName)) {
+                    $clientName = !empty($clientEmail) ? explode('@', $clientEmail)[0] : 'Client';
+                }
                 $clientPhone = trim($customer['phone_number']['number'] ?? $customer['phone_number'] ?? '');
                 
-                $metadata = $tx['custom_metadata'] ?? [];
                 $itemId = $metadata['bookId'] ?? '';
                 if (empty($itemId)) {
                     $desc = strtolower($tx['description'] ?? '');
@@ -1415,14 +1443,15 @@ switch ($action) {
 
                 if (!empty($clientEmail)) {
                     // Vérifier si la commande n'a pas déjà été insérée
-                    $checkStmt = $pdo->prepare("SELECT id FROM orders WHERE id = ? OR (client_email = ? AND item_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 1 HOUR))");
+                    $checkStmt = $pdo->prepare("SELECT id FROM orders WHERE id = ? OR (client_email = ? AND item_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR))");
                     $checkStmt->execute([$orderId, $clientEmail, $itemId]);
                     $exists = $checkStmt->fetch();
 
                     if (!$exists) {
                         $insStmt = $pdo->prepare("INSERT INTO orders (
                             id, client_name, client_email, client_phone, item_id, item_title, amount, code, promo_code, discount_amount, payment_method, status, date
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'FedaPay Live', 'Actif', ?)");
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'FedaPay Live', 'Actif', ?)
+                        ON DUPLICATE KEY UPDATE status = 'Actif'");
                         $insStmt->execute([$orderId, $clientName, $clientEmail, $clientPhone, $itemId, $itemTitle, $amount, $code, $promoCode, $date]);
 
                         $unlockStmt = $pdo->prepare("INSERT IGNORE INTO unlocked_books (email, book_id, book_title, code) VALUES (?, ?, ?, ?)");

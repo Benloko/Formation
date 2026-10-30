@@ -65,9 +65,20 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
   const activeBook = item || book || { id: 'livre-bd-storytelling', title: "L'Art du Storytelling & BD avec l'IA", price: 2500 };
 
   const isVideo = activeBook?.id === 'livre-videos-ia';
-  const bookCover = isVideo ? '/books/book_video_cover.png?v=2' : '/books/book_bd_cover.png';
-  const bookPrice = storageService.getFormationPrice(activeBook?.id) || activeBook?.price || (isVideo ? 3100 : 2500);
-  const bookOriginalPrice = storageService.getFormationOriginalPrice(activeBook?.id) || activeBook?.originalPrice || (isVideo ? 6000 : 5000);
+  const [currentPrices, setCurrentPrices] = useState(() => storageService.getFormationPrices());
+  const [currentOriginalPrices, setCurrentOriginalPrices] = useState(() => storageService.getFormationOriginalPrices());
+
+  useEffect(() => {
+    const handlePriceChange = (e) => {
+      if (e.detail?.prices) setCurrentPrices(e.detail.prices);
+      if (e.detail?.originalPrices) setCurrentOriginalPrices(e.detail.originalPrices);
+    };
+    window.addEventListener('mrben_price_changed', handlePriceChange);
+    return () => window.removeEventListener('mrben_price_changed', handlePriceChange);
+  }, []);
+
+  const bookPrice = (currentPrices && currentPrices[activeBook?.id]) || storageService.getFormationPrice(activeBook?.id) || activeBook?.price || (isVideo ? 3100 : 2500);
+  const bookOriginalPrice = (currentOriginalPrices && currentOriginalPrices[activeBook?.id]) || storageService.getFormationOriginalPrice(activeBook?.id) || activeBook?.originalPrice || (isVideo ? 6000 : 5000);
   const [userCountry, setUserCountry] = useState(() => currencyService.getCurrentCountry());
 
   // Liste des comptes vérifiés sur cet appareil
@@ -644,7 +655,37 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
           );
 
           if (isSuccess) {
-            // Paiement réel validé avec succès !
+            // 1. Déblocage et création de commande IMMÉDIATS (sauvegardés avant toute animation)
+            const txId = resp.transaction?.id ? String(resp.transaction.id) : '';
+            const order = storageService.createOrder({
+              clientName: selectedGmail.split('@')[0],
+              clientEmail: selectedGmail,
+              clientPhone: resp.transaction?.customer?.phone_number?.number || resp.transaction?.customer?.phone_number || '',
+              itemId: activeBook.id,
+              itemTitle: activeBook.title,
+              amount: payablePrice,
+              paymentMethod: 'FedaPay Live',
+              transactionId: txId,
+              promoCode: appliedPromo ? appliedPromo.promoter.codePromo : null,
+              discountAmount: appliedPromo ? appliedPromo.discountAmount : 0
+            });
+
+            if (appliedPromo?.promoter?.codePromo) {
+              storageService.recordPromoSale(appliedPromo.promoter.codePromo, {
+                bookId: activeBook.id,
+                bookTitle: activeBook.title,
+                buyerName: selectedGmail.split('@')[0],
+                buyerEmail: selectedGmail,
+                orderId: order?.id || '',
+                paidAmount: payablePrice
+              });
+            }
+
+            storageService.clearPendingPaymentIntent();
+            storageService.setLoggedInGmail(selectedGmail);
+            setCompletedOrder(order);
+
+            // 2. Animation de validation et transition
             setStep('verifying');
             setVerificationProgress(35);
 
@@ -652,34 +693,6 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
               setVerificationProgress(75);
               setTimeout(() => {
                 setVerificationProgress(100);
-
-                const txId = resp.transaction?.id ? String(resp.transaction.id) : '';
-                const order = storageService.createOrder({
-                  clientName: selectedGmail.split('@')[0],
-                  clientEmail: selectedGmail,
-                  clientPhone: resp.transaction?.customer?.phone_number?.number || resp.transaction?.customer?.phone_number || '',
-                  itemId: activeBook.id,
-                  itemTitle: activeBook.title,
-                  amount: payablePrice,
-                  paymentMethod: 'FedaPay Live',
-                  transactionId: txId,
-                  promoCode: appliedPromo ? appliedPromo.promoter.codePromo : null,
-                  discountAmount: appliedPromo ? appliedPromo.discountAmount : 0
-                });
-
-                if (appliedPromo?.promoter?.codePromo) {
-                  storageService.recordPromoSale(appliedPromo.promoter.codePromo, {
-                    bookId: activeBook.id,
-                    bookTitle: activeBook.title,
-                    buyerName: selectedGmail.split('@')[0],
-                    buyerEmail: selectedGmail,
-                    orderId: order?.id || '',
-                    paidAmount: payablePrice
-                  });
-                }
-
-                storageService.setLoggedInGmail(selectedGmail);
-                setCompletedOrder(order);
 
                 try {
                   confetti({
@@ -701,6 +714,17 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
             handleForceCloseFedaPay();
           }
         }
+      });
+
+      // Sauvegarde préalable de l'intention en cas de redirection externe (Mobile Money MTN, Moov, Wave)
+      storageService.setPendingPaymentIntent({
+        bookId: activeBook.id,
+        bookTitle: activeBook.title,
+        payablePrice: Math.round(Number(payablePrice) || 2500),
+        selectedGmail: selectedGmail,
+        promoCode: appliedPromo?.promoter?.codePromo || null,
+        discountAmount: appliedPromo ? appliedPromo.discountAmount : 0,
+        timestamp: Date.now()
       });
 
       setIsFedaPayActive(true);
@@ -1117,62 +1141,71 @@ export function CheckoutModal({ item, book, onClose, onSuccess, onOpenTraining, 
               </div>
 
               <h2 className="clean-modal-title">{activeBook.title}</h2>
-              {appliedPromo ? (
-                <div className="clean-price-pill with-discount">
-                  <div className="discount-prices-flex">
-                    <span className="price-struck">{appliedPromo.originalPrice.toLocaleString()} FCFA</span>
-                    <strong className="discounted-price">{appliedPromo.finalPrice.toLocaleString()} FCFA</strong>
-                  </div>
-                  <span className="savings-tag">Économie : -{appliedPromo.discountAmount.toLocaleString()} FCFA (-{appliedPromo.reductionPct}%)</span>
-                </div>
-              ) : (
-                <div className="clean-price-pill">
-                  <span className="clean-price-struck">{pricePair.originalFormatted}</span>
-                  <strong>{pricePair.currentFormatted}</strong>
-                  <span>• Accès à Vie</span>
-                  {pricePair.equivalentNote && (
-                    <span className="clean-price-equiv">{pricePair.equivalentNote}</span>
+              {!isEnteringCode ? (
+                <>
+                  {appliedPromo ? (
+                    <div className="clean-price-pill with-discount">
+                      <div className="discount-prices-flex">
+                        <span className="price-struck">{appliedPromo.originalPrice.toLocaleString()} FCFA</span>
+                        <strong className="discounted-price">{appliedPromo.finalPrice.toLocaleString()} FCFA</strong>
+                      </div>
+                      <span className="savings-tag">Économie : -{appliedPromo.discountAmount.toLocaleString()} FCFA (-{appliedPromo.reductionPct}%)</span>
+                    </div>
+                  ) : (
+                    <div className="clean-price-pill">
+                      <span className="clean-price-struck">{pricePair.originalFormatted}</span>
+                      <strong>{pricePair.currentFormatted}</strong>
+                      <span>• Accès à Vie</span>
+                      {pricePair.equivalentNote && (
+                        <span className="clean-price-equiv">{pricePair.equivalentNote}</span>
+                      )}
+                    </div>
                   )}
+
+                  {/* Saisie ou badge de Code Promo */}
+                  <div className="checkout-promo-box">
+                    {!appliedPromo ? (
+                      <form onSubmit={handleApplyPromo} className="checkout-promo-input-row">
+                        <Tag size={13} className="promo-input-glyph" />
+                        <input 
+                          type="text" 
+                          placeholder="Code promo (ex: ALEX15)"
+                          value={promoInput}
+                          onChange={(e) => {
+                            setPromoInput(e.target.value.toUpperCase());
+                            setPromoError('');
+                          }}
+                          className="checkout-promo-input"
+                        />
+                        <button type="submit" className="btn-checkout-apply-promo">
+                          Appliquer
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="checkout-promo-applied-badge">
+                        <div className="promo-applied-text">
+                          <CheckCircle2 size={13} className="text-green" />
+                          <span>Code <strong>{appliedPromo.promoter.codePromo}</strong> appliqué (-{appliedPromo.reductionPct}%)</span>
+                        </div>
+                        <button 
+                          type="button" 
+                          className="btn-checkout-remove-promo"
+                          onClick={handleRemovePromo}
+                          title="Retirer ce code"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                    {promoError && <div className="checkout-promo-error">{promoError}</div>}
+                  </div>
+                </>
+              ) : (
+                <div className="clean-vip-mode-pill">
+                  <Key size={14} className="text-amber" />
+                  <span>Activation VIP • Code d'accès unique direct</span>
                 </div>
               )}
-
-              {/* Saisie ou badge de Code Promo */}
-              <div className="checkout-promo-box">
-                {!appliedPromo ? (
-                  <form onSubmit={handleApplyPromo} className="checkout-promo-input-row">
-                    <Tag size={13} className="promo-input-glyph" />
-                    <input 
-                      type="text" 
-                      placeholder="Code promo (ex: ALEX15)"
-                      value={promoInput}
-                      onChange={(e) => {
-                        setPromoInput(e.target.value.toUpperCase());
-                        setPromoError('');
-                      }}
-                      className="checkout-promo-input"
-                    />
-                    <button type="submit" className="btn-checkout-apply-promo">
-                      Appliquer
-                    </button>
-                  </form>
-                ) : (
-                  <div className="checkout-promo-applied-badge">
-                    <div className="promo-applied-text">
-                      <CheckCircle2 size={13} className="text-green" />
-                      <span>Code <strong>{appliedPromo.promoter.codePromo}</strong> appliqué (-{appliedPromo.reductionPct}%)</span>
-                    </div>
-                    <button 
-                      type="button" 
-                      className="btn-checkout-remove-promo"
-                      onClick={handleRemovePromo}
-                      title="Retirer ce code"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-                {promoError && <div className="checkout-promo-error">{promoError}</div>}
-              </div>
             </div>
 
             {paymentError && (

@@ -179,8 +179,71 @@ export function App() {
     return null;
   });
 
+  const [, setAuthTick] = useState(0);
+
   React.useEffect(() => {
-    // Synchronisation initiale et périodique avec le cloud Hostinger
+    // 1. Détection automatique du retour de paiement FedaPay (notamment redirection Mobile Money MTN, Moov, Wave)
+    const checkPaymentRedirect = async () => {
+      try {
+        if (typeof window === 'undefined') return;
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = (urlParams.get('status') || urlParams.get('fedapay_status') || '').toLowerCase();
+        const txId = urlParams.get('id') || urlParams.get('transaction_id') || '';
+
+        if (status === 'approved' || status === 'completed' || (txId && status !== 'declined' && status !== 'canceled')) {
+          const pending = storageService.getPendingPaymentIntent();
+          if (pending && pending.bookId) {
+            // Créer la commande et débloquer immédiatement le livre
+            const createdOrder = storageService.createOrder({
+              clientName: (pending.selectedGmail || 'client').split('@')[0],
+              clientEmail: pending.selectedGmail || 'client@mrben.com',
+              clientPhone: '',
+              itemId: pending.bookId,
+              itemTitle: pending.bookTitle,
+              amount: pending.payablePrice || 2500,
+              paymentMethod: 'FedaPay Mobile Redirect',
+              transactionId: txId,
+              promoCode: pending.promoCode,
+              discountAmount: pending.discountAmount || 0
+            });
+
+            if (pending.promoCode) {
+              storageService.recordPromoSale(pending.promoCode, {
+                bookId: pending.bookId,
+                bookTitle: pending.bookTitle,
+                buyerName: (pending.selectedGmail || 'client').split('@')[0],
+                buyerEmail: pending.selectedGmail,
+                orderId: createdOrder?.id || '',
+                paidAmount: pending.payablePrice || 2500
+              });
+            }
+
+            storageService.clearPendingPaymentIntent();
+            if (pending.selectedGmail) {
+              storageService.setLoggedInGmail(pending.selectedGmail);
+            }
+
+            // Ouvrir directement la formation débloquée pour l'élève !
+            const bookToOpen = BOOKS_DATA.find(b => b.id === pending.bookId) || BOOKS_DATA[0];
+            setSelectedBookForAction(bookToOpen);
+            setActiveTab('READER');
+            setIsCheckoutOpen(false);
+
+            // Nettoyer l'URL sans recharger la page
+            const cleanUrl = window.location.pathname + (window.location.hash || '');
+            window.history.replaceState({}, document.title, cleanUrl);
+
+            await storageService.initCloudSync();
+          } else {
+            await storageService.initCloudSync();
+          }
+        }
+      } catch {}
+    };
+
+    checkPaymentRedirect();
+
+    // 2. Synchronisation initiale et périodique avec le cloud Hostinger
     storageService.initCloudSync();
     const syncInterval = setInterval(() => {
       storageService.initCloudSync();
@@ -190,6 +253,12 @@ export function App() {
       storageService.initCloudSync();
     };
     window.addEventListener('focus', onWindowFocus);
+
+    const handleAuthEvent = () => {
+      setAuthTick(t => t + 1);
+    };
+    window.addEventListener('mrben_auth_changed', handleAuthEvent);
+    window.addEventListener('storage', handleAuthEvent);
 
     const checkPromo = () => {
       try {
@@ -234,13 +303,13 @@ export function App() {
     window.addEventListener('hashchange', checkPromo);
     window.addEventListener('mrben_promo_detected', onPromoDetected);
     window.addEventListener('mrben_promo_cleared', onPromoCleared);
-    window.addEventListener('mrben_promo_detected', checkPromo);
-    window.addEventListener('mrben_promo_cleared', onPromoCleared);
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('focus', onWindowFocus);
+      window.removeEventListener('mrben_auth_changed', handleAuthEvent);
+      window.removeEventListener('storage', handleAuthEvent);
       window.removeEventListener('hashchange', checkPromo);
-      window.removeEventListener('mrben_promo_detected', checkPromo);
+      window.removeEventListener('mrben_promo_detected', onPromoDetected);
       window.removeEventListener('mrben_promo_cleared', onPromoCleared);
     };
   }, []);
@@ -596,6 +665,9 @@ export function App() {
           item={selectedBookForAction}
           activePromo={activePromoBanner}
           onClose={handleCloseCheckout}
+          onSuccess={(order) => {
+            storageService.initCloudSync();
+          }}
           onOpenTraining={(book) => {
             if (book) setSelectedBookForAction(book);
             setIsCheckoutOpen(false);

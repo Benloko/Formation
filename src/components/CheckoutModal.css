@@ -2056,4 +2056,26 @@ div[id^="fedapay_modal_"] .modal__iframe,
   z-index: 2 !important;
 }
 
+.clean-vip-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+  color: #fbbf24;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin: 0.5rem auto 0.75rem auto;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.text-amber {
+  color: #f59e0b;
+}
+
+
 

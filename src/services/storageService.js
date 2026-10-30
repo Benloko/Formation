@@ -9,7 +9,8 @@ const STORAGE_KEYS = {
   FORMATION_ORIGINAL_PRICES: "mrben_formation_original_prices",
   ADMIN_PASSWORD: "mrben_admin_pwd",
   PROMOTERS: "mrben_promoters_list",
-  PENDING_PROMO: "mrben_pending_promo_code"
+  PENDING_PROMO: "mrben_pending_promo_code",
+  PENDING_PAYMENT_INTENT: "mrben_pending_payment_intent"
 };
 
 const DEFAULT_PRICES = {
@@ -121,7 +122,15 @@ export const storageService = {
   // Synchronisation bidirectionnelle avec la base de données cloud Hostinger
   initCloudSync: async () => {
     try {
-      const email = storageService.getLoggedInGmail();
+      let email = storageService.getLoggedInGmail();
+      if (!email) {
+        const accounts = storageService.getGoogleAccounts();
+        if (accounts.length > 0) {
+          email = accounts[0];
+          storageService.setLoggedInGmail(email);
+        }
+      }
+
       const res = await apiRequest('get_all', email ? { email } : {}, 'GET');
       if (res && res.success) {
         if (Array.isArray(res.promoters) && res.promoters.length > 0) {
@@ -167,12 +176,25 @@ export const storageService = {
         if (Array.isArray(res.orders)) {
           localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(res.orders));
         }
+
+        // Synchronisation des prix réduits en temps réel
+        let pricesChanged = false;
         if (res.prices) {
           localStorage.setItem(STORAGE_KEYS.FORMATION_PRICES, JSON.stringify(res.prices));
+          pricesChanged = true;
         }
         if (res.originalPrices) {
           localStorage.setItem(STORAGE_KEYS.FORMATION_ORIGINAL_PRICES, JSON.stringify(res.originalPrices));
+          pricesChanged = true;
         }
+        if (pricesChanged) {
+          const detail = {
+            prices: res.prices || storageService.getFormationPrices(),
+            originalPrices: res.originalPrices || storageService.getFormationOriginalPrices()
+          };
+          window.dispatchEvent(new CustomEvent('mrben_price_changed', { detail }));
+        }
+
         if (email && Array.isArray(res.unlocked) && res.unlocked.length > 0) {
           const currentUnlocked = storageService.getUnlockedCodes();
           res.unlocked.forEach(bookId => {
@@ -187,6 +209,7 @@ export const storageService = {
             }
           });
           localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(currentUnlocked));
+          window.dispatchEvent(new Event('mrben_auth_changed'));
         }
         window.dispatchEvent(new Event('storage'));
       }
@@ -283,24 +306,62 @@ export const storageService = {
     }
   },
 
+  // Sauvegarde temporaire de l'intention de paiement avant redirection FedaPay
+  setPendingPaymentIntent: (intent) => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PENDING_PAYMENT_INTENT, JSON.stringify(intent));
+    } catch {}
+  },
+
+  getPendingPaymentIntent: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.PENDING_PAYMENT_INTENT);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  clearPendingPaymentIntent: () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.PENDING_PAYMENT_INTENT);
+    } catch {}
+  },
+
   // Vérifier si un livre spécifique est débloqué pour ce visiteur
   isBookUnlocked: (bookId) => {
     try {
-      const email = storageService.getLoggedInGmail();
-      // RÈGLE DE SÉCURITÉ : Si l'utilisateur est déconnecté, AUCUN livre n'est débloqué !
+      const codes = storageService.getUnlockedCodes();
+      const adminCodes = storageService.getAdminGeneratedCodes();
+      const blockedCodesList = new Set(
+        adminCodes.filter(c => c.status === "BLOQUÉ").map(c => c.code)
+      );
+
+      // 1. Vérification directe sur cet appareil : si le code de déblocage local existe et n'est pas révoqué
+      const hasDirectUnlocked = codes.some(c => 
+        (c.itemId === bookId || c.itemId === "pack-duo-mr-ben") &&
+        (!c.code || !blockedCodesList.has(c.code))
+      );
+      if (hasDirectUnlocked) return true;
+
+      // 2. Récupérer ou auto-restaurer l'email connecté
+      let email = storageService.getLoggedInGmail();
+      if (!email) {
+        const accounts = storageService.getGoogleAccounts();
+        if (accounts.length > 0) {
+          email = typeof accounts[0] === 'string' ? accounts[0] : (accounts[0].email || '');
+          if (email) storageService.setLoggedInGmail(email);
+        }
+      }
+
+      // Si aucun compte n'est trouvé et aucun déblocage local, refuser l'accès
       if (!email) {
         return false;
       }
 
       const cleanEmail = email.trim().toLowerCase();
 
-      // Liste des codes admin révoqués / bloqués
-      const adminCodes = storageService.getAdminGeneratedCodes();
-      const blockedCodesList = new Set(
-        adminCodes.filter(c => c.status === "BLOQUÉ").map(c => c.code)
-      );
-
-      // 1. Vérifier si une commande officielle (achat ou duo) est associée à ce compte Google
+      // 3. Vérifier si une commande officielle (achat ou duo) est associée à ce compte Google
       const orders = storageService.getAllOrders();
       const hasOrder = orders.some(o => 
         o.clientEmail && 
@@ -311,7 +372,7 @@ export const storageService = {
       );
       if (hasOrder) return true;
 
-      // 2. Vérifier si un code admin à usage unique actif a été activé par ce compte
+      // 4. Vérifier si un code admin à usage unique actif a été activé par ce compte
       const hasAdminCode = adminCodes.some(c => 
         c.status === "UTILISÉ" && 
         c.usedBy && 
@@ -320,8 +381,7 @@ export const storageService = {
       );
       if (hasAdminCode) return true;
 
-      // 3. Vérifier dans la liste des codes débloqués rattachés strictement à cet e-mail
-      const codes = storageService.getUnlockedCodes();
+      // 5. Vérifier dans la liste des codes débloqués rattachés strictement à cet e-mail
       return codes.some(c => 
         (c.itemId === bookId || c.itemId === "pack-duo-mr-ben") &&
         c.userEmail && c.userEmail.toLowerCase() === cleanEmail &&
@@ -589,6 +649,15 @@ export const storageService = {
         localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(unlocked));
       }
 
+      if (cleanEmail) {
+        storageService.setLoggedInGmail(cleanEmail);
+        storageService.addGoogleAccount(cleanEmail);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('mrben_auth_changed'));
+        window.dispatchEvent(new Event('storage'));
+      }
+
       return { success: true, order };
     }
 
@@ -615,6 +684,17 @@ export const storageService = {
         });
         localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(unlocked));
       }
+
+      const effectiveEmail = cleanEmail || order.clientEmail;
+      if (effectiveEmail) {
+        storageService.setLoggedInGmail(effectiveEmail);
+        storageService.addGoogleAccount(effectiveEmail);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('mrben_auth_changed'));
+        window.dispatchEvent(new Event('storage'));
+      }
+
       return { success: true, order };
     }
 
@@ -665,6 +745,17 @@ export const storageService = {
     });
     localStorage.setItem(STORAGE_KEYS.UNLOCKED_CODES, JSON.stringify(unlocked));
 
+    // Définir comme connecté avec cet email et l'ajouter aux comptes vérifiés
+    if (clientEmail) {
+      storageService.setLoggedInGmail(clientEmail);
+      storageService.addGoogleAccount(clientEmail, clientName);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('mrben_auth_changed'));
+      window.dispatchEvent(new Event('storage'));
+    }
+
     // Synchronisation cloud en arrière-plan
     apiRequest('create_order', newOrder).catch(() => {});
 
@@ -688,20 +779,21 @@ export const storageService = {
   // Calculer les statistiques du dashboard admin
   getAdminStats: () => {
     const orders = storageService.getAllOrders();
-    const totalRevenue = orders.reduce((sum, ord) => sum + (Number(ord.amount) || 0), 0);
+    const validOrders = orders.filter(o => o.status !== "BLOQUÉ");
+    const totalRevenue = validOrders.reduce((sum, ord) => sum + (Number(ord.amount) || 0), 0);
     
     // Un élève correspond à un compte unique (adresse email Google distincte)
     const uniqueEmails = new Set(
-      orders
+      validOrders
         .map(o => (o.clientEmail || '').trim().toLowerCase())
         .filter(email => email.length > 0)
     );
     const totalStudents = uniqueEmails.size;
-    const totalOrders = orders.length;
+    const totalOrders = validOrders.length;
     
-    const countBD = orders.filter(o => o.itemId === "livre-bd-storytelling").length;
-    const countVideo = orders.filter(o => o.itemId === "livre-videos-ia").length;
-    const countDuo = orders.filter(o => o.itemId === "pack-duo-mr-ben").length;
+    const countBD = validOrders.filter(o => o.itemId === "livre-bd-storytelling").length;
+    const countVideo = validOrders.filter(o => o.itemId === "livre-videos-ia").length;
+    const countDuo = validOrders.filter(o => o.itemId === "pack-duo-mr-ben").length;
 
     return {
       totalRevenue,

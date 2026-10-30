@@ -75,9 +75,9 @@ export function AdminDashboard({ onClose }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Données dynamiques
-  const [orders, setOrders] = useState([]);
-  const [stats, setStats] = useState({ totalRevenue: 0, totalStudents: 0, totalOrders: 0, countBD: 0, countVideo: 0, countDuo: 0 });
-  const [adminCodes, setAdminCodes] = useState([]);
+  const [orders, setOrders] = useState(() => storageService.getAllOrders());
+  const [stats, setStats] = useState(() => storageService.getAdminStats());
+  const [adminCodes, setAdminCodes] = useState(() => storageService.getAdminGeneratedCodes());
 
   // Filtres
   const [searchTerm, setSearchTerm] = useState('');
@@ -183,6 +183,12 @@ export function AdminDashboard({ onClose }) {
     }
     setIsLoadingAnalytics(false);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshData();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {

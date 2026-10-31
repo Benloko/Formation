@@ -137,11 +137,11 @@ export const storageService = {
           const local = storageService.getAllPromoters();
           const map = new Map();
           local.forEach(l => {
-            const key = l.id || (l.codePromo || '').trim().toUpperCase();
+            const key = (l.codePromo || '').trim().toUpperCase() || l.id;
             if (key) map.set(key, l);
           });
           res.promoters.forEach(r => {
-            const key = r.id || (r.codePromo || '').trim().toUpperCase();
+            const key = (r.codePromo || '').trim().toUpperCase() || r.id;
             if (key) {
               const existing = map.get(key) || {};
               const mergedPassword = (r.password && r.password.trim()) ? r.password.trim() : (existing.password || '');
@@ -160,8 +160,9 @@ export const storageService = {
             }
           });
           DEFAULT_PROMOTERS.forEach(d => {
-            if (!map.has(d.id) && !map.has(d.codePromo.toUpperCase())) {
-              map.set(d.id, d);
+            const key = (d.codePromo || '').trim().toUpperCase() || d.id;
+            if (!map.has(key)) {
+              map.set(key, d);
             }
           });
           localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(Array.from(map.values())));
@@ -1236,15 +1237,18 @@ export const storageService = {
   },
 
   getPromoterById: (id) => {
+    if (!id) return null;
+    const clean = String(id).trim();
+    const cleanUpper = clean.toUpperCase();
     const list = storageService.getAllPromoters();
-    return list.find(p => p.id === id) || null;
+    return list.find(p => p.id === clean || (p.codePromo && p.codePromo.toUpperCase() === cleanUpper)) || null;
   },
 
   getPromoterByCode: (code) => {
     if (!code) return null;
     const clean = String(code).trim().toUpperCase();
     const list = storageService.getAllPromoters();
-    return list.find(p => (p.codePromo || '').trim().toUpperCase() === clean) || null;
+    return list.find(p => (p.codePromo && p.codePromo.toUpperCase() === clean) || p.id === code) || null;
   },
 
   createPromoter: ({ nom, prenom, codePromo, whatsapp, targetBookId, reductionPct, commissionPct }) => {
@@ -1356,7 +1360,12 @@ export const storageService = {
   setPromoterPassword: async (promoterId, password, email = '', payoutPhone = '') => {
     try {
       const list = storageService.getAllPromoters();
-      const idx = list.findIndex(p => p.id === promoterId);
+      const cleanId = String(promoterId || '').trim();
+      const cleanIdUpper = cleanId.toUpperCase();
+      const idx = list.findIndex(p => 
+        p.id === cleanId || 
+        (p.codePromo && p.codePromo.toUpperCase() === cleanIdUpper)
+      );
       if (idx === -1) return { success: false, message: "Promoteur introuvable." };
 
       const cleanPwd = String(password).trim();
@@ -1374,12 +1383,18 @@ export const storageService = {
 
       // Synchronisation cloud immédiate avec la base de données
       try {
-        await apiRequest('set_promoter_password', {
-          promoterId,
+        const apiRes = await apiRequest('set_promoter_password', {
+          promoterId: list[idx].id,
+          codePromo: list[idx].codePromo || '',
           password: cleanPwd,
           email: list[idx].email || '',
           payoutPhone: list[idx].payoutPhone || ''
         });
+        if (apiRes && apiRes.promoter) {
+          list[idx] = { ...list[idx], ...apiRes.promoter, password: cleanPwd };
+          localStorage.setItem(STORAGE_KEYS.PROMOTERS, JSON.stringify(list));
+          window.dispatchEvent(new Event('storage'));
+        }
       } catch (err) {
         console.warn("Synchro cloud mot de passe promoteur:", err);
       }
@@ -1529,7 +1544,7 @@ export const storageService = {
 
   // Vérifier la connexion du promoteur
   verifyPromoterLogin: (promoterId, password) => {
-    const promoter = storageService.getPromoterById(promoterId);
+    const promoter = storageService.getPromoterById(promoterId) || storageService.getPromoterByCode(promoterId);
     if (!promoter) return { success: false, message: "Compte promoteur introuvable." };
     if (promoter.status === 'BLOQUÉ') {
       return { success: false, message: "Ce compte promoteur a été bloqué par l'administration." };

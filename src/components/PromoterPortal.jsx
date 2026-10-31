@@ -25,7 +25,8 @@ import {
   KeyRound,
   X,
   RotateCcw,
-  MessageCircle
+  MessageCircle,
+  Loader2
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import './PromoterPortal.css';
@@ -76,12 +77,19 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       if (!promoter?.id) return false;
-      return localStorage.getItem(`mrben_promoter_session_${promoter.id}`) === 'active' ||
-             sessionStorage.getItem(`mrben_promoter_session_${promoter.id}`) === 'active';
+      const idKey = `mrben_promoter_session_${promoter.id}`;
+      const codeKey = promoter.codePromo ? `mrben_promoter_session_${promoter.codePromo.toUpperCase()}` : null;
+      return localStorage.getItem(idKey) === 'active' ||
+             sessionStorage.getItem(idKey) === 'active' ||
+             (codeKey && localStorage.getItem(codeKey) === 'active') ||
+             (codeKey && sessionStorage.getItem(codeKey) === 'active');
     } catch {
       return false;
     }
   });
+
+  // Indicateur de synchronisation cloud initiale
+  const [isSyncing, setIsSyncing] = useState(true);
 
   // États pour la création initiale : Étape 1 (Mot de passe) / Étape 2 (Gmail & Retrait)
   const [setupStep, setSetupStep] = useState(1);
@@ -127,17 +135,51 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     try {
       await storageService.initCloudSync();
     } catch {}
-    if (promoter?.id) {
-      const fresh = storageService.getPromoterById(promoter.id);
-      if (fresh) {
-        setPromoter(fresh);
-        if (fresh.email && !selectedGmail) setSelectedGmail(fresh.email);
-        if (fresh.payoutPhone && !payoutPhone) setPayoutPhone(fresh.payoutPhone);
+    const fresh = getInitialPromoter();
+    if (fresh) {
+      setPromoter(fresh);
+      if (fresh.email && !selectedGmail) setSelectedGmail(fresh.email);
+      if ((fresh.payoutPhone || fresh.whatsapp) && !payoutPhone) {
+        setPayoutPhone(fresh.payoutPhone || fresh.whatsapp);
       }
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const syncPromoterOnMount = async () => {
+      try {
+        setIsSyncing(true);
+        // Synchroniser avec Hostinger MySQL pour obtenir le mot de passe et profil à jour
+        await storageService.initCloudSync();
+
+        const freshPromoter = getInitialPromoter();
+        if (isMounted && freshPromoter) {
+          setPromoter(freshPromoter);
+          if (freshPromoter.email) setSelectedGmail(freshPromoter.email);
+          if (freshPromoter.payoutPhone || freshPromoter.whatsapp) {
+            setPayoutPhone(freshPromoter.payoutPhone || freshPromoter.whatsapp);
+          }
+          const idKey = `mrben_promoter_session_${freshPromoter.id}`;
+          const codeKey = freshPromoter.codePromo ? `mrben_promoter_session_${freshPromoter.codePromo.toUpperCase()}` : null;
+          const hasSession = localStorage.getItem(idKey) === 'active' ||
+                             sessionStorage.getItem(idKey) === 'active' ||
+                             (codeKey && localStorage.getItem(codeKey) === 'active') ||
+                             (codeKey && sessionStorage.getItem(codeKey) === 'active');
+          if (hasSession) {
+            setIsAuthenticated(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Erreur synchro cloud portail promoteur:", err);
+      } finally {
+        if (isMounted) setIsSyncing(false);
+      }
+    };
+
+    syncPromoterOnMount();
+
     const handleStorage = () => refreshPromoterData();
     const handleHash = () => {
       const p = getInitialPromoter();
@@ -152,10 +194,11 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     } catch {}
 
     return () => {
+      isMounted = false;
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('hashchange', handleHash);
     };
-  }, [promoter?.id]);
+  }, []);
 
   // Handler Étape 1 : Validation du mot de passe initial
   const handleStep1Password = (e) => {
@@ -236,6 +279,9 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     if (res.success) {
       try {
         localStorage.setItem(`mrben_promoter_session_${promoter.id}`, 'active');
+        if (promoter.codePromo) {
+          localStorage.setItem(`mrben_promoter_session_${promoter.codePromo.toUpperCase()}`, 'active');
+        }
       } catch {}
       setPromoter(res.promoter);
       setIsAuthenticated(true);
@@ -253,6 +299,9 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
     if (res.success) {
       try {
         localStorage.setItem(`mrben_promoter_session_${promoter.id}`, 'active');
+        if (promoter.codePromo) {
+          localStorage.setItem(`mrben_promoter_session_${promoter.codePromo.toUpperCase()}`, 'active');
+        }
       } catch {}
       setIsAuthenticated(true);
     } else {
@@ -263,8 +312,14 @@ export function PromoterPortal({ onClose, promoterIdParam }) {
   // Handler déconnexion
   const handleLogout = () => {
     try {
-      localStorage.removeItem(`mrben_promoter_session_${promoter.id}`);
-      sessionStorage.removeItem(`mrben_promoter_session_${promoter.id}`);
+      if (promoter?.id) {
+        localStorage.removeItem(`mrben_promoter_session_${promoter.id}`);
+        sessionStorage.removeItem(`mrben_promoter_session_${promoter.id}`);
+      }
+      if (promoter?.codePromo) {
+        localStorage.removeItem(`mrben_promoter_session_${promoter.codePromo.toUpperCase()}`);
+        sessionStorage.removeItem(`mrben_promoter_session_${promoter.codePromo.toUpperCase()}`);
+      }
     } catch {}
     setIsAuthenticated(false);
     setLoginPassword('');
@@ -516,6 +571,27 @@ Merci de procéder au versement de mes gains.`;
   };
 
   if (!promoter) {
+    if (isSyncing) {
+      return (
+        <div className="promoter-page-backdrop">
+          <div className="promoter-auth-box">
+            <div className="auth-header-card">
+              <div className="brand-logo-mark purple">MB</div>
+              <h2>Espace Partenaire Promoteur</h2>
+              <p className="auth-subtitle">Plateforme Officielle Mr Ben</p>
+            </div>
+            <div className="auth-form-card promoter-syncing-card">
+              <div className="promoter-sync-inner">
+                <Loader2 size={32} className="btn-spinner text-gold" />
+                <h4 style={{ margin: '0.8rem 0 0.3rem 0', color: '#f8fafc', fontSize: '1rem' }}>Vérification de votre espace</h4>
+                <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.82rem' }}>Connexion sécurisée en cours avec le serveur...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="promoter-page-backdrop">
         <div className="promoter-card-modal">
@@ -661,7 +737,15 @@ Merci de procéder au versement de mes gains.`;
                 </form>
               )}
             </div>
-          ) : !promoter.password ? (
+          ) : (isSyncing && !promoter?.password) ? (
+            <div className="auth-form-card promoter-syncing-card">
+              <div className="promoter-sync-inner">
+                <Loader2 size={32} className="btn-spinner text-gold" />
+                <h4 style={{ margin: '0.8rem 0 0.3rem 0', color: '#f8fafc', fontSize: '1rem' }}>Vérification de votre espace</h4>
+                <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.82rem' }}>Connexion sécurisée en cours avec le serveur...</p>
+              </div>
+            </div>
+          ) : !promoter?.password ? (
             /* PREMIÈRE CONNEXION : ONBOARDING EN 2 ÉTAPES */
             <div className="auth-form-card">
               

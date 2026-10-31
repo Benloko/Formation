@@ -100,6 +100,8 @@ switch ($action) {
             $p['totalEarned'] = (int)($p['total_earned'] ?? 0);
             $p['email'] = $p['email'] ?? '';
             $p['payoutPhone'] = $p['payout_phone'] ?? $p['whatsapp'] ?? '';
+            $p['password'] = trim($p['password'] ?? '');
+            $p['hasPassword'] = !empty($p['password']);
             $p['passwordSetAt'] = $p['password_set_at'] ?? '';
             $p['salesHistory'] = json_decode($p['sales_history'] ?? '[]', true) ?: [];
         }
@@ -361,24 +363,40 @@ switch ($action) {
     // -------------------------------------------------------------------------
     // 4b. Définition ou mise à jour sécurisée du mot de passe du promoteur
     // -------------------------------------------------------------------------
+    // 4b. Définition ou mise à jour sécurisée du mot de passe du promoteur
+    // -------------------------------------------------------------------------
     case 'set_promoter_password':
-        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $promoterId = trim($inputData['promoterId'] ?? $inputData['id'] ?? '');
+        $codePromo = strtoupper(trim($inputData['codePromo'] ?? $inputData['code'] ?? ''));
         $password = trim($inputData['password'] ?? '');
         $email = strtolower(trim($inputData['email'] ?? ''));
         $payoutPhone = trim($inputData['payoutPhone'] ?? $inputData['payout_phone'] ?? '');
 
-        if (empty($promoterId) || empty($password)) {
+        if ((empty($promoterId) && empty($codePromo)) || empty($password)) {
             echo json_encode(['success' => false, 'error' => 'Identifiant et mot de passe requis.']);
             exit;
         }
 
         $now = date('d/m/Y, H:i');
-        $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END, whatsapp = CASE WHEN ? != '' THEN ? ELSE whatsapp END WHERE id = ?");
-        $stmt->execute([$password, $now, $email, $email, $payoutPhone, $payoutPhone, $payoutPhone, $payoutPhone, $promoterId]);
+        $stmt = $pdo->prepare("UPDATE promoters SET 
+            password = ?, 
+            password_set_at = ?, 
+            email = CASE WHEN ? != '' THEN ? ELSE email END, 
+            payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END, 
+            whatsapp = CASE WHEN ? != '' THEN ? ELSE whatsapp END 
+            WHERE id = ? OR UPPER(code_promo) = UPPER(?) OR UPPER(code_promo) = UPPER(?)");
+        $stmt->execute([
+            $password, 
+            $now, 
+            $email, $email, 
+            $payoutPhone, $payoutPhone, 
+            $payoutPhone, $payoutPhone, 
+            $promoterId, $promoterId, $codePromo
+        ]);
 
         // Retourner le promoteur mis à jour
-        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ?");
-        $stmt->execute([$promoterId]);
+        $stmt = $pdo->prepare("SELECT * FROM promoters WHERE id = ? OR UPPER(code_promo) = UPPER(?) OR UPPER(code_promo) = UPPER(?)");
+        $stmt->execute([$promoterId, $promoterId, $codePromo]);
         $p = $stmt->fetch();
         if ($p) {
             $phone = !empty($p['whatsapp']) ? $p['whatsapp'] : (!empty($p['payout_phone']) ? $p['payout_phone'] : '');
@@ -391,7 +409,9 @@ switch ($action) {
             $p['email'] = $p['email'] ?? '';
             $p['whatsapp'] = $phone;
             $p['payoutPhone'] = $phone;
-            $p['passwordSetAt'] = $p['password_set_at'] ?? '';
+            $p['password'] = $password;
+            $p['hasPassword'] = true;
+            $p['passwordSetAt'] = $p['password_set_at'] ?? $now;
             $p['salesHistory'] = json_decode($p['sales_history'] ?? '[]', true) ?: [];
         }
 
@@ -400,20 +420,21 @@ switch ($action) {
 
     // Réinitialisation ou modification du mot de passe par l'administrateur
     case 'admin_reset_promoter_password':
-        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $promoterId = trim($inputData['promoterId'] ?? $inputData['id'] ?? '');
+        $codePromo = strtoupper(trim($inputData['codePromo'] ?? $inputData['code'] ?? ''));
         $newPassword = trim($inputData['password'] ?? '');
-        if (empty($promoterId)) {
+        if (empty($promoterId) && empty($codePromo)) {
             echo json_encode(['success' => false, 'error' => 'Identifiant promoteur requis.']);
             exit;
         }
         if (empty($newPassword)) {
             // Remise à zéro : le compte redevient "En attente" et le promoteur configurera son mot de passe à sa prochaine visite
-            $stmt = $pdo->prepare("UPDATE promoters SET password = NULL, password_set_at = NULL, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ?");
-            $stmt->execute([$promoterId]);
+            $stmt = $pdo->prepare("UPDATE promoters SET password = NULL, password_set_at = NULL, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ? OR UPPER(code_promo) = UPPER(?) OR UPPER(code_promo) = UPPER(?)");
+            $stmt->execute([$promoterId, $promoterId, $codePromo]);
         } else {
             $now = date('d/m/Y, H:i');
-            $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ?");
-            $stmt->execute([$newPassword, $now, $promoterId]);
+            $stmt = $pdo->prepare("UPDATE promoters SET password = ?, password_set_at = ?, reset_code = NULL, reset_code_expires_at = NULL WHERE id = ? OR UPPER(code_promo) = UPPER(?) OR UPPER(code_promo) = UPPER(?)");
+            $stmt->execute([$newPassword, $now, $promoterId, $promoterId, $codePromo]);
         }
         echo json_encode(['success' => true]);
         exit;
@@ -422,17 +443,18 @@ switch ($action) {
     // 4c. Mise à jour profil de retrait (Gmail de récupération + Numéro Mobile Money)
     // -------------------------------------------------------------------------
     case 'update_promoter_profile':
-        $promoterId = $inputData['promoterId'] ?? $inputData['id'] ?? '';
+        $promoterId = trim($inputData['promoterId'] ?? $inputData['id'] ?? '');
+        $codePromo = strtoupper(trim($inputData['codePromo'] ?? $inputData['code'] ?? ''));
         $email = strtolower(trim($inputData['email'] ?? ''));
         $payoutPhone = trim($inputData['payoutPhone'] ?? $inputData['payout_phone'] ?? '');
 
-        if (empty($promoterId)) {
+        if (empty($promoterId) && empty($codePromo)) {
             echo json_encode(['success' => false, 'error' => 'Identifiant requis.']);
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE promoters SET email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END, whatsapp = CASE WHEN ? != '' THEN ? ELSE whatsapp END WHERE id = ?");
-        $stmt->execute([$email, $email, $payoutPhone, $payoutPhone, $payoutPhone, $payoutPhone, $promoterId]);
+        $stmt = $pdo->prepare("UPDATE promoters SET email = CASE WHEN ? != '' THEN ? ELSE email END, payout_phone = CASE WHEN ? != '' THEN ? ELSE payout_phone END, whatsapp = CASE WHEN ? != '' THEN ? ELSE whatsapp END WHERE id = ? OR UPPER(code_promo) = UPPER(?) OR UPPER(code_promo) = UPPER(?)");
+        $stmt->execute([$email, $email, $payoutPhone, $payoutPhone, $payoutPhone, $payoutPhone, $promoterId, $promoterId, $codePromo]);
 
         echo json_encode(['success' => true]);
         exit;
